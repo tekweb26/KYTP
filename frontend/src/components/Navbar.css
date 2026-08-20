@@ -1,0 +1,614 @@
+/* =====================================================
+   KYTP NAVBAR
+===================================================== */
+
+.ktyp-navbar {
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+
+/* =====================================================
+   NAVBAR CONTAINER
+===================================================== */
+
+.ktyp-navbar-container {
+  width: 100%;
+  max-width: 1400px;
+  min-height: 74px;
+
+  margin: 0 auto;
+  padding: 0 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  box-sizing: border-box;
+}
+
+
+/* =====================================================
+   LOGO
+===================================================== */
+
+.ktyp-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  text-decoration: none;
+
+  flex-shrink: 0;
+}
+
+
+.ktyp-logo-box {
+  padding: 9px 13px;
+
+  border-radius: 9px;
+
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #1d4ed8
+  );
+
+  color: #ffffff;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  letter-spacing: 0.3px;
+
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.20);
+
+  transition: 0.2s ease;
+}
+
+
+.ktyp-logo:hover .ktyp-logo-box {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 6px 14px rgba(37, 99, 235, 0.28);
+}
+
+
+.ktyp-logo-text {
+  color: #1f2937;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+
+/* =====================================================
+   DESKTOP NAVIGATION
+===================================================== */
+
+.ktyp-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-left: auto;
+  margin-right: 28px;
+}
+
+
+.ktyp-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 13px;
+
+  border-radius: 8px;
+
+  color: #4b5563;
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.ktyp-nav-link:hover {
+  background: #f3f4f6;
+  color: #2563eb;
+}
+
+
+.ktyp-nav-link.active {
+  background: #eff6ff;
+  color: #2563eb;
+
+  box-shadow:
+    inset 0 0 0 1px #dbeafe;
+}
+
+
+.ktyp-nav-link.active svg {
+  color: #2563eb;
+}
+
+
+/* =====================================================
+   RIGHT SECTION
+===================================================== */
+
+.ktyp-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  flex-shrink: 0;
+}
+
+
+/* =====================================================
+   NOTIFICATION
+===================================================== */
+
+.ktyp-notification {
+  width: 40px;
+  height: 40px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: transparent;
+
+  color: #4b5563;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.ktyp-notification:hover {
+  background: #f3f4f6;
+  color: #2563eb;
+}
+
+
+.ktyp-notification-dot {
+  position: absolute;
+
+  width: 7px;
+  height: 7px;
+
+  background: #ef4444;
+
+  border-radius: 50%;
+
+  top: 8px;
+  right: 8px;
+
+  border: 2px solid #ffffff;
+}
+
+
+/* =====================================================
+   USER BUTTON
+===================================================== */
+
+.ktyp-user-wrapper {
+  position: relative;
+}
+
+
+.ktyp-user-button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 5px 9px 5px 5px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.ktyp-user-button:hover {
+  background: #f3f4f6;
+}
+
+
+.ktyp-user-avatar {
+  width: 36px;
+  height: 36px;
+
+  border-radius: 50%;
+
+  background: linear-gradient(
+    135deg,
+    #3b82f6,
+    #2563eb
+  );
+
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+.ktyp-user-name {
+  max-width: 120px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #374151;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   USER DROPDOWN
+===================================================== */
+
+.ktyp-user-dropdown {
+  position: absolute;
+
+  top: calc(100% + 10px);
+  right: 0;
+
+  width: 250px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.12);
+
+  overflow: hidden;
+
+  z-index: 1100;
+
+  animation: ktypDropdown 0.15s ease;
+}
+
+
+@keyframes ktypDropdown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* =====================================================
+   USER HEADER
+===================================================== */
+
+.ktyp-user-header {
+  padding: 16px;
+
+  background: linear-gradient(
+    135deg,
+    #eff6ff,
+    #dbeafe
+  );
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+
+.ktyp-user-email {
+  color: #111827;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  word-break: break-word;
+}
+
+
+.ktyp-account-text {
+  margin-top: 4px;
+
+  color: #6b7280;
+
+  font-size: 12px;
+}
+
+
+/* =====================================================
+   DROPDOWN ITEMS
+===================================================== */
+
+.ktyp-dropdown-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 11px 16px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #374151;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.ktyp-dropdown-item:hover {
+  background: #f9fafb;
+  color: #2563eb;
+}
+
+
+.ktyp-dropdown-item.logout {
+  color: #dc2626;
+}
+
+
+.ktyp-dropdown-item.logout:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+
+.ktyp-dropdown-divider {
+  height: 1px;
+
+  background: #e5e7eb;
+
+  margin: 5px 0;
+}
+
+
+/* =====================================================
+   MOBILE BUTTON
+===================================================== */
+
+.ktyp-mobile-button {
+  display: none;
+
+  width: 40px;
+  height: 40px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #374151;
+
+  cursor: pointer;
+}
+
+
+.ktyp-mobile-button:hover {
+  background: #f3f4f6;
+}
+
+
+/* =====================================================
+   MOBILE MENU
+===================================================== */
+
+.ktyp-mobile-menu {
+  display: none;
+}
+
+
+/* =====================================================
+   DROPDOWN BACKDROP
+===================================================== */
+
+.ktyp-dropdown-backdrop {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 900;
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1100px) {
+
+  .ktyp-navbar-container {
+    padding: 0 20px;
+  }
+
+  .ktyp-nav-links {
+    gap: 2px;
+    margin-right: 15px;
+  }
+
+  .ktyp-nav-link {
+    padding: 9px 10px;
+  }
+
+  .ktyp-nav-link span {
+    display: none;
+  }
+
+  .ktyp-logo-text {
+    display: none;
+  }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 768px) {
+
+  .ktyp-navbar-container {
+    min-height: 68px;
+
+    padding: 0 16px;
+  }
+
+
+  .ktyp-nav-links {
+    display: none;
+  }
+
+
+  .ktyp-mobile-button {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+  }
+
+
+  .ktyp-navbar-right {
+    gap: 5px;
+  }
+
+
+  .ktyp-user-name {
+    display: none;
+  }
+
+
+  .ktyp-logo-box {
+    font-size: 16px;
+
+    padding: 8px 11px;
+  }
+
+
+  .ktyp-mobile-menu {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 12px 16px 16px;
+
+    border-top: 1px solid #e5e7eb;
+
+    background: #ffffff;
+  }
+
+
+  .ktyp-mobile-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 11px 13px;
+
+    border-radius: 8px;
+
+    text-decoration: none;
+
+    color: #4b5563;
+
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+
+  .ktyp-mobile-link:hover {
+    background: #f3f4f6;
+  }
+
+
+  .ktyp-mobile-link.active {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+
+  .ktyp-user-dropdown {
+    right: -5px;
+
+    width: 230px;
+  }
+}
+
+
+/* =====================================================
+   SMALL MOBILE
+===================================================== */
+
+@media (max-width: 420px) {
+
+  .ktyp-navbar-container {
+    padding: 0 12px;
+  }
+
+
+  .ktyp-notification {
+    width: 36px;
+    height: 36px;
+  }
+
+
+  .ktyp-mobile-button {
+    width: 36px;
+    height: 36px;
+  }
+
+
+  .ktyp-logo-box {
+    font-size: 15px;
+  }
+}

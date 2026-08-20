@@ -1,0 +1,73 @@
+# fly.toml app configuration file generated for gst-payment-poc
+
+app = "gst-payment-poc"
+primary_region = "maa"  # Mumbai, India
+
+[build]
+  builder = "heroku"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 100
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 3000
+  processes = ["app"]
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+[checks]
+  [checks.status]
+    port = 3000
+    type = "http"
+    interval = "10s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/health"
+    protocol = "http"
+    success_threshold = 1
+    failure_threshold = 2
+
+[mounts]
+  source = "postgres_data"
+  destination = "/var/lib/postgresql/data"
+  initial_size = 10
+
+[vm]
+  cpu_kind = "shared"
+  cpus = 2
+  memory_mb = 512
+
+[[regions]]
+  code = "maa"  # Mumbai
+  count = 1
+  gpu_count = 0
+
+# For scaling to other regions later:
+# [[regions]]
+#   code = "del"  # Delhi
+#   count = 1
+
+# [[regions]]
+#   code = "sin"  # Singapore
+#   count = 1
