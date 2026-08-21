@@ -1,16 +1,17 @@
+
 /* =====================================================
    INVOICES PAGE
 ===================================================== */
 
 .invoices-page {
-  width: 100%;
-  min-height: 100vh;
+    width: 100%;
+    min-height: 100vh;
 
-  padding: 45px 40px;
+    padding: 45px 40px;
 
-  background: #f5f7fb;
+    background: #f5f7fb;
 
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 
@@ -19,10 +20,10 @@
 ===================================================== */
 
 .invoices-container {
-  width: 100%;
-  max-width: 1050px;
+    width: 100%;
+    max-width: 1100px;
 
-  margin: 0 auto;
+    margin: 0 auto;
 }
 
 
@@ -31,28 +32,32 @@
 ===================================================== */
 
 .invoices-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    width: 70%;
+    margin: 0 auto 30px;
 
-  margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 50px;
 }
-
 .invoices-title {
-  margin: 0;
+    margin: 0;
 
-  font-size: 34px;
-  font-weight: 700;
+    font-size: 34px;
+    font-weight: 700;
 
-  color: #172033;
+    color: #172033;
+
+    white-space: nowrap;
 }
 
 .invoices-subtitle {
-  margin: 7px 0 0;
+    margin: 7px 0 0;
 
-  font-size: 15px;
+    font-size: 15px;
 
-  color: #6b7280;
+    color: #6b7280;
 }
 
 
@@ -61,64 +66,77 @@
 ===================================================== */
 
 .invoice-primary-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
+    display: inline-flex;
 
-  padding: 12px 20px;
+    align-items: center;
+    justify-content: center;
 
-  border: none;
-  border-radius: 8px;
+    gap: 9px;
 
-  background: #2563eb;
-  color: #ffffff;
+    padding: 12px 20px;
 
-  font-size: 15px;
-  font-weight: 600;
+    border: none;
+    border-radius: 8px;
 
-  cursor: pointer;
+    background: #2563eb;
 
-  transition: 0.2s ease;
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+
+    white-space: nowrap;
 }
 
 .invoice-primary-btn:hover {
-  background: #1d4ed8;
+    background: #1d4ed8;
 }
 
 
 /* =====================================================
    CREATE FORM
+   SAME WIDTH AS TABLE
 ===================================================== */
 
 .invoice-form-card {
-  width: 100%;
-  max-width: 850px;
+    width: 70%;
+    max-width: none;
 
-  margin: 0 auto 30px;
+    margin: 0 auto 30px;
 
-  padding: 30px;
+    padding: 30px;
 
-  box-sizing: border-box;
+    box-sizing: border-box;
 
-  background: #ffffff;
+    background: #ffffff;
 
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
 
-  box-shadow:
-    0 5px 20px rgba(15, 23, 42, 0.06);
+    box-shadow:
+        0 5px 20px rgba(15, 23, 42, 0.06);
 }
 
+
+/* =====================================================
+   FORM TITLE
+===================================================== */
+
 .invoice-form-title {
-  margin: 0 0 24px;
+    width: 100%;
 
-  font-size: 24px;
-  font-weight: 700;
+    margin: 0 0 24px;
 
-  color: #172033;
+    font-size: 24px;
+    font-weight: 700;
 
-  text-align: center;
+    color: #172033;
+
+    text-align: center;
 }
 
 
@@ -127,11 +145,11 @@
 ===================================================== */
 
 .invoice-form-grid {
-  display: grid;
+    display: grid;
 
-  grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
 
-  gap: 20px;
+    gap: 20px;
 }
 
 
@@ -140,60 +158,62 @@
 ===================================================== */
 
 .invoice-form-group {
-  display: flex;
-  flex-direction: column;
+    display: flex;
 
-  margin-bottom: 20px;
+    flex-direction: column;
+
+    margin-bottom: 20px;
 }
 
 .invoice-form-group label {
-  margin-bottom: 8px;
+    margin-bottom: 8px;
 
-  font-size: 14px;
-  font-weight: 600;
+    font-size: 14px;
 
-  color: #374151;
+    font-weight: 600;
+
+    color: #374151;
 }
 
 .invoice-form-group input,
 .invoice-form-group textarea {
-  width: 100%;
+    width: 100%;
 
-  box-sizing: border-box;
+    box-sizing: border-box;
 
-  padding: 12px 14px;
+    padding: 12px 14px;
 
-  border: 1px solid #d1d5db;
+    border: 1px solid #d1d5db;
 
-  border-radius: 8px;
+    border-radius: 8px;
 
-  background: #ffffff;
+    background: #ffffff;
 
-  font-size: 15px;
+    font-size: 15px;
 
-  color: #111827;
+    color: #111827;
 
-  outline: none;
+    outline: none;
 
-  transition: 0.2s ease;
+    transition: 0.2s ease;
 }
 
 .invoice-form-group input {
-  height: 46px;
+    height: 46px;
 }
 
 .invoice-form-group textarea {
-  min-height: 100px;
+    min-height: 100px;
 
-  resize: vertical;
+    resize: vertical;
 }
 
 .invoice-form-group input:focus,
 .invoice-form-group textarea:focus {
-  border-color: #2563eb;
+    border-color: #2563eb;
 
-  box-shadow:
-    0 0 0 3px rgba(37, 99, 235, 0.10);
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.10);
 }
 
 
@@ -202,16 +222,21 @@
 ===================================================== */
 
 .invoice-form-actions {
-  display: flex;
-  justify-content: center;
+    width: 100%;
 
-  gap: 14px;
+    display: flex;
 
-  margin-top: 8px;
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 14px;
+
+    margin-top: 8px;
 }
 
 .invoice-form-actions button {
-  min-width: 120px;
+    min-width: 120px;
 }
 
 
@@ -220,45 +245,61 @@
 ===================================================== */
 
 .invoice-secondary-btn {
-  padding: 12px 20px;
+    padding: 12px 20px;
 
-  border: none;
-  border-radius: 8px;
+    border: none;
 
-  background: #e5e7eb;
+    border-radius: 8px;
 
-  color: #374151;
+    background: #e5e7eb;
 
-  font-size: 15px;
-  font-weight: 600;
+    color: #374151;
 
-  cursor: pointer;
+    font-size: 15px;
 
-  transition: 0.2s ease;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
 }
 
 .invoice-secondary-btn:hover {
-  background: #d1d5db;
+    background: #d1d5db;
 }
 
 
 /* =====================================================
    TABLE CARD
+   SAME WIDTH AS FORM
 ===================================================== */
 
 .invoice-table-card {
-  width: 100%;
+    width: 70%;
+    max-width: none;
 
-  background: #ffffff;
+    margin: 0 auto;
 
-  border: 1px solid #e5e7eb;
+    background: #ffffff;
 
-  border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
 
-  overflow: hidden;
+    overflow: hidden;
 
-  box-shadow:
-    0 5px 20px rgba(15, 23, 42, 0.05);
+    box-shadow:
+        0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+
+/* =====================================================
+   TABLE WRAPPER
+===================================================== */
+
+.invoice-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
 }
 
 
@@ -266,18 +307,12 @@
    TABLE
 ===================================================== */
 
-.invoice-table-wrapper {
-  width: 100%;
-
-  overflow-x: auto;
-}
-
 .invoice-table {
-  width: 100%;
+    width: 100%;
 
-  min-width: 700px;
+    min-width: 700px;
 
-  border-collapse: collapse;
+    border-collapse: collapse;
 }
 
 
@@ -286,21 +321,21 @@
 ===================================================== */
 
 .invoice-table thead {
-  background: #f8fafc;
+    background: #f8fafc;
 }
 
 .invoice-table th {
-  padding: 16px 20px;
+    padding: 16px 20px;
 
-  text-align: left;
+    text-align: left;
 
-  font-size: 14px;
+    font-size: 14px;
 
-  font-weight: 700;
+    font-weight: 700;
 
-  color: #475569;
+    color: #475569;
 
-  border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 
@@ -309,21 +344,42 @@
 ===================================================== */
 
 .invoice-table td {
-  padding: 17px 20px;
+    padding: 17px 20px;
 
-  font-size: 15px;
+    font-size: 15px;
 
-  color: #374151;
+    color: #374151;
 
-  border-bottom: 1px solid #eef0f3;
+    border-bottom: 1px solid #eef0f3;
 }
 
 .invoice-table tbody tr:hover {
-  background: #f8fafc;
+    background: #f8fafc;
 }
 
 .invoice-table tbody tr:last-child td {
-  border-bottom: none;
+    border-bottom: none;
+}
+
+
+/* =====================================================
+   VENDOR
+===================================================== */
+
+.invoice-vendor-name {
+    font-size: 15px;
+
+    font-weight: 600;
+
+    color: #172033;
+}
+
+.invoice-vendor-gstin {
+    margin-top: 4px;
+
+    font-size: 12px;
+
+    color: #94a3b8;
 }
 
 
@@ -332,11 +388,17 @@
 ===================================================== */
 
 .invoice-amount {
-  font-size: 15px;
+    font-size: 15px;
 
-  font-weight: 600;
+    font-weight: 600;
 
-  color: #172033;
+    color: #172033;
+}
+
+.invoice-tax {
+    font-size: 15px;
+
+    color: #374151;
 }
 
 
@@ -345,21 +407,21 @@
 ===================================================== */
 
 .invoice-status {
-  display: inline-flex;
+    display: inline-flex;
 
-  align-items: center;
+    align-items: center;
 
-  padding: 6px 12px;
+    padding: 6px 12px;
 
-  border-radius: 20px;
+    border-radius: 20px;
 
-  background: #eff6ff;
+    background: #eff6ff;
 
-  color: #2563eb;
+    color: #2563eb;
 
-  font-size: 13px;
+    font-size: 13px;
 
-  font-weight: 600;
+    font-weight: 600;
 }
 
 
@@ -368,45 +430,46 @@
 ===================================================== */
 
 .invoice-actions {
-  display: flex;
+    display: flex;
 
-  align-items: center;
+    align-items: center;
 
-  gap: 8px;
+    gap: 8px;
 }
 
 .invoice-action-btn {
-  width: 36px;
-  height: 36px;
+    width: 36px;
+    height: 36px;
 
-  display: flex;
+    display: flex;
 
-  align-items: center;
-  justify-content: center;
+    align-items: center;
 
-  border: none;
+    justify-content: center;
 
-  border-radius: 7px;
+    border: none;
 
-  background: transparent;
+    border-radius: 7px;
 
-  cursor: pointer;
+    background: transparent;
+
+    cursor: pointer;
 }
 
 .invoice-edit-btn {
-  color: #2563eb;
+    color: #2563eb;
 }
 
 .invoice-edit-btn:hover {
-  background: #eff6ff;
+    background: #eff6ff;
 }
 
 .invoice-delete-btn {
-  color: #dc2626;
+    color: #dc2626;
 }
 
 .invoice-delete-btn:hover {
-  background: #fef2f2;
+    background: #fef2f2;
 }
 
 
@@ -415,13 +478,13 @@
 ===================================================== */
 
 .invoice-empty {
-  padding: 60px 20px;
+    padding: 60px 20px;
 
-  text-align: center;
+    text-align: center;
 
-  font-size: 15px;
+    font-size: 15px;
 
-  color: #94a3b8;
+    color: #94a3b8;
 }
 
 
@@ -430,74 +493,98 @@
 ===================================================== */
 
 .invoice-loading {
-  min-height: 350px;
+    min-height: 350px;
 
-  display: flex;
+    display: flex;
 
-  align-items: center;
-  justify-content: center;
+    align-items: center;
 
-  font-size: 16px;
+    justify-content: center;
 
-  color: #64748b;
+    font-size: 16px;
+
+    color: #64748b;
 }
 
 
 /* =====================================================
-   RESPONSIVE
+   RESPONSIVE - TABLET
 ===================================================== */
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
 
-  .invoices-page {
-    padding: 35px 25px;
-  }
+    .invoices-page {
+        padding: 35px 25px;
+    }
 
-  .invoices-container {
-    max-width: 100%;
-  }
-
-  .invoice-form-card {
-    max-width: 100%;
-  }
+    .invoices-header,
+    .invoice-form-card,
+    .invoice-table-card {
+        width: 75%;
+    }
 }
 
+
+/* =====================================================
+   RESPONSIVE - MOBILE
+===================================================== */
 
 @media (max-width: 700px) {
 
-  .invoices-page {
-    padding: 25px 15px;
-  }
+    .invoices-page {
+        padding: 25px 15px;
+    }
 
-  .invoices-header {
-    flex-direction: column;
+    .invoices-header {
+        width: 100%;
 
-    align-items: flex-start;
+        flex-direction: column;
 
-    gap: 18px;
-  }
+        align-items: center;
 
-  .invoices-title {
-    font-size: 29px;
-  }
+        justify-content: center;
 
-  .invoice-primary-btn {
-    width: 100%;
-  }
+        gap: 15px;
+    }
 
-  .invoice-form-grid {
-    grid-template-columns: 1fr;
-  }
+    .invoices-title {
+        font-size: 29px;
 
-  .invoice-form-card {
-    padding: 22px;
-  }
+        text-align: center;
+    }
 
-  .invoice-form-actions {
-    flex-direction: column;
-  }
+    .invoices-subtitle {
+        text-align: center;
+    }
 
-  .invoice-form-actions button {
-    width: 100%;
-  }
+    .invoice-primary-btn {
+        width: auto;
+    }
+
+    .invoice-form-card,
+    .invoice-table-card {
+        width: 100%;
+    }
+
+    .invoice-form-card {
+        padding: 22px;
+    }
+
+    .invoice-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-form-actions {
+        flex-direction: column;
+    }
+
+    .invoice-form-actions button {
+        width: 100%;
+    }
+
+    .invoice-table-wrapper {
+        overflow-x: auto;
+    }
 }
+
+
