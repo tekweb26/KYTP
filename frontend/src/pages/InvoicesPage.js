@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { invoiceAPI } from '../api/api';
 import toast from 'react-hot-toast';
+import './InvoicesPage.css';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
 
 export default function InvoicesPage() {
