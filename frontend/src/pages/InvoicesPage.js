@@ -1,20 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { invoiceAPI } from '../api/api';
-import toast from 'react-hot-toast';
-import './InvoicesPage.css';
-import { Plus, Trash2, Edit2 } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { invoiceAPI } from "../api/api";
+import toast from "react-hot-toast";
+import { Plus, Trash2, Edit2 } from "lucide-react";
+import "./InvoicesPage.css";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+
   const [formData, setFormData] = useState({
-    vendor_name: '',
-    vendor_gstin: '',
-    total_amount: '',
-    tax_amount: '',
-    description: '',
+    vendor_name: "",
+    vendor_gstin: "",
+    total_amount: "",
+    tax_amount: "",
+    description: "",
   });
+
+  /* =====================================================
+     LOAD INVOICES
+  ===================================================== */
 
   useEffect(() => {
     loadInvoices();
@@ -23,162 +28,500 @@ export default function InvoicesPage() {
   const loadInvoices = async () => {
     try {
       const { data } = await invoiceAPI.list();
-      setInvoices(data);
+
+      /*
+        Backend कडून response:
+        {
+          success: true,
+          invoices: [...]
+        }
+
+        त्यामुळे invoices array handle केला आहे.
+      */
+
+      if (Array.isArray(data)) {
+        setInvoices(data);
+      } else if (Array.isArray(data?.invoices)) {
+        setInvoices(data.invoices);
+      } else {
+        setInvoices([]);
+      }
     } catch (error) {
-      toast.error('Failed to load invoices');
+      console.error("Invoice Load Error:", error);
+      toast.error("Failed to load invoices");
     } finally {
       setLoading(false);
     }
   };
 
+
+  /* =====================================================
+     FORM INPUT CHANGE
+  ===================================================== */
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+
+  /* =====================================================
+     CREATE INVOICE
+  ===================================================== */
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       await invoiceAPI.create(formData);
-      toast.success('Invoice created successfully');
+
+      toast.success("Invoice created successfully");
+
       setFormData({
-        vendor_name: '',
-        vendor_gstin: '',
-        total_amount: '',
-        tax_amount: '',
-        description: '',
+        vendor_name: "",
+        vendor_gstin: "",
+        total_amount: "",
+        tax_amount: "",
+        description: "",
       });
+
       setShowForm(false);
-      loadInvoices();
+
+      await loadInvoices();
     } catch (error) {
-      toast.error('Failed to create invoice');
+      console.error("Invoice Create Error:", error);
+
+      toast.error(
+        error?.response?.data?.error ||
+        "Failed to create invoice"
+      );
     }
   };
+
+
+  /* =====================================================
+     DELETE INVOICE
+  ===================================================== */
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure?')) {
-      try {
-        await invoiceAPI.delete(id);
-        toast.success('Invoice deleted');
-        loadInvoices();
-      } catch (error) {
-        toast.error('Failed to delete invoice');
-      }
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this invoice?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await invoiceAPI.delete(id);
+
+      toast.success("Invoice deleted");
+
+      await loadInvoices();
+    } catch (error) {
+      console.error("Invoice Delete Error:", error);
+
+      toast.error("Failed to delete invoice");
     }
   };
 
+
+  /* =====================================================
+     LOADING
+  ===================================================== */
+
   if (loading) {
-    return <div className="p-8 text-center">Loading invoices...</div>;
+    return (
+      <div className="invoice-loading">
+        Loading invoices...
+      </div>
+    );
   }
 
+
+  /* =====================================================
+     PAGE
+  ===================================================== */
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Invoices</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="btn btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} />
-          New Invoice
-        </button>
-      </div>
+    <div className="invoices-page">
 
-      {showForm && (
-        <div className="card mb-8">
-          <h2 className="text-xl font-bold mb-4">Create Invoice</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="form-group">
-                <label>Vendor Name</label>
-                <input
-                  type="text"
-                  value={formData.vendor_name}
-                  onChange={(e) => setFormData({...formData, vendor_name: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Vendor GSTIN</label>
-                <input
-                  type="text"
-                  value={formData.vendor_gstin}
-                  onChange={(e) => setFormData({...formData, vendor_gstin: e.target.value})}
-                />
-              </div>
-              <div className="form-group">
-                <label>Total Amount</label>
-                <input
-                  type="number"
-                  value={formData.total_amount}
-                  onChange={(e) => setFormData({...formData, total_amount: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Tax Amount</label>
-                <input
-                  type="number"
-                  value={formData.tax_amount}
-                  onChange={(e) => setFormData({...formData, tax_amount: e.target.value})}
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                rows="3"
-              />
-            </div>
-            <div className="flex gap-4">
-              <button type="submit" className="btn btn-primary">Create</button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+      <div className="invoices-container">
+
+        {/* =================================================
+            PAGE HEADER
+        ================================================= */}
+
+        <div className="invoices-header">
+
+          <div>
+            <h1 className="invoices-title">
+              Invoices
+            </h1>
+
+            <p className="invoices-subtitle">
+              Manage your invoices and GST details
+            </p>
+          </div>
+
+
+          <button
+            type="button"
+            onClick={() => setShowForm(!showForm)}
+            className="invoice-primary-btn"
+          >
+            <Plus size={18} />
+
+            {showForm
+              ? "Close Form"
+              : "New Invoice"}
+          </button>
+
         </div>
-      )}
 
-      <div className="card">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-3">Vendor</th>
-              <th className="text-left py-3">Amount</th>
-              <th className="text-left py-3">Tax</th>
-              <th className="text-left py-3">Status</th>
-              <th className="text-left py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map((invoice) => (
-              <tr key={invoice.id} className="border-b hover:bg-gray-50">
-                <td className="py-3">{invoice.vendor_name}</td>
-                <td className="py-3">₹{invoice.total_amount}</td>
-                <td className="py-3">₹{invoice.tax_amount}</td>
-                <td className="py-3">
-                  <span className="px-2 py-1 rounded text-sm bg-blue-100 text-blue-700">
-                    {invoice.status || 'Pending'}
-                  </span>
-                </td>
-                <td className="py-3 flex gap-2">
-                  <button className="text-blue-600 hover:text-blue-800">
-                    <Edit2 size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(invoice.id)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+        {/* =================================================
+            CREATE INVOICE FORM
+        ================================================= */}
+
+        {showForm && (
+
+          <div className="invoice-form-card">
+
+            <h2 className="invoice-form-title">
+              Create Invoice
+            </h2>
+
+
+            <form onSubmit={handleSubmit}>
+
+              {/* FORM GRID */}
+
+              <div className="invoice-form-grid">
+
+                {/* Vendor Name */}
+
+                <div className="invoice-form-group">
+
+                  <label htmlFor="vendor_name">
+                    Vendor Name
+                  </label>
+
+                  <input
+                    id="vendor_name"
+                    name="vendor_name"
+                    type="text"
+                    value={formData.vendor_name}
+                    onChange={handleChange}
+                    placeholder="Enter vendor name"
+                    required
+                  />
+
+                </div>
+
+
+                {/* GSTIN */}
+
+                <div className="invoice-form-group">
+
+                  <label htmlFor="vendor_gstin">
+                    Vendor GSTIN
+                  </label>
+
+                  <input
+                    id="vendor_gstin"
+                    name="vendor_gstin"
+                    type="text"
+                    value={formData.vendor_gstin}
+                    onChange={handleChange}
+                    placeholder="Enter GSTIN"
+                  />
+
+                </div>
+
+
+                {/* Total Amount */}
+
+                <div className="invoice-form-group">
+
+                  <label htmlFor="total_amount">
+                    Total Amount
+                  </label>
+
+                  <input
+                    id="total_amount"
+                    name="total_amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.total_amount}
+                    onChange={handleChange}
+                    placeholder="Enter total amount"
+                    required
+                  />
+
+                </div>
+
+
+                {/* Tax Amount */}
+
+                <div className="invoice-form-group">
+
+                  <label htmlFor="tax_amount">
+                    Tax Amount
+                  </label>
+
+                  <input
+                    id="tax_amount"
+                    name="tax_amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.tax_amount}
+                    onChange={handleChange}
+                    placeholder="Enter tax amount"
+                  />
+
+                </div>
+
+              </div>
+
+
+              {/* Description */}
+
+              <div className="invoice-form-group">
+
+                <label htmlFor="description">
+                  Description
+                </label>
+
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Enter invoice description"
+                  rows="3"
+                />
+
+              </div>
+
+
+              {/* BUTTONS */}
+
+              <div className="invoice-form-actions">
+
+                <button
+                  type="submit"
+                  className="invoice-primary-btn"
+                >
+                  Create
+                </button>
+
+
+                <button
+                  type="button"
+                  className="invoice-secondary-btn"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        )}
+
+
+        {/* =================================================
+            INVOICE TABLE
+        ================================================= */}
+
+        <div className="invoice-table-card">
+
+          <div className="invoice-table-wrapper">
+
+            <table className="invoice-table">
+
+              <thead>
+
+                <tr>
+
+                  <th>
+                    Vendor
+                  </th>
+
+                  <th>
+                    Amount
+                  </th>
+
+                  <th>
+                    Tax
+                  </th>
+
+                  <th>
+                    Status
+                  </th>
+
+                  <th>
+                    Actions
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody>
+
+                {invoices.length > 0 ? (
+
+                  invoices.map((invoice) => (
+
+                    <tr
+                      key={
+                        invoice.id ||
+                        invoice._id
+                      }
+                    >
+
+                      {/* Vendor */}
+
+                      <td>
+
+                        <div className="invoice-vendor-name">
+                          {invoice.vendor_name ||
+                            "Unknown Vendor"}
+                        </div>
+
+                        {invoice.vendor_gstin && (
+
+                          <div className="invoice-vendor-gstin">
+                            {invoice.vendor_gstin}
+                          </div>
+
+                        )}
+
+                      </td>
+
+
+                      {/* Amount */}
+
+                      <td>
+
+                        <span className="invoice-amount">
+                          ₹
+                          {Number(
+                            invoice.total_amount || 0
+                          ).toLocaleString("en-IN")}
+                        </span>
+
+                      </td>
+
+
+                      {/* Tax */}
+
+                      <td>
+
+                        <span className="invoice-tax">
+                          ₹
+                          {Number(
+                            invoice.tax_amount || 0
+                          ).toLocaleString("en-IN")}
+                        </span>
+
+                      </td>
+
+
+                      {/* Status */}
+
+                      <td>
+
+                        <span className="invoice-status">
+                          {invoice.status ||
+                            "Pending"}
+                        </span>
+
+                      </td>
+
+
+                      {/* Actions */}
+
+                      <td>
+
+                        <div className="invoice-actions">
+
+                          <button
+                            type="button"
+                            className="invoice-action-btn invoice-edit-btn"
+                            title="Edit Invoice"
+                          >
+                            <Edit2 size={17} />
+                          </button>
+
+
+                          <button
+                            type="button"
+                            className="invoice-action-btn invoice-delete-btn"
+                            title="Delete Invoice"
+                            onClick={() =>
+                              handleDelete(
+                                invoice.id ||
+                                invoice._id
+                              )
+                            }
+                          >
+                            <Trash2 size={17} />
+                          </button>
+
+                        </div>
+
+                      </td>
+
+                    </tr>
+
+                  ))
+
+                ) : (
+
+                  <tr>
+
+                    <td
+                      colSpan="5"
+                      className="invoice-empty"
+                    >
+                      No invoices found.
+                      <br />
+
+                      Click
+                      <strong>
+                        {" New Invoice "}
+                      </strong>
+                      to create your first invoice.
+                    </td>
+
+                  </tr>
+
+                )}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
       </div>
+
     </div>
   );
 }
+
