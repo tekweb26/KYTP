@@ -32,7 +32,7 @@
 ===================================================== */
 
 .invoices-header {
-    width: 70%;
+    width: 75%;
     margin: 0 auto 30px;
 
     display: flex;
@@ -103,7 +103,7 @@
 ===================================================== */
 
 .invoice-form-card {
-    width: 70%;
+    width: 80%;
     max-width: none;
 
     margin: 0 auto 30px;
@@ -275,7 +275,7 @@
 ===================================================== */
 
 .invoice-table-card {
-    width: 70%;
+    width: 80%;
     max-width: none;
 
     margin: 0 auto;
