@@ -401,6 +401,10 @@ export default function DashboardPage({ user }) {
           Welcome back, {getUserName()}!
         </h1>
 
+        <p>
+          Here's your GST compliance overview.
+        </p>
+
       </section>
 
 
@@ -1117,8 +1121,8 @@ export default function DashboardPage({ user }) {
       </main>
 
 
-     
-      
+
+
 
     </div>
 

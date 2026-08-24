@@ -13,24 +13,29 @@
 
 
 /* =====================================================
-   WELCOME
+   DASHBOARD WELCOME SECTION
 ===================================================== */
 
 .dashboard-welcome {
   width: 100%;
 
-  min-height: 190px;
-
   display: flex;
+  flex-direction: column;
+
   align-items: center;
   justify-content: center;
 
   text-align: center;
 
-  padding: 40px 20px;
+  padding: 55px 20px 40px;
 
   box-sizing: border-box;
 }
+
+
+/* =====================================================
+   WELCOME TITLE
+===================================================== */
 
 .dashboard-welcome h1 {
   margin: 0;
@@ -46,6 +51,66 @@
   text-align: center;
 }
 
+
+/* =====================================================
+   WELCOME SUBTITLE
+===================================================== */
+
+.dashboard-welcome p {
+  margin: 12px 0 0;
+
+  font-size: 18px;
+
+  line-height: 1.5;
+
+  font-weight: 400;
+
+  color: #6b7280;
+
+  text-align: center;
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 900px) {
+
+  .dashboard-welcome {
+    padding: 45px 20px 35px;
+  }
+
+  .dashboard-welcome h1 {
+    font-size: 38px;
+  }
+
+  .dashboard-welcome p {
+    font-size: 20px;
+  }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+  .dashboard-welcome {
+    padding: 35px 15px 30px;
+  }
+
+  .dashboard-welcome h1 {
+    font-size: 30px;
+  }
+
+  .dashboard-welcome p {
+    font-size: 15px;
+  }
+
+}
 
 /* =====================================================
    MAIN CONTAINER

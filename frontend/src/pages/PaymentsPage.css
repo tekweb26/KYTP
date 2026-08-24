@@ -1,0 +1,650 @@
+/* =====================================================
+   PAYMENTS PAGE
+===================================================== */
+
+.payments-page {
+  width: 100%;
+  min-height: 100vh;
+
+  background: #f5f7fb;
+
+  padding: 40px 30px 60px;
+
+  box-sizing: border-box;
+}
+
+
+/* =====================================================
+   MAIN CONTAINER
+===================================================== */
+
+.payments-container {
+  width: 100%;
+
+  max-width: 1200px;
+
+  margin: 0 auto;
+}
+
+
+/* =====================================================
+   PAGE HEADER
+===================================================== */
+
+.payments-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 30px;
+}
+
+.payments-header h1 {
+  margin: 0;
+
+  font-size: 34px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+
+/* =====================================================
+   PENDING SECTION
+===================================================== */
+
+.pending-section {
+  width: 100%;
+
+  margin-bottom: 30px;
+}
+
+.pending-section h2 {
+  margin: 0 0 18px;
+
+  font-size: 21px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+
+/* =====================================================
+   INVOICE GRID
+===================================================== */
+
+.invoice-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 20px;
+}
+
+
+/* =====================================================
+   INVOICE CARD
+===================================================== */
+
+.invoice-card {
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 14px;
+
+  padding: 22px;
+
+  box-sizing: border-box;
+
+  box-shadow:
+    0 3px 12px
+    rgba(0, 0, 0, 0.05);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.invoice-card:hover {
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 8px 22px
+    rgba(0, 0, 0, 0.09);
+}
+
+
+/* =====================================================
+   INVOICE DETAILS
+===================================================== */
+
+.invoice-detail {
+  margin-bottom: 17px;
+}
+
+.invoice-detail:last-of-type {
+  margin-bottom: 20px;
+}
+
+.invoice-detail-label {
+  margin: 0 0 5px;
+
+  font-size: 13px;
+
+  color: #6b7280;
+
+  font-weight: 500;
+}
+
+.invoice-vendor {
+  margin: 0;
+
+  font-size: 17px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+.invoice-amount {
+  margin: 0;
+
+  font-size: 25px;
+
+  font-weight: 700;
+
+  color: #2563eb;
+}
+
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+.payment-status {
+  display: inline-flex;
+
+  align-items: center;
+
+  padding: 6px 12px;
+
+  border-radius: 20px;
+
+  background: #fef3c7;
+
+  color: #b45309;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  text-transform: capitalize;
+}
+
+
+/* =====================================================
+   UPI BUTTON
+===================================================== */
+
+.upi-button {
+  width: 100%;
+
+  height: 44px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background: #2563eb;
+
+  color: #ffffff;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.upi-button:hover {
+  background: #1d4ed8;
+
+  transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   EMPTY INVOICE
+===================================================== */
+
+.no-pending-invoices {
+  width: 100%;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 14px;
+
+  padding: 45px 20px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  color: #9ca3af;
+
+  font-size: 14px;
+}
+
+
+/* =====================================================
+   PAYMENT HISTORY
+===================================================== */
+
+.payment-history {
+  width: 100%;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 14px;
+
+  padding: 25px;
+
+  box-sizing: border-box;
+
+  box-shadow:
+    0 3px 12px
+    rgba(0, 0, 0, 0.05);
+}
+
+.payment-history h2 {
+  margin: 0 0 20px;
+
+  font-size: 21px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.payment-table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+.payment-table {
+  width: 100%;
+
+  min-width: 650px;
+
+  border-collapse: collapse;
+}
+
+
+/* =====================================================
+   TABLE HEADER
+===================================================== */
+
+.payment-table thead {
+  background: #f8fafc;
+}
+
+.payment-table th {
+  padding: 14px 16px;
+
+  text-align: left;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  color: #475569;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+
+/* =====================================================
+   TABLE BODY
+===================================================== */
+
+.payment-table td {
+  padding: 15px 16px;
+
+  font-size: 14px;
+
+  color: #374151;
+
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.payment-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.payment-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+
+/* =====================================================
+   INVOICE ID
+===================================================== */
+
+.payment-invoice-id {
+  font-family: monospace;
+
+  font-size: 13px;
+
+  color: #475569;
+
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   PAYMENT AMOUNT
+===================================================== */
+
+.payment-amount {
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+
+/* =====================================================
+   PAYMENT STATUS BADGES
+===================================================== */
+
+.payment-history-status {
+  display: inline-flex;
+
+  align-items: center;
+
+  padding: 6px 12px;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  text-transform: capitalize;
+}
+
+.payment-history-status.completed {
+  background: #dcfce7;
+
+  color: #15803d;
+}
+
+.payment-history-status.pending {
+  background: #fef3c7;
+
+  color: #b45309;
+}
+
+
+/* =====================================================
+   PAYMENT DATE
+===================================================== */
+
+.payment-date {
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+
+/* =====================================================
+   EMPTY HISTORY
+===================================================== */
+
+.no-payment-history {
+  text-align: center;
+
+  padding: 45px 20px;
+
+  color: #9ca3af;
+
+  font-size: 14px;
+}
+
+
+/* =====================================================
+   UPI MODAL OVERLAY
+===================================================== */
+
+.upi-modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  width: 100%;
+
+  height: 100%;
+
+  background: rgba(15, 23, 42, 0.55);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  z-index: 9999;
+}
+
+
+/* =====================================================
+   UPI MODAL
+===================================================== */
+
+.upi-modal {
+  width: 100%;
+
+  max-width: 430px;
+
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 20px 50px
+    rgba(0, 0, 0, 0.25);
+}
+
+
+/* =====================================================
+   MODAL HEADER
+===================================================== */
+
+.upi-modal-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 18px 20px;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  position: sticky;
+
+  top: 0;
+
+  background: #ffffff;
+
+  z-index: 2;
+}
+
+.upi-modal-header h2 {
+  margin: 0;
+
+  font-size: 20px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
+
+.upi-close-button {
+  width: 34px;
+
+  height: 34px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: #f1f5f9;
+
+  color: #475569;
+
+  font-size: 24px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.upi-close-button:hover {
+  background: #e2e8f0;
+
+  color: #1f2937;
+}
+
+
+/* =====================================================
+   MODAL CONTENT
+===================================================== */
+
+.upi-modal-content {
+  padding: 20px;
+}
+
+
+/* =====================================================
+   LOADING
+===================================================== */
+
+.payments-loading {
+  min-height: 100vh;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: #f5f7fb;
+
+  color: #6b7280;
+
+  font-size: 15px;
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1000px) {
+
+  .invoice-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 650px) {
+
+  .payments-page {
+    padding: 28px 15px 45px;
+  }
+
+  .payments-header {
+    margin-bottom: 25px;
+  }
+
+  .payments-header h1 {
+    font-size: 28px;
+  }
+
+  .invoice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-card {
+    padding: 20px;
+  }
+
+  .payment-history {
+    padding: 18px;
+  }
+
+  .payment-table {
+    min-width: 600px;
+  }
+
+  .upi-modal-overlay {
+    padding: 12px;
+  }
+
+}

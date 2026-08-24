@@ -1,114 +1,336 @@
-import React, { useState } from 'react';
-import { invoiceAPI } from '../api/api';
-import toast from 'react-hot-toast';
-import { Upload, Check } from 'lucide-react';
+import React, { useState } from "react";
+import { invoiceAPI } from "../api/api";
+import toast from "react-hot-toast";
+import {
+  Upload,
+  Check,
+} from "lucide-react";
+import "./ScannerPage.css";
 
 export default function ScannerPage() {
+
   const [file, setFile] = useState(null);
+
   const [loading, setLoading] = useState(false);
+
   const [result, setResult] = useState(null);
+
   const [preview, setPreview] = useState(null);
 
+
+  /* =====================================================
+     FILE SELECT
+  ===================================================== */
+
   const handleFileSelect = (e) => {
+
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result);
-      };
-      reader.readAsDataURL(selectedFile);
+
+    if (!selectedFile) {
+      return;
     }
+
+    setFile(selectedFile);
+
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setPreview(reader.result);
+    };
+
+    reader.readAsDataURL(selectedFile);
   };
 
+
+  /* =====================================================
+     UPLOAD / SCAN
+  ===================================================== */
+
   const handleUpload = async () => {
+
     if (!file) {
-      toast.error('Please select a file');
+
+      toast.error(
+        "Please select a file"
+      );
+
       return;
     }
 
     setLoading(true);
+
     try {
-      const { data } = await invoiceAPI.upload(file);
+
+      const { data } =
+        await invoiceAPI.upload(file);
+
       setResult(data);
-      toast.success('Receipt scanned successfully!');
+
+      toast.success(
+        "Receipt scanned successfully!"
+      );
+
     } catch (error) {
-      toast.error('Failed to scan receipt');
+
+      console.error(
+        "Receipt scan error:",
+        error
+      );
+
+      toast.error(
+        "Failed to scan receipt"
+      );
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
+
+  /* =====================================================
+     PAGE
+  ===================================================== */
+
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Receipt Scanner</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="card">
-          <h2 className="text-xl font-bold mb-4">Upload Receipt</h2>
-          
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4">
-            {preview ? (
-              <img src={preview} alt="preview" className="max-h-80 mx-auto" />
-            ) : (
-              <div>
-                <Upload size={48} className="mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-600">Drag and drop or click to select</p>
-              </div>
-            )}
-          </div>
+    <div className="scanner-page">
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="w-full mb-4"
-          />
+      <div className="scanner-container">
 
-          <button
-            onClick={handleUpload}
-            disabled={loading || !file}
-            className="w-full btn btn-primary"
-          >
-            {loading ? 'Scanning...' : 'Scan Receipt'}
-          </button>
+
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
+        <div className="scanner-header">
+
+          <h1>
+            Receipt Scanner
+          </h1>
+
+          <p>
+            Upload your receipt and extract invoice details automatically.
+          </p>
+
         </div>
 
-        {result && (
-          <div className="card">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Check className="text-green-600" />
-              Extracted Data
+
+
+        {/* =================================================
+            CONTENT
+        ================================================= */}
+
+        <div className="scanner-content">
+
+
+          {/* =================================================
+              UPLOAD CARD
+          ================================================= */}
+
+          <div className="scanner-card">
+
+
+            <h2>
+              Upload Receipt
             </h2>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-gray-600">Vendor Name</label>
-                <div className="text-lg font-semibold">{result.vendor_name || 'N/A'}</div>
-              </div>
 
-              <div>
-                <label className="text-sm text-gray-600">Vendor GSTIN</label>
-                <div className="text-lg font-mono">{result.vendor_gstin || 'N/A'}</div>
-              </div>
+            {/* UPLOAD BOX */}
 
-              <div>
-                <label className="text-sm text-gray-600">Amount</label>
-                <div className="text-lg font-semibold">₹{result.total_amount || 0}</div>
-              </div>
+            <div className="upload-area">
 
-              <div>
-                <label className="text-sm text-gray-600">Tax Amount</label>
-                <div className="text-lg font-semibold">₹{result.tax_amount || 0}</div>
-              </div>
+              {preview ? (
 
-              <button className="w-full btn btn-primary mt-4">
-                Save as Invoice
-              </button>
+                <img
+                  src={preview}
+                  alt="Receipt preview"
+                  className="receipt-preview"
+                />
+
+              ) : (
+
+                <div className="upload-placeholder">
+
+                  <Upload
+                    size={45}
+                    className="upload-icon"
+                  />
+
+                  <h3>
+                    Upload your receipt
+                  </h3>
+
+                  <p>
+                    Select an image of your receipt
+                  </p>
+
+                </div>
+
+              )}
+
             </div>
+
+
+
+            {/* FILE INPUT */}
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="file-input"
+            />
+
+
+
+            {/* SCAN BUTTON */}
+
+            <button
+              onClick={handleUpload}
+              disabled={
+                loading ||
+                !file
+              }
+              className="scan-button"
+            >
+
+              {loading
+                ? "Scanning..."
+                : "Scan Receipt"}
+
+            </button>
+
           </div>
-        )}
+
+
+
+          {/* =================================================
+              RESULT CARD
+          ================================================= */}
+
+          {result && (
+
+            <div className="scanner-card result-card">
+
+
+              {/* RESULT TITLE */}
+
+              <h2 className="result-heading">
+
+                <Check
+                  size={24}
+                  className="success-icon"
+                />
+
+                Extracted Data
+
+              </h2>
+
+
+
+              <div className="result-data">
+
+
+                {/* VENDOR */}
+
+                <div className="result-item">
+
+                  <label>
+                    Vendor Name
+                  </label>
+
+                  <div className="result-value">
+
+                    {result.vendor_name ||
+                      "N/A"}
+
+                  </div>
+
+                </div>
+
+
+
+                {/* GSTIN */}
+
+                <div className="result-item">
+
+                  <label>
+                    Vendor GSTIN
+                  </label>
+
+                  <div className="result-value gstin">
+
+                    {result.vendor_gstin ||
+                      "N/A"}
+
+                  </div>
+
+                </div>
+
+
+
+                {/* AMOUNT */}
+
+                <div className="result-item">
+
+                  <label>
+                    Amount
+                  </label>
+
+                  <div className="result-value amount">
+
+                    ₹
+                    {result.total_amount ||
+                      0}
+
+                  </div>
+
+                </div>
+
+
+
+                {/* TAX */}
+
+                <div className="result-item">
+
+                  <label>
+                    Tax Amount
+                  </label>
+
+                  <div className="result-value amount">
+
+                    ₹
+                    {result.tax_amount ||
+                      0}
+
+                  </div>
+
+                </div>
+
+
+
+                {/* SAVE */}
+
+                <button
+                  className="save-button"
+                >
+                  Save as Invoice
+                </button>
+
+
+              </div>
+
+            </div>
+
+          )}
+
+        </div>
+
       </div>
+
     </div>
+
   );
 }

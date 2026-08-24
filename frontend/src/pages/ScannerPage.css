@@ -1,0 +1,494 @@
+/* =====================================================
+   SCANNER PAGE
+===================================================== */
+
+.scanner-page {
+  width: 100%;
+
+  min-height: 100vh;
+
+  background: #f5f7fb;
+
+  padding: 45px 20px 60px;
+
+  box-sizing: border-box;
+}
+
+
+/* =====================================================
+   MAIN CONTAINER
+===================================================== */
+
+.scanner-container {
+  width: 100%;
+
+  max-width: 1000px;
+
+  margin: 0 auto;
+
+  box-sizing: border-box;
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.scanner-header {
+  width: 100%;
+
+  text-align: center;
+
+  margin-bottom: 30px;
+}
+
+
+.scanner-header h1 {
+  margin: 0;
+
+  font-size: 38px;
+
+  font-weight: 700;
+
+  line-height: 1.2;
+
+  color: #1f2937;
+}
+
+
+.scanner-header p {
+  margin: 10px 0 0;
+
+  font-size: 15px;
+
+  color: #6b7280;
+}
+
+
+/* =====================================================
+   CONTENT
+===================================================== */
+
+.scanner-content {
+  width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 25px;
+}
+
+
+/* =====================================================
+   CARD
+===================================================== */
+
+.scanner-card {
+  width: 100%;
+
+  max-width: 560px;
+
+  background: #ffffff;
+
+  border-radius: 16px;
+
+  padding: 25px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow:
+    0 4px 18px
+    rgba(0, 0, 0, 0.07);
+}
+
+
+.scanner-card h2 {
+  margin: 0 0 20px;
+
+  font-size: 22px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+
+/* =====================================================
+   UPLOAD AREA
+===================================================== */
+
+.upload-area {
+  width: 100%;
+
+  height: 240px;
+
+  border: 2px dashed #cbd5e1;
+
+  border-radius: 12px;
+
+  background: #f8fafc;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+
+  margin-bottom: 16px;
+}
+
+
+/* =====================================================
+   UPLOAD PLACEHOLDER
+===================================================== */
+
+.upload-placeholder {
+  width: 100%;
+
+  text-align: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+}
+
+
+.upload-icon {
+  display: block;
+
+  margin: 0 auto 12px;
+
+  color: #94a3b8;
+}
+
+
+.upload-placeholder h3 {
+  margin: 0;
+
+  font-size: 17px;
+
+  font-weight: 600;
+
+  color: #374151;
+}
+
+
+.upload-placeholder p {
+  margin: 7px 0 0;
+
+  font-size: 14px;
+
+  color: #9ca3af;
+}
+
+
+/* =====================================================
+   RECEIPT PREVIEW
+===================================================== */
+
+.receipt-preview {
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: contain;
+
+  display: block;
+}
+
+
+/* =====================================================
+   FILE INPUT
+===================================================== */
+
+.file-input {
+  width: 100%;
+
+  height: 44px;
+
+  padding: 8px 10px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #374151;
+
+  font-size: 14px;
+
+  margin-bottom: 15px;
+
+  cursor: pointer;
+}
+
+
+/* =====================================================
+   SCAN BUTTON
+===================================================== */
+
+.scan-button {
+  width: 100%;
+
+  height: 46px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background: #2563eb;
+
+  color: #ffffff;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.scan-button:hover:not(:disabled) {
+  background: #1d4ed8;
+
+  transform: translateY(-1px);
+}
+
+
+.scan-button:disabled {
+  background: #cbd5e1;
+
+  color: #64748b;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+/* =====================================================
+   RESULT CARD
+===================================================== */
+
+.result-card {
+  max-width: 560px;
+}
+
+
+.result-heading {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+}
+
+
+.success-icon {
+  color: #16a34a;
+}
+
+
+/* =====================================================
+   RESULT DATA
+===================================================== */
+
+.result-data {
+  width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 17px;
+}
+
+
+/* =====================================================
+   RESULT ITEM
+===================================================== */
+
+.result-item {
+  width: 100%;
+
+  padding-bottom: 13px;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+
+.result-item label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  font-size: 13px;
+
+  font-weight: 500;
+
+  color: #6b7280;
+}
+
+
+.result-value {
+  font-size: 17px;
+
+  font-weight: 600;
+
+  color: #1f2937;
+}
+
+
+.result-value.gstin {
+  font-family: monospace;
+
+  letter-spacing: 0.5px;
+}
+
+
+.result-value.amount {
+  font-size: 20px;
+
+  color: #111827;
+}
+
+
+/* =====================================================
+   SAVE BUTTON
+===================================================== */
+
+.save-button {
+  width: 100%;
+
+  height: 46px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background: #16a34a;
+
+  color: #ffffff;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.save-button:hover {
+  background: #15803d;
+
+  transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 700px) {
+
+  .scanner-page {
+    padding:
+      35px 18px 45px;
+  }
+
+
+  .scanner-container {
+    max-width: 560px;
+  }
+
+
+  .scanner-header h1 {
+    font-size: 32px;
+  }
+
+
+  .scanner-card {
+    max-width: 100%;
+
+    padding: 22px;
+  }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 480px) {
+
+  .scanner-page {
+    padding:
+      28px 14px 40px;
+  }
+
+
+  .scanner-header {
+    margin-bottom: 25px;
+  }
+
+
+  .scanner-header h1 {
+    font-size: 28px;
+  }
+
+
+  .scanner-header p {
+    font-size: 14px;
+
+    line-height: 1.5;
+  }
+
+
+  .scanner-card {
+    padding: 18px;
+
+    border-radius: 13px;
+  }
+
+
+  .scanner-card h2 {
+    font-size: 20px;
+  }
+
+
+  .upload-area {
+    height: 220px;
+  }
+
+
+  .upload-placeholder h3 {
+    font-size: 16px;
+  }
+
+
+  .upload-placeholder p {
+    font-size: 13px;
+  }
+
+}
