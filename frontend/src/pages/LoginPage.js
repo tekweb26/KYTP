@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { authAPI } from "../api/api";
 import toast from "react-hot-toast";
 import "./LoginPage.css";
 
 export default function LoginPage({ onLogin }) {
-  const [isLogin, setIsLogin] = useState(true);
+
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,34 +15,47 @@ export default function LoginPage({ onLogin }) {
 
 
   /* =====================================================
-     HANDLE LOGIN / REGISTER
+     HANDLE LOGIN
   ===================================================== */
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     if (!email || !password) {
-      toast.error("Please enter email and password");
+
+      toast.error(
+        "Please enter email and password"
+      );
+
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = isLogin
-        ? await authAPI.login(email, password)
-        : await authAPI.register(email, password);
 
-      const data = response.data;
+      const response =
+        await authAPI.login(
+          email,
+          password
+        );
 
-      console.log("Auth Response:", data);
+      const data =
+        response.data;
+
+      console.log(
+        "Login Response:",
+        data
+      );
+
 
       if (data.success) {
+
         toast.success(
-          isLogin
-            ? "Login successful!"
-            : "Registration successful!"
+          "Login successful!"
         );
+
 
         /*
           Backend response:
@@ -51,7 +66,7 @@ export default function LoginPage({ onLogin }) {
             token: "JWT TOKEN"
           }
 
-          App.js मध्ये पूर्ण data पाठवत आहोत.
+          Complete response App.js ला पाठवत आहोत.
         */
 
         onLogin(data);
@@ -59,8 +74,10 @@ export default function LoginPage({ onLogin }) {
         return;
       }
 
+
       toast.error(
-        data.message || "Something went wrong"
+        data.message ||
+        "Login failed"
       );
 
     } catch (error) {
@@ -76,20 +93,21 @@ export default function LoginPage({ onLogin }) {
       );
 
     } finally {
+
       setLoading(false);
+
     }
   };
 
 
   /* =====================================================
-     SWITCH LOGIN / REGISTER
+     GO TO SIGNUP
   ===================================================== */
 
-  const handleModeChange = () => {
-    setIsLogin(!isLogin);
+  const handleSignup = () => {
 
-    setEmail("");
-    setPassword("");
+    navigate("/signup");
+
   };
 
 
@@ -123,22 +141,18 @@ export default function LoginPage({ onLogin }) {
         <div className="kytp-login-heading">
 
           <h1>
-            {isLogin
-              ? "Welcome Back!"
-              : "Create Account"}
+            Welcome Back!
           </h1>
 
           <p>
-            {isLogin
-              ? "Login to access your GST payment dashboard"
-              : "Register to start using the GST Payment Platform"}
+            Login to access your GST payment dashboard
           </p>
 
         </div>
 
 
         {/* =================================================
-            FORM
+            LOGIN FORM
         ================================================= */}
 
         <form
@@ -147,7 +161,9 @@ export default function LoginPage({ onLogin }) {
         >
 
 
-          {/* EMAIL */}
+          {/* =================================================
+              EMAIL
+          ================================================= */}
 
           <div className="kytp-form-group">
 
@@ -170,7 +186,9 @@ export default function LoginPage({ onLogin }) {
           </div>
 
 
-          {/* PASSWORD */}
+          {/* =================================================
+              PASSWORD
+          ================================================= */}
 
           <div className="kytp-form-group">
 
@@ -186,18 +204,16 @@ export default function LoginPage({ onLogin }) {
                 setPassword(e.target.value)
               }
               placeholder="Enter your password"
-              autoComplete={
-                isLogin
-                  ? "current-password"
-                  : "new-password"
-              }
+              autoComplete="current-password"
               required
             />
 
           </div>
 
 
-          {/* SUBMIT BUTTON */}
+          {/* =================================================
+              LOGIN BUTTON
+          ================================================= */}
 
           <button
             type="submit"
@@ -207,9 +223,7 @@ export default function LoginPage({ onLogin }) {
 
             {loading
               ? "Please wait..."
-              : isLogin
-              ? "Login"
-              : "Create Account"}
+              : "Login"}
 
           </button>
 
@@ -217,24 +231,20 @@ export default function LoginPage({ onLogin }) {
 
 
         {/* =================================================
-            SWITCH LOGIN / REGISTER
+            SIGNUP LINK
         ================================================= */}
 
         <div className="kytp-login-switch">
 
           <span>
-            {isLogin
-              ? "Don't have an account?"
-              : "Already have an account?"}
+            Don't have an account?
           </span>
 
           <button
             type="button"
-            onClick={handleModeChange}
+            onClick={handleSignup}
           >
-            {isLogin
-              ? "Register"
-              : "Login"}
+            Sign Up
           </button>
 
         </div>
@@ -247,15 +257,12 @@ export default function LoginPage({ onLogin }) {
         <div className="kytp-demo-box">
 
           <div className="kytp-demo-title">
-            {isLogin
-              ? "Login Information"
-              : "Account Information"}
+            Login Information
           </div>
 
           <p>
-            {isLogin
-              ? "Use the email and password you registered with."
-              : "Your account will be securely stored in MongoDB."}
+            Use the email and password
+            you registered with.
           </p>
 
         </div>
@@ -266,7 +273,9 @@ export default function LoginPage({ onLogin }) {
         ================================================= */}
 
         <div className="kytp-login-footer">
+
           © 2026 KYTP • GST Payment Platform
+
         </div>
 
 
@@ -275,3 +284,4 @@ export default function LoginPage({ onLogin }) {
     </div>
   );
 }
+

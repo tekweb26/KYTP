@@ -4,8 +4,12 @@ import cors from "cors";
 import helmet from "helmet";
 
 import connectDB from "./config/db.js";
+
 import authRoutes from "./routes/authRoutes.js";
+import invoiceRoutes from "./routes/invoiceRoutes.js";
+
 import authMiddleware from "./middleware/authMiddleware.js";
+
 
 /* =====================================================
    ENVIRONMENT VARIABLES
@@ -13,17 +17,20 @@ import authMiddleware from "./middleware/authMiddleware.js";
 
 dotenv.config();
 
+
 /* =====================================================
    APP
 ===================================================== */
 
 const app = express();
 
+
 /* =====================================================
    DATABASE
 ===================================================== */
 
 connectDB();
+
 
 /* =====================================================
    CORS
@@ -34,22 +41,28 @@ const allowedOrigins = [
   "https://kytp.vercel.app",
 ];
 
+
 app.use(
   cors({
     origin: function (origin, callback) {
+
       // Allow requests without origin
-      // such as Postman or server-to-server requests
+      // Example: Postman / server-to-server
+
       if (!origin) {
         return callback(null, true);
       }
+
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
+
       return callback(
         new Error("Not allowed by CORS")
       );
+
     },
 
     methods: [
@@ -72,17 +85,22 @@ app.use(
   })
 );
 
+
 /* =====================================================
    PREFLIGHT REQUEST
 ===================================================== */
 
 app.options("*", cors());
 
+
 /* =====================================================
    SECURITY
 ===================================================== */
 
-app.use(helmet());
+app.use(
+  helmet()
+);
+
 
 /* =====================================================
    BODY PARSER
@@ -94,6 +112,7 @@ app.use(
   })
 );
 
+
 app.use(
   express.urlencoded({
     limit: "50mb",
@@ -101,11 +120,15 @@ app.use(
   })
 );
 
+
 /* =====================================================
    STATIC FILES
 ===================================================== */
 
-app.use(express.static("public"));
+app.use(
+  express.static("public")
+);
+
 
 /* =====================================================
    AUTH ROUTES
@@ -124,6 +147,34 @@ app.use(
   authRoutes
 );
 
+
+/* =====================================================
+   INVOICE ROUTES
+===================================================== */
+
+/*
+   Create Invoice
+   POST /api/invoices
+
+   Get All Invoices
+   GET /api/invoices
+
+   Get Single Invoice
+   GET /api/invoices/:id
+
+   Update Invoice
+   PUT /api/invoices/:id
+
+   Delete Invoice
+   DELETE /api/invoices/:id
+*/
+
+app.use(
+  "/api/invoices",
+  invoiceRoutes
+);
+
+
 /* =====================================================
    PROTECTED PROFILE ROUTE
 ===================================================== */
@@ -132,24 +183,33 @@ app.get(
   "/api/auth/profile",
   authMiddleware,
   (req, res) => {
+
     res.status(200).json({
+
       success: true,
 
       message:
         "Protected route accessed successfully",
 
-      user: req.user,
+      user:
+        req.user,
+
     });
+
   }
 );
+
 
 /* =====================================================
    GST MOCK DATABASE
 ===================================================== */
 
 const gstDatabase = {
+
   "27ABCDE1234F1Z5": {
-    gstin: "27ABCDE1234F1Z5",
+
+    gstin:
+      "27ABCDE1234F1Z5",
 
     businessName:
       "TECH SOLUTIONS PRIVATE LIMITED",
@@ -160,11 +220,14 @@ const gstDatabase = {
     registeredAddress:
       "123 Business Park, Mumbai, Maharashtra 400001",
 
-    state: "Maharashtra",
+    state:
+      "Maharashtra",
 
-    stateCode: "27",
+    stateCode:
+      "27",
 
-    panNumber: "ABCDE1234F",
+    panNumber:
+      "ABCDE1234F",
 
     registrationDate:
       "2020-01-15",
@@ -178,21 +241,28 @@ const gstDatabase = {
     returnStatus:
       "Filed",
 
-    outstandingTax: 0,
+    outstandingTax:
+      0,
 
-    invoicesPending: 0,
+    invoicesPending:
+      0,
 
-    filedReturns: 24,
+    filedReturns:
+      24,
 
     category:
       "Regular",
 
     businessActivity:
       "Software Development & IT Services",
+
   },
 
+
   "36AABCT1234H1Z0": {
-    gstin: "36AABCT1234H1Z0",
+
+    gstin:
+      "36AABCT1234H1Z0",
 
     businessName:
       "APEX MANUFACTURING CORPORATION",
@@ -203,11 +273,14 @@ const gstDatabase = {
     registeredAddress:
       "Plot 45, Industrial Area, Hyderabad, Telangana 500032",
 
-    state: "Telangana",
+    state:
+      "Telangana",
 
-    stateCode: "36",
+    stateCode:
+      "36",
 
-    panNumber: "AABCT1234H",
+    panNumber:
+      "AABCT1234H",
 
     registrationDate:
       "2019-06-20",
@@ -221,21 +294,28 @@ const gstDatabase = {
     returnStatus:
       "Filed",
 
-    outstandingTax: 15000,
+    outstandingTax:
+      15000,
 
-    invoicesPending: 5,
+    invoicesPending:
+      5,
 
-    filedReturns: 18,
+    filedReturns:
+      18,
 
     category:
       "Regular",
 
     businessActivity:
       "Manufacturing of Industrial Equipment",
+
   },
 
+
   "19AABCC1234G1Z5": {
-    gstin: "19AABCC1234G1Z5",
+
+    gstin:
+      "19AABCC1234G1Z5",
 
     businessName:
       "AGRO EXPORT SOLUTIONS LLP",
@@ -246,11 +326,14 @@ const gstDatabase = {
     registeredAddress:
       "Sector 12, Delhi 110001",
 
-    state: "Delhi",
+    state:
+      "Delhi",
 
-    stateCode: "19",
+    stateCode:
+      "19",
 
-    panNumber: "AABCC1234G",
+    panNumber:
+      "AABCC1234G",
 
     registrationDate:
       "2021-03-10",
@@ -264,30 +347,39 @@ const gstDatabase = {
     returnStatus:
       "Overdue",
 
-    outstandingTax: 125000,
+    outstandingTax:
+      125000,
 
-    invoicesPending: 23,
+    invoicesPending:
+      23,
 
-    filedReturns: 12,
+    filedReturns:
+      12,
 
     category:
       "Regular",
 
     businessActivity:
       "Agricultural Products Export",
+
   },
+
 };
+
 
 /* =====================================================
    GST FORMAT VALIDATION
 ===================================================== */
 
 function isValidGSTFormat(gstin) {
+
   const gstRegex =
-    /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9]{1}$/;
+    /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
   return gstRegex.test(gstin);
+
 }
+
 
 /* =====================================================
    GST CHECK DIGIT
@@ -296,6 +388,7 @@ function isValidGSTFormat(gstin) {
 function calculateGSTCheckDigit(
   gstWithoutCheck
 ) {
+
   const factor = [
     0,
     1,
@@ -309,7 +402,9 @@ function calculateGSTCheckDigit(
     9,
   ];
 
+
   const charMap = {
+
     A: 10,
     B: 11,
     C: 12,
@@ -336,27 +431,35 @@ function calculateGSTCheckDigit(
     X: 33,
     Y: 34,
     Z: 35,
+
   };
 
+
   let sum = 0;
+
   let position = 0;
+
 
   for (
     let i = gstWithoutCheck.length - 1;
     i >= 0;
     i--
   ) {
+
     const char =
       gstWithoutCheck[i];
+
 
     const digit =
       isNaN(char)
         ? charMap[char]
         : parseInt(char);
 
+
     const product =
       digit *
       factor[position % 10];
+
 
     sum +=
       Math.floor(
@@ -364,28 +467,38 @@ function calculateGSTCheckDigit(
       ) +
       (product % 36);
 
+
     position++;
+
   }
+
 
   const checkDigit =
     (36 - (sum % 36)) % 36;
 
+
   return checkDigit < 10
+
     ? checkDigit.toString()
+
     : String.fromCharCode(
         55 + checkDigit
       );
+
 }
+
 
 /* =====================================================
    GST VALIDATION FUNCTION
 ===================================================== */
 
 function validateGST(gstin) {
+
   const cleanGST =
     gstin
       .toUpperCase()
       .trim();
+
 
   /* ---------------------------------------------
      FORMAT CHECK
@@ -396,7 +509,9 @@ function validateGST(gstin) {
       cleanGST
     )
   ) {
+
     return {
+
       isValid: false,
 
       message:
@@ -404,8 +519,11 @@ function validateGST(gstin) {
 
       error:
         "FORMAT_INVALID",
+
     };
+
   }
+
 
   /* ---------------------------------------------
      MOCK DATABASE CHECK
@@ -414,7 +532,9 @@ function validateGST(gstin) {
   if (
     gstDatabase[cleanGST]
   ) {
+
     return {
+
       isValid: true,
 
       message:
@@ -422,8 +542,11 @@ function validateGST(gstin) {
 
       data:
         gstDatabase[cleanGST],
+
     };
+
   }
+
 
   /* ---------------------------------------------
      EXTRACT GST INFORMATION
@@ -435,11 +558,13 @@ function validateGST(gstin) {
       2
     );
 
+
   const panNumber =
     cleanGST.substring(
       2,
       12
     );
+
 
   const gstWithoutCheckDigit =
     cleanGST.substring(
@@ -447,13 +572,16 @@ function validateGST(gstin) {
       14
     );
 
+
   const providedCheckDigit =
     cleanGST[14];
+
 
   const calculatedCheckDigit =
     calculateGSTCheckDigit(
       gstWithoutCheckDigit
     );
+
 
   /* ---------------------------------------------
      CHECKSUM VALIDATION
@@ -463,7 +591,9 @@ function validateGST(gstin) {
     providedCheckDigit !==
     calculatedCheckDigit
   ) {
+
     return {
+
       isValid: false,
 
       message:
@@ -471,14 +601,18 @@ function validateGST(gstin) {
 
       error:
         "CHECKSUM_INVALID",
+
     };
+
   }
+
 
   /* ---------------------------------------------
      MOCK GST DATA
   --------------------------------------------- */
 
   const mockData = {
+
     gstin:
       cleanGST,
 
@@ -512,20 +646,26 @@ function validateGST(gstin) {
     returnStatus:
       "Filed",
 
-    outstandingTax: 0,
+    outstandingTax:
+      0,
 
-    invoicesPending: 0,
+    invoicesPending:
+      0,
 
-    filedReturns: 12,
+    filedReturns:
+      12,
 
     category:
       "Regular",
 
     businessActivity:
       "General Business Activity",
+
   };
 
+
   return {
+
     isValid: true,
 
     message:
@@ -533,8 +673,11 @@ function validateGST(gstin) {
 
     data:
       mockData,
+
   };
+
 }
+
 
 /* =====================================================
    GST POST ROUTE
@@ -543,13 +686,18 @@ function validateGST(gstin) {
 app.post(
   "/api/gst/validate",
   (req, res) => {
-    const { gstin } =
-      req.body;
+
+    const {
+      gstin,
+    } = req.body;
+
 
     if (!gstin) {
+
       return res
         .status(400)
         .json({
+
           isValid: false,
 
           message:
@@ -557,24 +705,31 @@ app.post(
 
           error:
             "GSTIN_REQUIRED",
+
         });
+
     }
+
 
     const result =
       validateGST(
         gstin
       );
 
+
     const statusCode =
       result.isValid
         ? 200
         : 400;
 
+
     res
       .status(statusCode)
       .json(result);
+
   }
 );
+
 
 /* =====================================================
    GST GET ROUTE
@@ -583,21 +738,26 @@ app.post(
 app.get(
   "/api/gst/validate/:gstin",
   (req, res) => {
+
     const result =
       validateGST(
         req.params.gstin
       );
+
 
     const statusCode =
       result.isValid
         ? 200
         : 400;
 
+
     res
       .status(statusCode)
       .json(result);
+
   }
 );
+
 
 /* =====================================================
    HEALTH CHECK
@@ -606,17 +766,23 @@ app.get(
 app.get(
   "/health",
   (req, res) => {
+
     res.status(200).json({
-      status: "OK",
+
+      status:
+        "OK",
 
       timestamp:
         new Date(),
 
       message:
         "GST Payment Platform API is running",
+
     });
+
   }
 );
+
 
 /* =====================================================
    HOME ROUTE
@@ -625,8 +791,11 @@ app.get(
 app.get(
   "/",
   (req, res) => {
+
     res.status(200).json({
-      success: true,
+
+      success:
+        true,
 
       message:
         "GST Payment Platform API",
@@ -635,7 +804,9 @@ app.get(
         "0.1.0",
 
       endpoints: {
+
         auth: {
+
           register:
             "POST /api/auth/register",
 
@@ -644,22 +815,51 @@ app.get(
 
           profile:
             "GET /api/auth/profile",
+
         },
 
+
+        invoice: {
+
+          create:
+            "POST /api/invoices",
+
+          list:
+            "GET /api/invoices",
+
+          get:
+            "GET /api/invoices/:id",
+
+          update:
+            "PUT /api/invoices/:id",
+
+          delete:
+            "DELETE /api/invoices/:id",
+
+        },
+
+
         gst: {
+
           validate:
             "POST /api/gst/validate",
 
           validateGet:
             "GET /api/gst/validate/:gstin",
+
         },
+
 
         health:
           "GET /health",
+
       },
+
     });
+
   }
 );
+
 
 /* =====================================================
    404 HANDLER
@@ -667,17 +867,23 @@ app.get(
 
 app.use(
   (req, res) => {
+
     res.status(404).json({
-      success: false,
+
+      success:
+        false,
 
       message:
         "Route not found",
 
       path:
         req.originalUrl,
+
     });
+
   }
 );
+
 
 /* =====================================================
    ERROR HANDLER
@@ -690,24 +896,31 @@ app.use(
     res,
     next
   ) => {
+
     console.error(
       "Server Error:",
       err
     );
+
 
     res
       .status(
         err.status || 500
       )
       .json({
-        success: false,
+
+        success:
+          false,
 
         message:
           err.message ||
           "Internal Server Error",
+
       });
+
   }
 );
+
 
 /* =====================================================
    SERVER
@@ -716,11 +929,14 @@ app.use(
 const PORT =
   process.env.PORT || 5000;
 
+
 app.listen(
   PORT,
   () => {
+
     console.log(
       `Server running on port ${PORT}`
     );
+
   }
 );

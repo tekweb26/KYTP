@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -13,6 +14,8 @@ import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+
 import DashboardPage from "./pages/DashboardPage";
 import InvoicesPage from "./pages/InvoicesPage";
 import PaymentsPage from "./pages/PaymentsPage";
@@ -27,6 +30,7 @@ function App() {
       !!localStorage.getItem("token")
     );
 
+
   const [user, setUser] = useState(
     JSON.parse(
       localStorage.getItem("user") || "null"
@@ -35,7 +39,7 @@ function App() {
 
 
   /* =====================================================
-     LOGIN
+     LOGIN / SIGNUP SUCCESS
   ===================================================== */
 
   const handleLogin = (loginData) => {
@@ -78,7 +82,10 @@ function App() {
 
       <div className="min-h-screen bg-gray-50">
 
-        {/* NAVBAR */}
+
+        {/* =================================================
+            NAVBAR
+        ================================================= */}
 
         {isAuthenticated && (
           <Navbar
@@ -88,18 +95,25 @@ function App() {
         )}
 
 
-        {/* TOASTER */}
+        {/* =================================================
+            TOASTER
+        ================================================= */}
 
         <Toaster
           position="top-right"
         />
 
 
-        {/* ROUTES */}
+        {/* =================================================
+            ROUTES
+        ================================================= */}
 
         <Routes>
 
-          {/* LOGIN */}
+
+          {/* =================================================
+              LOGIN
+          ================================================= */}
 
           <Route
             path="/login"
@@ -115,7 +129,27 @@ function App() {
           />
 
 
-          {/* DASHBOARD */}
+          {/* =================================================
+              SIGNUP
+          ================================================= */}
+
+          <Route
+            path="/signup"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" />
+              ) : (
+                <SignupPage
+                  onLogin={handleLogin}
+                />
+              )
+            }
+          />
+
+
+          {/* =================================================
+              DASHBOARD
+          ================================================= */}
 
           <Route
             path="/dashboard"
@@ -133,7 +167,9 @@ function App() {
           />
 
 
-          {/* INVOICES */}
+          {/* =================================================
+              INVOICES
+          ================================================= */}
 
           <Route
             path="/invoices"
@@ -151,7 +187,9 @@ function App() {
           />
 
 
-          {/* PAYMENTS */}
+          {/* =================================================
+              PAYMENTS
+          ================================================= */}
 
           <Route
             path="/payments"
@@ -169,7 +207,9 @@ function App() {
           />
 
 
-          {/* SCANNER */}
+          {/* =================================================
+              SCANNER
+          ================================================= */}
 
           <Route
             path="/scanner"
@@ -187,7 +227,9 @@ function App() {
           />
 
 
-          {/* GST */}
+          {/* =================================================
+              GST
+          ================================================= */}
 
           <Route
             path="/gst"
@@ -205,29 +247,35 @@ function App() {
           />
 
 
-          {/* DEFAULT */}
+          {/* =================================================
+              DEFAULT
+          ================================================= */}
 
           <Route
             path="/"
             element={
-              <Navigate to="/dashboard" />
+              <Navigate to="/login" />
             }
           />
 
 
-          {/* UNKNOWN ROUTE */}
+          {/* =================================================
+              UNKNOWN ROUTE
+          ================================================= */}
 
           <Route
             path="*"
             element={
-              <Navigate to="/dashboard" />
+              <Navigate to="/login" />
             }
           />
 
         </Routes>
 
 
-        {/* FOOTER */}
+        {/* =================================================
+            FOOTER
+        ================================================= */}
 
         <Footer />
 
@@ -239,3 +287,4 @@ function App() {
 
 
 export default App;
+

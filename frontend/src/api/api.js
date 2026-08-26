@@ -1,6 +1,13 @@
 import axios from "axios";
 
-const API_URL = 'https://kytp-backend.onrender.com/api';
+
+/* =====================================================
+   API BASE URL
+===================================================== */
+
+const API_URL =
+  process.env.REACT_APP_API_BASE_URL ||
+  "https://kytp-backend.onrender.com//api";
 
 
 /* =====================================================
@@ -8,48 +15,72 @@ const API_URL = 'https://kytp-backend.onrender.com/api';
 ===================================================== */
 
 const api = axios.create({
+
   baseURL: API_URL,
+
   headers: {
     "Content-Type": "application/json",
   },
+
 });
 
 
 /* =====================================================
-   ADD JWT TOKEN
+   REQUEST INTERCEPTOR
 ===================================================== */
 
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(
 
-  const token = localStorage.getItem("token");
+  (config) => {
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    const token =
+      localStorage.getItem("token");
+
+    if (token) {
+
+      config.headers.Authorization =
+        `Bearer ${token}`;
+
+    }
+
+    return config;
+
+  },
+
+  (error) => {
+
+    return Promise.reject(error);
+
   }
 
-  return config;
-});
+);
 
 
 /* =====================================================
-   ERROR HANDLING
+   RESPONSE INTERCEPTOR
 ===================================================== */
 
 api.interceptors.response.use(
 
-  (response) => response,
+  (response) => {
+
+    return response;
+
+  },
 
   (error) => {
 
-    if (error.response?.status === 401) {
+    if (
+      error.response?.status === 401
+    ) {
 
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
-      window.location.href = "/login";
     }
 
     return Promise.reject(error);
+
   }
 
 );
@@ -61,17 +92,55 @@ api.interceptors.response.use(
 
 export const authAPI = {
 
-  register: (email, password) =>
-    api.post("/auth/register", {
-      email,
-      password,
-    }),
 
-  login: (email, password) =>
-    api.post("/auth/login", {
-      email,
-      password,
-    }),
+  /* ===================================================
+     REGISTER / SIGNUP
+     
+     IMPORTANT:
+     SignupPage कडून पूर्ण object येत आहे.
+  =================================================== */
+
+  register: (data) => {
+
+    return api.post(
+      "/auth/register",
+      data
+    );
+
+  },
+
+
+  /* ===================================================
+     LOGIN
+  =================================================== */
+
+  login: (
+    email,
+    password
+  ) => {
+
+    return api.post(
+      "/auth/login",
+      {
+        email,
+        password,
+      }
+    );
+
+  },
+
+
+  /* ===================================================
+     PROFILE
+  =================================================== */
+
+  profile: () => {
+
+    return api.get(
+      "/auth/profile"
+    );
+
+  },
 
 };
 
@@ -82,29 +151,75 @@ export const authAPI = {
 
 export const invoiceAPI = {
 
-  list: () =>
-    api.get("/invoices"),
 
-  create: (data) =>
-    api.post("/invoices", data),
+  /* ---------------------------------------------------
+     LIST
+  --------------------------------------------------- */
 
-  upload: (file) => {
+  list: () => {
 
-    const formData = new FormData();
-
-    formData.append("file", file);
-
-    return api.post(
-      "/invoices/upload",
-      formData
+    return api.get(
+      "/invoices"
     );
+
   },
 
-  update: (id, data) =>
-    api.put(`/invoices/${id}`, data),
 
-  delete: (id) =>
-    api.delete(`/invoices/${id}`),
+  /* ---------------------------------------------------
+     CREATE
+  --------------------------------------------------- */
+
+  create: (data) => {
+
+    return api.post(
+      "/invoices",
+      data
+    );
+
+  },
+
+
+  /* ---------------------------------------------------
+     DELETE
+  --------------------------------------------------- */
+
+  delete: (id) => {
+
+    return api.delete(
+      `/invoices/${id}`
+    );
+
+  },
+
+
+  /* ---------------------------------------------------
+     GET SINGLE INVOICE
+  --------------------------------------------------- */
+
+  get: (id) => {
+
+    return api.get(
+      `/invoices/${id}`
+    );
+
+  },
+
+
+  /* ---------------------------------------------------
+     UPDATE
+  --------------------------------------------------- */
+
+  update: (
+    id,
+    data
+  ) => {
+
+    return api.put(
+      `/invoices/${id}`,
+      data
+    );
+
+  },
 
 };
 
@@ -115,26 +230,32 @@ export const invoiceAPI = {
 
 export const paymentAPI = {
 
-  initiate: (data) =>
-    api.post("/payments/initiate", data),
 
-  verify: (paymentId, data) =>
-    api.post(
-      `/payments/${paymentId}/verify`,
+  /* ---------------------------------------------------
+     LIST PAYMENTS
+  --------------------------------------------------- */
+
+  list: () => {
+
+    return api.get(
+      "/payments"
+    );
+
+  },
+
+
+  /* ---------------------------------------------------
+     CREATE PAYMENT
+  --------------------------------------------------- */
+
+  create: (data) => {
+
+    return api.post(
+      "/payments",
       data
-    ),
+    );
 
-  list: () =>
-    api.get("/payments"),
-
-  record: (invoiceId, data) =>
-    api.post(
-      "/payments/record",
-      {
-        invoiceId,
-        ...data,
-      }
-    ),
+  },
 
 };
 
@@ -145,28 +266,24 @@ export const paymentAPI = {
 
 export const gstAPI = {
 
-  monthlySummary: (month, year) =>
-    api.get(
-      `/gst/monthly-summary?month=${month}&year=${year}`
-    ),
 
-  reports: () =>
-    api.get("/gst/reports"),
+  /* ---------------------------------------------------
+     VALIDATE GST
+  --------------------------------------------------- */
 
-  calculateTax: (amount, taxRate) =>
-    api.post(
-      "/gst/calculate",
-      {
-        amount,
-        taxRate,
-      }
-    ),
+  validate: (gstin) => {
+
+    return api.get(
+      `/gst/validate/${gstin}`
+    );
+
+  },
 
 };
 
 
 /* =====================================================
-   EXPORT
+   DEFAULT EXPORT
 ===================================================== */
 
 export default api;
