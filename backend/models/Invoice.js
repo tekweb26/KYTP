@@ -4,7 +4,6 @@ const invoiceSchema = new mongoose.Schema(
   {
     /* =====================================================
        USER
-       कोणत्या logged-in user ने invoice तयार केला
     ===================================================== */
 
     user_id: {
@@ -16,7 +15,47 @@ const invoiceSchema = new mongoose.Schema(
 
 
     /* =====================================================
-       VENDOR DETAILS
+       INVOICE NUMBER - MANUAL
+    ===================================================== */
+
+    invoice_number: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+
+    /* =====================================================
+       INVOICE DATE - MANUAL
+    ===================================================== */
+
+    invoice_date: {
+      type: Date,
+      required: true,
+    },
+
+
+    /* =====================================================
+       STORED YEAR / MONTH
+    ===================================================== */
+
+    invoice_year: {
+      type: Number,
+      required: true,
+      index: true,
+    },
+
+    invoice_month: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 12,
+      index: true,
+    },
+
+
+    /* =====================================================
+       VENDOR
     ===================================================== */
 
     vendor_name: {
@@ -24,6 +63,22 @@ const invoiceSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
+
+    /* =====================================================
+       VENDOR GST AVAILABLE
+    ===================================================== */
+
+    vendor_has_gst: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+
+
+    /* =====================================================
+       VENDOR GST
+    ===================================================== */
 
     vendor_gstin: {
       type: String,
@@ -35,7 +90,17 @@ const invoiceSchema = new mongoose.Schema(
 
     /* =====================================================
        VENDOR STATE
-       GST च्या पहिल्या 2 digits वरून state code
+    ===================================================== */
+
+    vendor_state: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+
+    /* =====================================================
+       VENDOR STATE CODE
     ===================================================== */
 
     vendor_state_code: {
@@ -47,42 +112,26 @@ const invoiceSchema = new mongoose.Schema(
 
     /* =====================================================
        TAX TYPE
-
-       CGST_SGST = Same State
-       IGST       = Different State
     ===================================================== */
 
     tax_type: {
       type: String,
-
       enum: [
         "CGST_SGST",
         "IGST",
       ],
-
       required: true,
     },
 
 
     /* =====================================================
-       TAX RATE
-
-       User manually rate enter करेल.
-
-       Example:
-       5
-       12
-       18
-       28
+       GST RATE
     ===================================================== */
 
     gst_rate: {
       type: Number,
-
       required: true,
-
       min: 0,
-
       max: 100,
     },
 
@@ -93,19 +142,14 @@ const invoiceSchema = new mongoose.Schema(
 
     cgst_rate: {
       type: Number,
-
       default: 0,
-
       min: 0,
-
       max: 100,
     },
 
     cgst_amount: {
       type: Number,
-
       default: 0,
-
       min: 0,
     },
 
@@ -116,19 +160,14 @@ const invoiceSchema = new mongoose.Schema(
 
     sgst_rate: {
       type: Number,
-
       default: 0,
-
       min: 0,
-
       max: 100,
     },
 
     sgst_amount: {
       type: Number,
-
       default: 0,
-
       min: 0,
     },
 
@@ -139,19 +178,14 @@ const invoiceSchema = new mongoose.Schema(
 
     igst_rate: {
       type: Number,
-
       default: 0,
-
       min: 0,
-
       max: 100,
     },
 
     igst_amount: {
       type: Number,
-
       default: 0,
-
       min: 0,
     },
 
@@ -162,37 +196,21 @@ const invoiceSchema = new mongoose.Schema(
 
     total_amount: {
       type: Number,
-
       required: true,
-
       min: 0,
     },
 
-
-    /* =====================================================
-       TAX TOTAL
-    ===================================================== */
 
     total_tax: {
       type: Number,
-
       default: 0,
-
       min: 0,
     },
 
 
-    /* =====================================================
-       GRAND TOTAL
-
-       total_amount + total_tax
-    ===================================================== */
-
     grand_total: {
       type: Number,
-
       default: 0,
-
       min: 0,
     },
 
@@ -203,9 +221,7 @@ const invoiceSchema = new mongoose.Schema(
 
     description: {
       type: String,
-
       trim: true,
-
       default: "",
     },
 
@@ -216,17 +232,14 @@ const invoiceSchema = new mongoose.Schema(
 
     status: {
       type: String,
-
       enum: [
         "Pending",
         "Paid",
         "Cancelled",
       ],
-
       default: "Pending",
     },
   },
-
 
   {
     timestamps: true,
@@ -234,14 +247,10 @@ const invoiceSchema = new mongoose.Schema(
 );
 
 
-/* =====================================================
-   MODEL
-===================================================== */
-
-const Invoice = mongoose.model(
-  "Invoice",
-  invoiceSchema
-);
-
+const Invoice =
+  mongoose.model(
+    "Invoice",
+    invoiceSchema
+  );
 
 export default Invoice;

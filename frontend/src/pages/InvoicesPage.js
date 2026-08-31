@@ -1,76 +1,160 @@
+import React, {
+  useEffect,
+  useState,
+} from "react";
 
-import React, { useEffect, useState } from "react";
 import { invoiceAPI } from "../api/api";
+
 import toast from "react-hot-toast";
+
 import {
   Plus,
   Trash2,
   Edit2,
   Eye,
   X,
+  Printer,
+  ChevronDown,
+  ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
+
 import "./InvoicesPage.css";
+
 
 export default function InvoicesPage() {
 
+  const [invoices, setInvoices] =
+    useState([]);
+
+  const [showForm, setShowForm] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [creating, setCreating] =
+    useState(false);
+
+  const [selectedInvoice, setSelectedInvoice] =
+    useState(null);
+
+  const [showViewModal, setShowViewModal] =
+    useState(false);
+
+  const [selectedYear, setSelectedYear] =
+    useState(null);
+
+  const [selectedMonth, setSelectedMonth] =
+    useState(null);
+
+
   /* =====================================================
-     STATE
+     FORM
   ===================================================== */
 
-  const [invoices, setInvoices] = useState([]);
+  const [formData, setFormData] =
+    useState({
 
-  const [showForm, setShowForm] = useState(false);
+      invoice_number: "",
 
-  const [loading, setLoading] = useState(true);
+      invoice_date: "",
 
-  const [creating, setCreating] = useState(false);
+      vendor_name: "",
+
+      vendor_has_gst: "",
+
+      vendor_gstin: "",
+
+      vendor_state: "",
+
+      total_amount: "",
+
+      gst_rate: "",
+
+      description: "",
+    });
+
+
+  const [gstError, setGstError] =
+    useState("");
+
 
   /* =====================================================
-     VIEW MODAL
+     STATES
   ===================================================== */
 
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const states = [
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Delhi",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Puducherry",
+    "Chandigarh",
+  ];
 
-  const [showViewModal, setShowViewModal] = useState(false);
 
   /* =====================================================
-     FORM DATA
-  ===================================================== */
-
-  const [formData, setFormData] = useState({
-    vendor_name: "",
-    vendor_gstin: "",
-    total_amount: "",
-    gst_rate: "",
-    description: "",
-  });
-
-  /* =====================================================
-     GST ERROR
-  ===================================================== */
-
-  const [gstError, setGstError] = useState("");
-
-  /* =====================================================
-     LOAD INVOICES
+     LOAD
   ===================================================== */
 
   useEffect(() => {
     loadInvoices();
   }, []);
 
+
   const loadInvoices = async () => {
+
     try {
 
-      const response = await invoiceAPI.list();
+      const response =
+        await invoiceAPI.list();
 
-      const data = response.data;
+      const data =
+        response.data;
 
       if (Array.isArray(data)) {
         setInvoices(data);
-      } else if (Array.isArray(data?.invoices)) {
-        setInvoices(data.invoices);
-      } else {
+      }
+
+      else if (
+        Array.isArray(
+          data?.invoices
+        )
+      ) {
+        setInvoices(
+          data.invoices
+        );
+      }
+
+      else {
         setInvoices([]);
       }
 
@@ -89,12 +173,12 @@ export default function InvoicesPage() {
     } finally {
 
       setLoading(false);
-
     }
   };
 
+
   /* =====================================================
-     FORM CHANGE
+     CHANGE
   ===================================================== */
 
   const handleChange = (e) => {
@@ -104,64 +188,82 @@ export default function InvoicesPage() {
       value,
     } = e.target;
 
-    let finalValue = value;
 
-    /* ---------------------------------------------
-       VENDOR GST
-    --------------------------------------------- */
+    let finalValue =
+      value;
 
-    if (name === "vendor_gstin") {
 
-      finalValue = value
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 15);
+    if (
+      name ===
+      "vendor_gstin"
+    ) {
 
-      validateVendorGST(finalValue);
+      finalValue =
+        value
+          .toUpperCase()
+          .replace(
+            /[^A-Z0-9]/g,
+            ""
+          )
+          .slice(0, 15);
+
+      validateVendorGST(
+        finalValue
+      );
     }
 
-    /* ---------------------------------------------
-       GST RATE
-    --------------------------------------------- */
 
-    if (name === "gst_rate") {
+    if (
+      name ===
+      "total_amount"
+    ) {
 
-      finalValue = value
-        .replace(/[^0-9.]/g, "");
-
+      finalValue =
+        value.replace(
+          /[^0-9.]/g,
+          ""
+        );
     }
 
-    /* ---------------------------------------------
-       TOTAL AMOUNT
-    --------------------------------------------- */
 
-    if (name === "total_amount") {
+    if (
+      name ===
+      "gst_rate"
+    ) {
 
-      finalValue = value
-        .replace(/[^0-9.]/g, "");
-
+      finalValue =
+        value.replace(
+          /[^0-9.]/g,
+          ""
+        );
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: finalValue,
-    }));
 
+    setFormData(
+      (prev) => ({
+        ...prev,
+        [name]:
+          finalValue,
+      })
+    );
   };
 
+
   /* =====================================================
-     VALIDATE VENDOR GST
+     GST VALIDATION
   ===================================================== */
 
-  const validateVendorGST = (gst) => {
+  const validateVendorGST = (
+    gst
+  ) => {
 
     if (!gst) {
 
       setGstError("");
 
       return false;
-
     }
+
 
     if (gst.length < 15) {
 
@@ -170,11 +272,12 @@ export default function InvoicesPage() {
       );
 
       return false;
-
     }
+
 
     const gstRegex =
       /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
 
     if (!gstRegex.test(gst)) {
 
@@ -183,304 +286,512 @@ export default function InvoicesPage() {
       );
 
       return false;
-
     }
+
 
     setGstError("");
 
     return true;
   };
 
+
   /* =====================================================
-     RESET FORM
+     RESET
   ===================================================== */
 
   const resetForm = () => {
 
     setFormData({
+
+      invoice_number: "",
+
+      invoice_date: "",
+
       vendor_name: "",
+
+      vendor_has_gst: "",
+
       vendor_gstin: "",
+
+      vendor_state: "",
+
       total_amount: "",
+
       gst_rate: "",
+
       description: "",
     });
 
     setGstError("");
-
   };
 
+
   /* =====================================================
-     CREATE INVOICE
+     SUBMIT
   ===================================================== */
 
-  const handleSubmit = async (e) => {
+  const handleSubmit =
+    async (e) => {
 
-    e.preventDefault();
+      e.preventDefault();
 
-    /* ---------------------------------------------
-       VENDOR NAME
-    --------------------------------------------- */
 
-    if (!formData.vendor_name.trim()) {
-
-      toast.error(
-        "Please enter vendor name"
-      );
-
-      return;
-    }
-
-    /* ---------------------------------------------
-       VENDOR GST
-    --------------------------------------------- */
-
-    const cleanGST =
-      formData.vendor_gstin
-        .toUpperCase()
-        .trim();
-
-    if (!cleanGST) {
-
-      toast.error(
-        "Please enter vendor GST number"
-      );
-
-      return;
-    }
-
-    if (!validateVendorGST(cleanGST)) {
-
-      toast.error(
-        "Please enter a valid vendor GST number"
-      );
-
-      return;
-    }
-
-    /* ---------------------------------------------
-       TOTAL AMOUNT
-    --------------------------------------------- */
-
-    if (formData.total_amount === "") {
-
-      toast.error(
-        "Please enter total amount"
-      );
-
-      return;
-    }
-
-    const totalAmount =
-      Number(formData.total_amount);
-
-    if (
-      Number.isNaN(totalAmount) ||
-      totalAmount <= 0
-    ) {
-
-      toast.error(
-        "Please enter a valid total amount"
-      );
-
-      return;
-    }
-
-    /* ---------------------------------------------
-       GST RATE
-    --------------------------------------------- */
-
-    if (formData.gst_rate === "") {
-
-      toast.error(
-        "Please enter GST rate"
-      );
-
-      return;
-    }
-
-    const gstRate =
-      Number(formData.gst_rate);
-
-    if (
-      Number.isNaN(gstRate) ||
-      gstRate < 0 ||
-      gstRate > 100
-    ) {
-
-      toast.error(
-        "GST rate must be between 0 and 100"
-      );
-
-      return;
-    }
-
-    /* ---------------------------------------------
-       CREATE
-    --------------------------------------------- */
-
-    setCreating(true);
-
-    try {
-
-      const invoiceData = {
-
-        vendor_name:
-          formData.vendor_name.trim(),
-
-        vendor_gstin:
-          cleanGST,
-
-        total_amount:
-          totalAmount,
-
-        gst_rate:
-          gstRate,
-
-        description:
-          formData.description.trim(),
-
-      };
-
-      console.log(
-        "Invoice Data:",
-        invoiceData
-      );
-
-      const response =
-        await invoiceAPI.create(
-          invoiceData
-        );
-
-      const data =
-        response.data;
-
-      console.log(
-        "Invoice Response:",
-        data
-      );
-
-      if (data?.success) {
-
-        toast.success(
-          "Invoice created successfully"
-        );
-
-        resetForm();
-
-        setShowForm(false);
-
-        await loadInvoices();
-
-      } else {
+      if (
+        !formData.invoice_number.trim()
+      ) {
 
         toast.error(
-          data?.message ||
+          "Please enter invoice number"
+        );
+
+        return;
+      }
+
+
+      if (
+        !formData.invoice_date
+      ) {
+
+        toast.error(
+          "Please select invoice date"
+        );
+
+        return;
+      }
+
+
+      if (
+        !formData.vendor_name.trim()
+      ) {
+
+        toast.error(
+          "Please enter vendor name"
+        );
+
+        return;
+      }
+
+
+      if (
+        formData.vendor_has_gst === ""
+      ) {
+
+        toast.error(
+          "Please select whether vendor has GST"
+        );
+
+        return;
+      }
+
+
+      /* =================================================
+         VENDOR GST
+      ================================================= */
+
+      if (
+        formData.vendor_has_gst ===
+        "yes"
+      ) {
+
+        if (
+          !validateVendorGST(
+            formData.vendor_gstin
+          )
+        ) {
+
+          toast.error(
+            "Please enter valid vendor GST number"
+          );
+
+          return;
+        }
+
+      }
+
+
+      /* =================================================
+         VENDOR WITHOUT GST
+      ================================================= */
+
+      if (
+        formData.vendor_has_gst ===
+        "no" &&
+        !formData.vendor_state
+      ) {
+
+        toast.error(
+          "Please select vendor state"
+        );
+
+        return;
+      }
+
+
+      /* =================================================
+         AMOUNT
+      ================================================= */
+
+      if (
+        formData.total_amount === ""
+      ) {
+
+        toast.error(
+          "Please enter total amount"
+        );
+
+        return;
+      }
+
+
+      const totalAmount =
+        Number(
+          formData.total_amount
+        );
+
+
+      if (
+        Number.isNaN(
+          totalAmount
+        ) ||
+        totalAmount <= 0
+      ) {
+
+        toast.error(
+          "Please enter valid total amount"
+        );
+
+        return;
+      }
+
+
+      /* =================================================
+         GST RATE
+      ================================================= */
+
+      if (
+        formData.gst_rate === ""
+      ) {
+
+        toast.error(
+          "Please enter GST rate"
+        );
+
+        return;
+      }
+
+
+      const gstRate =
+        Number(
+          formData.gst_rate
+        );
+
+
+      if (
+        Number.isNaN(gstRate) ||
+        gstRate < 0 ||
+        gstRate > 100
+      ) {
+
+        toast.error(
+          "GST rate must be between 0 and 100"
+        );
+
+        return;
+      }
+
+
+      setCreating(true);
+
+
+      try {
+
+        const invoiceData = {
+
+          invoice_number:
+            formData.invoice_number.trim(),
+
+          invoice_date:
+            formData.invoice_date,
+
+          vendor_name:
+            formData.vendor_name.trim(),
+
+          vendor_has_gst:
+            formData.vendor_has_gst ===
+            "yes",
+
+          vendor_gstin:
+            formData.vendor_has_gst ===
+            "yes"
+              ? formData.vendor_gstin
+              : "",
+
+          vendor_state:
+            formData.vendor_state,
+
+          total_amount:
+            totalAmount,
+
+          gst_rate:
+            gstRate,
+
+          description:
+            formData.description.trim(),
+        };
+
+
+        const response =
+          await invoiceAPI.create(
+            invoiceData
+          );
+
+
+        const data =
+          response.data;
+
+
+        if (data?.success) {
+
+          toast.success(
+            "Invoice created successfully"
+          );
+
+          resetForm();
+
+          setShowForm(false);
+
+          await loadInvoices();
+
+        }
+
+        else {
+
+          toast.error(
+            data?.message ||
+            "Failed to create invoice"
+          );
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Invoice Create Error:",
+          error
+        );
+
+        toast.error(
+          error?.response?.data?.message ||
           "Failed to create invoice"
         );
 
+      } finally {
+
+        setCreating(false);
       }
+    };
 
-    } catch (error) {
-
-      console.error(
-        "Invoice Create Error:",
-        error
-      );
-
-      toast.error(
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        "Failed to create invoice"
-      );
-
-    } finally {
-
-      setCreating(false);
-
-    }
-
-  };
 
   /* =====================================================
-     DELETE INVOICE
+     DELETE
   ===================================================== */
 
-  const handleDelete = async (id) => {
+  const handleDelete =
+    async (id) => {
 
-    const confirmed =
-      window.confirm(
-        "Are you sure you want to delete this invoice?"
-      );
+      const confirmed =
+        window.confirm(
+          "Are you sure you want to delete this invoice?"
+        );
 
-    if (!confirmed) {
-      return;
-    }
 
-    try {
+      if (!confirmed)
+        return;
 
-      await invoiceAPI.delete(id);
 
-      toast.success(
-        "Invoice deleted successfully"
-      );
+      try {
 
-      await loadInvoices();
+        await invoiceAPI.delete(
+          id
+        );
 
-    } catch (error) {
+        toast.success(
+          "Invoice deleted successfully"
+        );
 
-      console.error(
-        "Invoice Delete Error:",
-        error
-      );
+        await loadInvoices();
 
-      toast.error(
-        error?.response?.data?.message ||
-        "Failed to delete invoice"
-      );
+      } catch (error) {
 
-    }
+        console.error(
+          "Delete Error:",
+          error
+        );
 
-  };
+        toast.error(
+          error?.response?.data?.message ||
+          "Failed to delete invoice"
+        );
+      }
+    };
+
 
   /* =====================================================
-     FORMAT CURRENCY
+     AMOUNT
   ===================================================== */
 
-  const formatAmount = (amount) => {
+  const formatAmount =
+    (amount) => {
 
-    return Number(amount || 0).toLocaleString(
-      "en-IN",
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+      return Number(
+        amount || 0
+      ).toLocaleString(
+        "en-IN",
+        {
+          minimumFractionDigits:
+            2,
+
+          maximumFractionDigits:
+            2,
+        }
+      );
+    };
+
+
+  /* =====================================================
+     VIEW
+  ===================================================== */
+
+  const handleView =
+    (invoice) => {
+
+      setSelectedInvoice(
+        invoice
+      );
+
+      setShowViewModal(
+        true
+      );
+    };
+
+
+  const closeViewModal =
+    () => {
+
+      setSelectedInvoice(
+        null
+      );
+
+      setShowViewModal(
+        false
+      );
+    };
+
+
+  /* =====================================================
+     PRINT
+  ===================================================== */
+
+  const handlePrint =
+    () => {
+
+      window.print();
+    };
+
+
+  /* =====================================================
+     DATE
+  ===================================================== */
+
+  const getInvoiceDate =
+    (invoice) => {
+
+      if (
+        !invoice.invoice_date
+      ) {
+        return "N/A";
       }
+
+      return new Date(
+        invoice.invoice_date
+      ).toLocaleDateString(
+        "en-IN"
+      );
+    };
+
+
+  /* =====================================================
+     GROUP BY YEAR
+  ===================================================== */
+
+  const groupedInvoices =
+    invoices.reduce(
+      (acc, invoice) => {
+
+        const year =
+          invoice.invoice_year ||
+          new Date(
+            invoice.invoice_date ||
+            invoice.createdAt
+          ).getFullYear();
+
+        const month =
+          invoice.invoice_month ||
+          (
+            new Date(
+              invoice.invoice_date ||
+              invoice.createdAt
+            ).getMonth() + 1
+          );
+
+
+        if (!acc[year]) {
+          acc[year] = {};
+        }
+
+
+        if (!acc[year][month]) {
+          acc[year][month] = [];
+        }
+
+
+        acc[year][month].push(
+          invoice
+        );
+
+
+        return acc;
+
+      },
+      {}
     );
 
-  };
 
-  /* =====================================================
-     VIEW INVOICE
-  ===================================================== */
+  const sortedYears =
+    Object.keys(
+      groupedInvoices
+    )
+      .map(Number)
+      .sort(
+        (a, b) =>
+          b - a
+      );
 
-  const handleView = (invoice) => {
 
-    setSelectedInvoice(invoice);
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
-    setShowViewModal(true);
-
-  };
-
-  /* =====================================================
-     CLOSE VIEW MODAL
-  ===================================================== */
-
-  const closeViewModal = () => {
-
-    setShowViewModal(false);
-
-    setSelectedInvoice(null);
-
-  };
 
   /* =====================================================
      LOADING
@@ -493,8 +804,8 @@ export default function InvoicesPage() {
         Loading invoices...
       </div>
     );
-
   }
+
 
   /* =====================================================
      PAGE
@@ -505,6 +816,7 @@ export default function InvoicesPage() {
     <div className="invoices-page">
 
       <div className="invoices-container">
+
 
         {/* =================================================
             HEADER
@@ -524,10 +836,13 @@ export default function InvoicesPage() {
 
           </div>
 
+
           <button
             type="button"
             onClick={() =>
-              setShowForm(!showForm)
+              setShowForm(
+                !showForm
+              )
             }
             className="invoice-primary-btn"
           >
@@ -542,6 +857,7 @@ export default function InvoicesPage() {
 
         </div>
 
+
         {/* =================================================
             CREATE FORM
         ================================================= */}
@@ -554,83 +870,278 @@ export default function InvoicesPage() {
               Create Invoice
             </h2>
 
-            <form onSubmit={handleSubmit}>
+
+            <form
+              onSubmit={
+                handleSubmit
+              }
+            >
+
 
               <div className="invoice-form-grid">
 
-                {/* VENDOR NAME */}
+
+                {/* INVOICE NUMBER */}
 
                 <div className="invoice-form-group">
 
-                  <label htmlFor="vendor_name">
+                  <label>
+                    Invoice Number
+                  </label>
+
+                  <input
+                    name="invoice_number"
+                    type="text"
+                    value={
+                      formData.invoice_number
+                    }
+                    onChange={
+                      handleChange
+                    }
+                    placeholder="Example: INV-001"
+                    required
+                  />
+
+                </div>
+
+
+                {/* INVOICE DATE */}
+
+                <div className="invoice-form-group">
+
+                  <label>
+                    Invoice Date
+                  </label>
+
+                  <input
+                    name="invoice_date"
+                    type="date"
+                    value={
+                      formData.invoice_date
+                    }
+                    onChange={
+                      handleChange
+                    }
+                    required
+                  />
+
+                </div>
+
+
+                {/* VENDOR */}
+
+                <div className="invoice-form-group">
+
+                  <label>
                     Vendor Name
                   </label>
 
                   <input
-                    id="vendor_name"
                     name="vendor_name"
                     type="text"
                     value={
                       formData.vendor_name
                     }
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Enter vendor name"
                     required
                   />
 
                 </div>
 
-                {/* VENDOR GST */}
+
+                {/* VENDOR GST YES NO */}
 
                 <div className="invoice-form-group">
 
-                  <label htmlFor="vendor_gstin">
-                    Vendor GSTIN
+                  <label>
+                    Does Vendor Have GST?
                   </label>
 
-                  <input
-                    id="vendor_gstin"
-                    name="vendor_gstin"
-                    type="text"
-                    value={
-                      formData.vendor_gstin
-                    }
-                    onChange={handleChange}
-                    placeholder="Enter 15 digit GSTIN"
-                    maxLength={15}
-                    autoComplete="off"
-                    required
-                  />
 
-                  {gstError && (
+                  <div className="kytp-gst-options">
 
-                    <small className="kytp-error-text">
-                      {gstError}
-                    </small>
+                    <label className="kytp-radio-option">
 
-                  )}
+                      <input
+                        type="radio"
+                        name="vendor_has_gst"
+                        value="yes"
+                        checked={
+                          formData.vendor_has_gst ===
+                          "yes"
+                        }
+                        onChange={() => {
 
-                  {!gstError &&
-                    formData.vendor_gstin.length === 15 && (
+                          setFormData(
+                            (prev) => ({
+                              ...prev,
 
-                      <small className="kytp-success-text">
-                        ✓ Valid GST format
-                      </small>
+                              vendor_has_gst:
+                                "yes",
 
-                    )}
+                              vendor_state:
+                                "",
+                            })
+                          );
+
+                          setGstError("");
+                        }}
+                      />
+
+                      <span>
+                        Yes
+                      </span>
+
+                    </label>
+
+
+                    <label className="kytp-radio-option">
+
+                      <input
+                        type="radio"
+                        name="vendor_has_gst"
+                        value="no"
+                        checked={
+                          formData.vendor_has_gst ===
+                          "no"
+                        }
+                        onChange={() => {
+
+                          setFormData(
+                            (prev) => ({
+                              ...prev,
+
+                              vendor_has_gst:
+                                "no",
+
+                              vendor_gstin:
+                                "",
+                            })
+                          );
+
+                          setGstError("");
+                        }}
+                      />
+
+                      <span>
+                        No
+                      </span>
+
+                    </label>
+
+                  </div>
 
                 </div>
 
-                {/* TOTAL AMOUNT */}
+
+                {/* VENDOR GST */}
+
+                {formData.vendor_has_gst ===
+                  "yes" && (
+
+                  <div className="invoice-form-group">
+
+                    <label>
+                      Vendor GSTIN
+                    </label>
+
+                    <input
+                      name="vendor_gstin"
+                      type="text"
+                      value={
+                        formData.vendor_gstin
+                      }
+                      onChange={
+                        handleChange
+                      }
+                      placeholder="Enter 15 digit GSTIN"
+                      maxLength={15}
+                      autoComplete="off"
+                    />
+
+                    {gstError && (
+                      <small className="kytp-error-text">
+                        {gstError}
+                      </small>
+                    )}
+
+                    {!gstError &&
+                      formData.vendor_gstin.length ===
+                        15 && (
+                        <small className="kytp-success-text">
+                          ✓ Valid GST format
+                        </small>
+                      )}
+
+                    <small>
+                      State will be detected automatically from GSTIN.
+                    </small>
+
+                  </div>
+
+                )}
+
+
+                {/* VENDOR STATE */}
+
+                {formData.vendor_has_gst ===
+                  "no" && (
+
+                  <div className="invoice-form-group">
+
+                    <label>
+                      Vendor State
+                    </label>
+
+                    <select
+                      name="vendor_state"
+                      value={
+                        formData.vendor_state
+                      }
+                      onChange={
+                        handleChange
+                      }
+                      required
+                    >
+
+                      <option value="">
+                        Select Vendor State
+                      </option>
+
+                      {states.map(
+                        (state) => (
+                          <option
+                            key={state}
+                            value={state}
+                          >
+                            {state}
+                          </option>
+                        )
+                      )}
+
+                    </select>
+
+                    <small>
+                      Vendor GST नसल्यामुळे State manually select करा.
+                    </small>
+
+                  </div>
+
+                )}
+
+
+                {/* AMOUNT */}
 
                 <div className="invoice-form-group">
 
-                  <label htmlFor="total_amount">
+                  <label>
                     Total Amount
                   </label>
 
                   <input
-                    id="total_amount"
                     name="total_amount"
                     type="number"
                     min="0"
@@ -638,23 +1149,25 @@ export default function InvoicesPage() {
                     value={
                       formData.total_amount
                     }
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Enter total amount"
                     required
                   />
 
                 </div>
 
+
                 {/* GST RATE */}
 
                 <div className="invoice-form-group">
 
-                  <label htmlFor="gst_rate">
+                  <label>
                     GST Rate (%)
                   </label>
 
                   <input
-                    id="gst_rate"
                     name="gst_rate"
                     type="number"
                     min="0"
@@ -663,20 +1176,19 @@ export default function InvoicesPage() {
                     value={
                       formData.gst_rate
                     }
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Example: 18"
                     required
                   />
-
-                  <small className="invoice-field-hint">
-                    Enter GST rate manually
-                  </small>
 
                 </div>
 
               </div>
 
-              {/* GST INFORMATION */}
+
+              {/* TAX INFO */}
 
               <div className="invoice-tax-info">
 
@@ -692,36 +1204,33 @@ export default function InvoicesPage() {
                   Different state → IGST
                 </span>
 
-                <small>
-                  Final tax type will be determined
-                  automatically using your GST and
-                  vendor GST.
-                </small>
-
               </div>
+
 
               {/* DESCRIPTION */}
 
               <div className="invoice-form-group">
 
-                <label htmlFor="description">
+                <label>
                   Description
                 </label>
 
                 <textarea
-                  id="description"
                   name="description"
                   value={
                     formData.description
                   }
-                  onChange={handleChange}
+                  onChange={
+                    handleChange
+                  }
                   placeholder="Enter invoice description"
                   rows="3"
                 />
 
               </div>
 
-              {/* BUTTONS */}
+
+              {/* ACTIONS */}
 
               <div className="invoice-form-actions">
 
@@ -737,6 +1246,7 @@ export default function InvoicesPage() {
 
                 </button>
 
+
                 <button
                   type="button"
                   className="invoice-secondary-btn"
@@ -744,7 +1254,9 @@ export default function InvoicesPage() {
 
                     resetForm();
 
-                    setShowForm(false);
+                    setShowForm(
+                      false
+                    );
 
                   }}
                   disabled={creating}
@@ -757,554 +1269,928 @@ export default function InvoicesPage() {
             </form>
 
           </div>
-
         )}
 
+
         {/* =================================================
-            INVOICE TABLE
+            YEAR / MONTH VIEW
         ================================================= */}
 
-        <div className="invoice-table-card">
+        {!selectedYear && (
 
-          <div className="invoice-table-wrapper">
+          <div className="invoice-table-card">
 
-            <table className="invoice-table">
+            <div className="invoice-month-header">
 
-              <thead>
+              <h2>
+                Invoice History
+              </h2>
 
-                <tr>
+              <p>
+                Select a year to view invoices by month
+              </p>
 
-                  <th>Vendor</th>
+            </div>
 
-                  <th>Amount</th>
 
-                  <th>GST Rate</th>
+            {sortedYears.length ===
+            0 ? (
 
-                  <th>Tax</th>
+              <div className="invoice-empty">
 
-                  <th>Grand Total</th>
+                No invoices found.
 
-                  <th>Status</th>
+                <br />
 
-                  <th>Actions</th>
+                Click{" "}
+                <strong>
+                  New Invoice
+                </strong>{" "}
+                to create your first invoice.
 
-                </tr>
+              </div>
 
-              </thead>
+            ) : (
 
-              <tbody>
+              <div className="invoice-year-list">
 
-                {invoices.length > 0 ? (
+                {sortedYears.map(
+                  (year) => (
 
-                  invoices.map((invoice) => (
-
-                    <tr
-                      key={
-                        invoice._id ||
-                        invoice.id
+                    <button
+                      key={year}
+                      type="button"
+                      className="invoice-year-item"
+                      onClick={() =>
+                        setSelectedYear(
+                          year
+                        )
                       }
                     >
 
-                      {/* VENDOR */}
+                      <span>
+                        {year}
+                      </span>
 
-                      <td>
+                      <ChevronRight
+                        size={20}
+                      />
 
-                        <div className="invoice-vendor-name">
+                    </button>
 
-                          {invoice.vendor_name ||
-                            "Unknown Vendor"}
+                  )
+                )}
+
+              </div>
+
+            )}
+
+          </div>
+        )}
+
+
+        {/* =================================================
+            MONTH VIEW
+        ================================================= */}
+
+        {selectedYear &&
+          !selectedMonth && (
+
+          <div className="invoice-table-card">
+
+            <div className="invoice-breadcrumb">
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedYear(
+                    null
+                  )
+                }
+              >
+                <ArrowLeft
+                  size={18}
+                />
+
+                Back
+              </button>
+
+              <h2>
+                {selectedYear}
+              </h2>
+
+            </div>
+
+
+            <div className="invoice-month-list">
+
+              {Object.keys(
+                groupedInvoices[
+                  selectedYear
+                ] || {}
+              )
+                .map(Number)
+                .sort(
+                  (a, b) =>
+                    b - a
+                )
+                .map(
+                  (month) => {
+
+                    const monthInvoices =
+                      groupedInvoices[
+                        selectedYear
+                      ][month];
+
+
+                    return (
+
+                      <button
+                        key={month}
+                        type="button"
+                        className="invoice-month-item"
+                        onClick={() =>
+                          setSelectedMonth(
+                            month
+                          )
+                        }
+                      >
+
+                        <div>
+
+                          <strong>
+                            {
+                              monthNames[
+                                month - 1
+                              ]
+                            }
+                          </strong>
+
+                          <small>
+                            {
+                              monthInvoices.length
+                            }{" "}
+                            invoice
+                            {monthInvoices.length !==
+                            1
+                              ? "s"
+                              : ""}
+                          </small>
 
                         </div>
 
-                        {invoice.vendor_gstin && (
+                        <ChevronRight
+                          size={20}
+                        />
 
-                          <div className="invoice-vendor-gstin">
+                      </button>
 
-                            {invoice.vendor_gstin}
+                    );
+                  }
+                )}
 
-                          </div>
+            </div>
 
-                        )}
+          </div>
+        )}
 
-                      </td>
 
-                      {/* AMOUNT */}
+        {/* =================================================
+            INVOICES OF SELECTED MONTH
+        ================================================= */}
 
-                      <td>
+        {selectedYear &&
+          selectedMonth && (
 
-                        <span className="invoice-amount">
+          <div className="invoice-table-card">
 
-                          ₹
-                          {formatAmount(
-                            invoice.total_amount
-                          )}
+            <div className="invoice-breadcrumb">
 
-                        </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedMonth(
+                    null
+                  )
+                }
+              >
+                <ArrowLeft
+                  size={18}
+                />
 
-                      </td>
+                Back
+              </button>
 
-                      {/* GST RATE */}
+              <div>
 
-                      <td>
+                <h2>
+                  {
+                    monthNames[
+                      selectedMonth - 1
+                    ]
+                  }{" "}
+                  {selectedYear}
+                </h2>
 
-                        <span className="invoice-tax">
+                <p>
+                  {
+                    groupedInvoices[
+                      selectedYear
+                    ][selectedMonth]
+                      ?.length || 0
+                  }{" "}
+                  invoices
+                </p>
 
-                          {invoice.gst_rate || 0}%
+              </div>
 
-                        </span>
+            </div>
 
-                      </td>
 
-                      {/* TAX */}
+            <div className="invoice-table-wrapper">
 
-                      <td>
+              <table className="invoice-table">
 
-                        {invoice.tax_type ===
-                        "CGST_SGST" ? (
-
-                          <div>
-
-                            <div>
-                              CGST (
-                              {invoice.cgst_rate || 0}
-                              %):
-                              ₹
-                              {formatAmount(
-                                invoice.cgst_amount
-                              )}
-                            </div>
-
-                            <div>
-                              SGST (
-                              {invoice.sgst_rate || 0}
-                              %):
-                              ₹
-                              {formatAmount(
-                                invoice.sgst_amount
-                              )}
-                            </div>
-
-                          </div>
-
-                        ) : (
-
-                          <div>
-
-                            <div>
-                              IGST (
-                              {invoice.igst_rate || 0}
-                              %):
-                              ₹
-                              {formatAmount(
-                                invoice.igst_amount
-                              )}
-                            </div>
-
-                          </div>
-
-                        )}
-
-                      </td>
-
-                      {/* GRAND TOTAL */}
-
-                      <td>
-
-                        <strong className="invoice-grand-total">
-
-                          ₹
-                          {formatAmount(
-                            invoice.grand_total
-                          )}
-
-                        </strong>
-
-                      </td>
-
-                      {/* STATUS */}
-
-                      <td>
-
-                        <span className="invoice-status">
-
-                          {invoice.status ||
-                            "Pending"}
-
-                        </span>
-
-                      </td>
-
-                      {/* ACTIONS */}
-
-                      <td>
-
-                        <div className="invoice-actions">
-
-                          {/* VIEW */}
-
-                          <button
-                            type="button"
-                            className="invoice-action-btn invoice-view-btn"
-                            title="View Invoice"
-                            onClick={() =>
-                              handleView(invoice)
-                            }
-                          >
-
-                            <Eye size={17} />
-
-                          </button>
-
-                          {/* EDIT */}
-
-                          <button
-                            type="button"
-                            className="invoice-action-btn invoice-edit-btn"
-                            title="Edit Invoice"
-                            onClick={() =>
-                              toast(
-                                "Edit feature will be added next"
-                              )
-                            }
-                          >
-
-                            <Edit2 size={17} />
-
-                          </button>
-
-                          {/* DELETE */}
-
-                          <button
-                            type="button"
-                            className="invoice-action-btn invoice-delete-btn"
-                            title="Delete Invoice"
-                            onClick={() =>
-                              handleDelete(
-                                invoice._id ||
-                                invoice.id
-                              )
-                            }
-                          >
-
-                            <Trash2 size={17} />
-
-                          </button>
-
-                        </div>
-
-                      </td>
-
-                    </tr>
-
-                  ))
-
-                ) : (
+                <thead>
 
                   <tr>
 
-                    <td
-                      colSpan="7"
-                      className="invoice-empty"
-                    >
+                    <th>
+                      Invoice No.
+                    </th>
 
-                      No invoices found.
+                    <th>
+                      Date
+                    </th>
 
-                      <br />
+                    <th>
+                      Vendor
+                    </th>
 
-                      Click{" "}
+                    <th>
+                      Amount
+                    </th>
 
-                      <strong>
-                        New Invoice
-                      </strong>{" "}
+                    <th>
+                      GST
+                    </th>
 
-                      to create your first invoice.
+                    <th>
+                      Grand Total
+                    </th>
 
-                    </td>
+                    <th>
+                      Status
+                    </th>
+
+                    <th>
+                      Actions
+                    </th>
 
                   </tr>
 
-                )}
+                </thead>
 
-              </tbody>
 
-            </table>
+                <tbody>
+
+                  {(
+                    groupedInvoices[
+                      selectedYear
+                    ][selectedMonth] || []
+                  ).map(
+                    (invoice) => (
+
+                      <tr
+                        key={
+                          invoice._id
+                        }
+                      >
+
+                        <td>
+                          <strong>
+                            {
+                              invoice.invoice_number
+                            }
+                          </strong>
+                        </td>
+
+
+                        <td>
+                          {
+                            getInvoiceDate(
+                              invoice
+                            )
+                          }
+                        </td>
+
+
+                        <td>
+
+                          <div className="invoice-vendor-name">
+                            {
+                              invoice.vendor_name
+                            }
+                          </div>
+
+                          {invoice.vendor_has_gst &&
+                            invoice.vendor_gstin && (
+                            <div className="invoice-vendor-gstin">
+                              {
+                                invoice.vendor_gstin
+                              }
+                            </div>
+                          )}
+
+                          {!invoice.vendor_has_gst && (
+                            <div className="invoice-vendor-gstin">
+                              {
+                                invoice.vendor_state
+                              }
+                            </div>
+                          )}
+
+                        </td>
+
+
+                        <td>
+
+                          <span className="invoice-amount">
+                            ₹
+                            {
+                              formatAmount(
+                                invoice.total_amount
+                              )
+                            }
+                          </span>
+
+                        </td>
+
+
+                        <td>
+
+                          {invoice.tax_type ===
+                          "CGST_SGST" ? (
+
+                            <div>
+
+                              <div>
+                                CGST (
+                                {
+                                  invoice.cgst_rate ||
+                                  0
+                                }
+                                %)
+                              </div>
+
+                              <div>
+                                SGST (
+                                {
+                                  invoice.sgst_rate ||
+                                  0
+                                }
+                                %)
+                              </div>
+
+                            </div>
+
+                          ) : (
+
+                            <div>
+                              IGST (
+                              {
+                                invoice.igst_rate ||
+                                0
+                              }
+                              %)
+                            </div>
+
+                          )}
+
+                        </td>
+
+
+                        <td>
+
+                          <strong className="invoice-grand-total">
+
+                            ₹
+                            {
+                              formatAmount(
+                                invoice.grand_total
+                              )
+                            }
+
+                          </strong>
+
+                        </td>
+
+
+                        <td>
+
+                          <span className="invoice-status">
+                            {
+                              invoice.status ||
+                              "Pending"
+                            }
+                          </span>
+
+                        </td>
+
+
+                        <td>
+
+                          <div className="invoice-actions">
+
+                            <button
+                              type="button"
+                              className="invoice-action-btn invoice-view-btn"
+                              title="View Invoice"
+                              onClick={() =>
+                                handleView(
+                                  invoice
+                                )
+                              }
+                            >
+                              <Eye
+                                size={17}
+                              />
+                            </button>
+
+
+                            <button
+                              type="button"
+                              className="invoice-action-btn invoice-edit-btn"
+                              title="Edit Invoice"
+                              onClick={() =>
+                                toast(
+                                  "Edit feature will be added next"
+                                )
+                              }
+                            >
+                              <Edit2
+                                size={17}
+                              />
+                            </button>
+
+
+                            <button
+                              type="button"
+                              className="invoice-action-btn invoice-delete-btn"
+                              title="Delete Invoice"
+                              onClick={() =>
+                                handleDelete(
+                                  invoice._id
+                                )
+                              }
+                            >
+                              <Trash2
+                                size={17}
+                              />
+                            </button>
+
+                          </div>
+
+                        </td>
+
+                      </tr>
+
+                    )
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
 
           </div>
+        )}
 
-        </div>
 
       </div>
 
+
       {/* =====================================================
-          VIEW INVOICE MODAL
+          VIEW MODAL
       ===================================================== */}
 
       {showViewModal &&
         selectedInvoice && (
 
+        <div
+          className="invoice-modal-overlay"
+          onClick={
+            closeViewModal
+          }
+        >
+
           <div
-            className="invoice-modal-overlay"
-            onClick={closeViewModal}
+            className="invoice-print-modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
           >
 
-            <div
-              className="invoice-view-modal"
-              onClick={(e) =>
-                e.stopPropagation()
-              }
-            >
+            <div className="invoice-preview-toolbar">
 
-              {/* MODAL HEADER */}
+              <strong>
+                Invoice Preview
+              </strong>
 
-              <div className="invoice-modal-header">
-
-                <div>
-
-                  <h2>
-                    Invoice Details
-                  </h2>
-
-                  <p>
-                    Complete invoice information
-                  </p>
-
-                </div>
+              <div className="invoice-preview-actions">
 
                 <button
                   type="button"
-                  className="invoice-modal-close"
-                  onClick={closeViewModal}
-                  title="Close"
+                  className="invoice-print-btn"
+                  onClick={
+                    handlePrint
+                  }
                 >
+                  <Printer
+                    size={17}
+                  />
 
-                  <X size={20} />
+                  Print Invoice
+                </button>
 
+
+                <button
+                  type="button"
+                  className="invoice-close-btn"
+                  onClick={
+                    closeViewModal
+                  }
+                >
+                  <X
+                    size={19}
+                  />
                 </button>
 
               </div>
 
-              {/* MODAL BODY */}
+            </div>
 
-              <div className="invoice-modal-body">
 
-                {/* VENDOR DETAILS */}
+            {/* =================================================
+                INVOICE PAPER
+            ================================================= */}
 
-                <div className="invoice-detail-section">
+            <div className="tax-invoice-paper">
 
-                  <h3>
-                    Vendor Details
-                  </h3>
 
-                  <div className="invoice-detail-grid">
+              <div className="tax-invoice-heading">
 
-                    <div className="invoice-detail-item">
+                <h1>
+                  TAX INVOICE
+                </h1>
 
-                      <span>
-                        Vendor Name
-                      </span>
+                <p>
+                  Original for Recipient
+                </p>
 
+              </div>
+
+
+              <div className="tax-invoice-top-grid">
+
+
+                <div className="seller-details">
+
+                  <h2>
+                    {selectedInvoice.user_id?.companyName ||
+                      "Your Business Name"}
+                  </h2>
+
+                  <p>
+                    {selectedInvoice.user_id?.companyAddress ||
+                      "Company Address"}
+                  </p>
+
+                  <p>
+                    {selectedInvoice.user_id?.companyState ||
+                      ""}
+                  </p>
+
+                  {selectedInvoice.user_id?.gstNumber && (
+                    <p>
                       <strong>
-                        {selectedInvoice.vendor_name ||
-                          "N/A"}
-                      </strong>
+                        GSTIN:
+                      </strong>{" "}
+                      {
+                        selectedInvoice.user_id.gstNumber
+                      }
+                    </p>
+                  )}
 
-                    </div>
+                </div>
 
-                    <div className="invoice-detail-item">
 
-                      <span>
-                        Vendor GSTIN
-                      </span>
+                <div className="invoice-meta">
 
-                      <strong>
-                        {selectedInvoice.vendor_gstin ||
-                          "N/A"}
-                      </strong>
+                  <div>
 
-                    </div>
+                    <span>
+                      Invoice No.
+                    </span>
+
+                    <strong>
+                      {
+                        selectedInvoice.invoice_number
+                      }
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Invoice Date
+                    </span>
+
+                    <strong>
+                      {
+                        getInvoiceDate(
+                          selectedInvoice
+                        )
+                      }
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Status
+                    </span>
+
+                    <strong>
+                      {
+                        selectedInvoice.status ||
+                        "Pending"
+                      }
+                    </strong>
 
                   </div>
 
                 </div>
 
-                {/* AMOUNT DETAILS */}
+              </div>
 
-                <div className="invoice-detail-section">
 
-                  <h3>
-                    Amount Details
-                  </h3>
+              {/* BILL TO */}
 
-                  <div className="invoice-detail-grid">
+              <div className="bill-to-box">
 
-                    <div className="invoice-detail-item">
+                <div className="invoice-section-label">
+                  BILL TO
+                </div>
 
-                      <span>
-                        Total Amount
-                      </span>
+                <h3>
+                  {
+                    selectedInvoice.vendor_name
+                  }
+                </h3>
 
-                      <strong className="invoice-modal-amount">
-                        ₹
-                        {formatAmount(
+
+                {selectedInvoice.vendor_has_gst ? (
+
+                  <p>
+                    GSTIN:{" "}
+                    {
+                      selectedInvoice.vendor_gstin
+                    }
+                  </p>
+
+                ) : (
+
+                  <p>
+                    State:{" "}
+                    {
+                      selectedInvoice.vendor_state
+                    }
+                  </p>
+
+                )}
+
+              </div>
+
+
+              {/* ITEMS */}
+
+              <table className="tax-invoice-table">
+
+                <thead>
+
+                  <tr>
+
+                    <th>
+                      #
+                    </th>
+
+                    <th>
+                      Description
+                    </th>
+
+                    <th>
+                      Qty
+                    </th>
+
+                    <th>
+                      Rate
+                    </th>
+
+                    <th>
+                      Taxable Value
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                  <tr>
+
+                    <td>
+                      1
+                    </td>
+
+                    <td className="item-description">
+
+                      {
+                        selectedInvoice.description ||
+                        "Invoice Services"
+                      }
+
+                    </td>
+
+                    <td>
+                      1
+                    </td>
+
+                    <td>
+                      ₹
+                      {
+                        formatAmount(
                           selectedInvoice.total_amount
-                        )}
-                      </strong>
+                        )
+                      }
+                    </td>
 
-                    </div>
+                    <td>
+                      ₹
+                      {
+                        formatAmount(
+                          selectedInvoice.total_amount
+                        )
+                      }
+                    </td>
 
-                    <div className="invoice-detail-item">
+                  </tr>
 
-                      <span>
-                        GST Rate
-                      </span>
+                </tbody>
 
-                      <strong>
-                        {selectedInvoice.gst_rate ||
-                          0}
-                        %
-                      </strong>
+              </table>
 
-                    </div>
 
-                    <div className="invoice-detail-item">
+              {/* TOTAL */}
 
-                      <span>
-                        Tax Type
-                      </span>
+              <div className="invoice-bottom-grid">
 
-                      <strong>
-                        {selectedInvoice.tax_type ||
-                          "N/A"}
-                      </strong>
 
-                    </div>
+                <div className="amount-words">
 
-                  </div>
+                  <strong>
+                    Amount in Words
+                  </strong>
+
+                  <p>
+                    Rupees{" "}
+                    {
+                      numberToWords(
+                        selectedInvoice.grand_total
+                      )
+                    }{" "}
+                    Only
+                  </p>
 
                 </div>
 
-                {/* TAX DETAILS */}
 
-                <div className="invoice-detail-section">
+                <div className="invoice-calculation">
 
-                  <h3>
-                    Tax Details
-                  </h3>
+                  <div>
+
+                    <span>
+                      Taxable Amount
+                    </span>
+
+                    <strong>
+                      ₹
+                      {
+                        formatAmount(
+                          selectedInvoice.total_amount
+                        )
+                      }
+                    </strong>
+
+                  </div>
+
 
                   {selectedInvoice.tax_type ===
                   "CGST_SGST" ? (
 
-                    <div className="invoice-tax-detail-box">
+                    <>
 
                       <div>
 
                         <span>
-                          CGST
+                          CGST (
+                          {
+                            selectedInvoice.cgst_rate ||
+                            0
+                          }%)
                         </span>
 
                         <strong>
-                          {selectedInvoice.cgst_rate ||
-                            0}
-                          % — ₹
-                          {formatAmount(
-                            selectedInvoice.cgst_amount
-                          )}
+                          ₹
+                          {
+                            formatAmount(
+                              selectedInvoice.cgst_amount
+                            )
+                          }
                         </strong>
 
                       </div>
+
 
                       <div>
 
                         <span>
-                          SGST
+                          SGST (
+                          {
+                            selectedInvoice.sgst_rate ||
+                            0
+                          }%)
                         </span>
 
                         <strong>
-                          {selectedInvoice.sgst_rate ||
-                            0}
-                          % — ₹
-                          {formatAmount(
-                            selectedInvoice.sgst_amount
-                          )}
+                          ₹
+                          {
+                            formatAmount(
+                              selectedInvoice.sgst_amount
+                            )
+                          }
                         </strong>
 
                       </div>
 
-                    </div>
+                    </>
 
                   ) : (
 
-                    <div className="invoice-tax-detail-box">
+                    <div>
 
-                      <div>
+                      <span>
+                        IGST (
+                        {
+                          selectedInvoice.igst_rate ||
+                          0
+                        }%)
+                      </span>
 
-                        <span>
-                          IGST
-                        </span>
-
-                        <strong>
-                          {selectedInvoice.igst_rate ||
-                            0}
-                          % — ₹
-                          {formatAmount(
+                      <strong>
+                        ₹
+                        {
+                          formatAmount(
                             selectedInvoice.igst_amount
-                          )}
-                        </strong>
-
-                      </div>
+                          )
+                        }
+                      </strong>
 
                     </div>
 
                   )}
 
-                </div>
 
-                {/* GRAND TOTAL */}
+                  <div className="invoice-final-total">
 
-                <div className="invoice-grand-total-box">
+                    <span>
+                      Grand Total
+                    </span>
 
-                  <span>
-                    Grand Total
-                  </span>
-
-                  <strong>
-                    ₹
-                    {formatAmount(
-                      selectedInvoice.grand_total
-                    )}
-                  </strong>
-
-                </div>
-
-                {/* STATUS */}
-
-                <div className="invoice-detail-section">
-
-                  <h3>
-                    Invoice Status
-                  </h3>
-
-                  <span className="invoice-modal-status">
-
-                    {selectedInvoice.status ||
-                      "Pending"}
-
-                  </span>
-
-                </div>
-
-                {/* DESCRIPTION */}
-
-                <div className="invoice-detail-section">
-
-                  <h3>
-                    Description
-                  </h3>
-
-                  <div className="invoice-description-box">
-
-                    {selectedInvoice.description ||
-                      "No description provided."}
+                    <strong>
+                      ₹
+                      {
+                        formatAmount(
+                          selectedInvoice.grand_total
+                        )
+                      }
+                    </strong>
 
                   </div>
 
@@ -1312,17 +2198,52 @@ export default function InvoicesPage() {
 
               </div>
 
-              {/* MODAL FOOTER */}
 
-              <div className="invoice-modal-footer">
+              <div className="invoice-payment-row">
 
-                <button
-                  type="button"
-                  className="invoice-secondary-btn"
-                  onClick={closeViewModal}
-                >
-                  Close
-                </button>
+                <span>
+                  Payment Status
+                </span>
+
+                <strong>
+                  {
+                    selectedInvoice.status ||
+                    "Pending"
+                  }
+                </strong>
+
+              </div>
+
+
+              <div className="tax-invoice-footer">
+
+                <div>
+
+                  <p>
+                    Thank you for your business.
+                  </p>
+
+                  <small>
+                    This is a computer generated invoice.
+                  </small>
+
+                </div>
+
+
+                <div className="signature-box">
+
+                  <div>
+                    Authorized Signatory
+                  </div>
+
+                  <div className="signature-line">
+                  </div>
+
+                  <strong>
+                    For Your Business
+                  </strong>
+
+                </div>
 
               </div>
 
@@ -1330,9 +2251,175 @@ export default function InvoicesPage() {
 
           </div>
 
-        )}
+        </div>
+      )}
 
     </div>
   );
-}
 
+
+  /* =====================================================
+     NUMBER TO WORDS
+  ===================================================== */
+
+  function numberToWords(num) {
+
+    num =
+      Math.floor(
+        Number(num || 0)
+      );
+
+
+    if (num === 0)
+      return "Zero";
+
+
+    const ones = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+
+
+    const tens = [
+      "",
+      "",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
+
+
+    const convert = (n) => {
+
+      if (n < 20)
+        return ones[n];
+
+
+      if (n < 100) {
+
+        return (
+          tens[
+            Math.floor(
+              n / 10
+            )
+          ] +
+          (
+            n % 10
+              ? " " +
+                ones[
+                  n % 10
+                ]
+              : ""
+          )
+        );
+      }
+
+
+      if (n < 1000) {
+
+        return (
+          ones[
+            Math.floor(
+              n / 100
+            )
+          ] +
+          " Hundred" +
+          (
+            n % 100
+              ? " " +
+                convert(
+                  n % 100
+                )
+              : ""
+          )
+        );
+      }
+
+
+      if (n < 100000) {
+
+        return (
+          convert(
+            Math.floor(
+              n / 1000
+            )
+          ) +
+          " Thousand" +
+          (
+            n % 1000
+              ? " " +
+                convert(
+                  n % 1000
+                )
+              : ""
+          )
+        );
+      }
+
+
+      if (n < 10000000) {
+
+        return (
+          convert(
+            Math.floor(
+              n / 100000
+            )
+          ) +
+          " Lakh" +
+          (
+            n % 100000
+              ? " " +
+                convert(
+                  n % 100000
+                )
+              : ""
+          )
+        );
+      }
+
+
+      return (
+        convert(
+          Math.floor(
+            n / 10000000
+          )
+        ) +
+        " Crore" +
+        (
+          n % 10000000
+            ? " " +
+              convert(
+                n % 10000000
+              )
+            : ""
+        )
+      );
+    };
+
+
+    return convert(num);
+  }
+}

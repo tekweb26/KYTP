@@ -4,7 +4,7 @@ import User from "../models/User.js";
 
 
 /* =====================================================
-   GENERATE JWT TOKEN
+   GENERATE JWT
 ===================================================== */
 
 const generateToken = (user) => {
@@ -30,8 +30,11 @@ const generateToken = (user) => {
 
 export const register = async (req, res) => {
   try {
-
     const {
+      name,
+      companyName,
+      companyAddress,
+      companyState,
       hasGST,
       gstNumber,
       panNumber,
@@ -46,6 +49,10 @@ export const register = async (req, res) => {
     ================================================= */
 
     if (
+      !name ||
+      !companyName ||
+      !companyAddress ||
+      !companyState ||
       hasGST === undefined ||
       !panNumber ||
       !mobileNumber ||
@@ -54,61 +61,99 @@ export const register = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "All required fields are required",
+        message: "All required fields are required",
       });
     }
 
 
     /* =================================================
-       GST VALIDATION
+       NAME
+    ================================================= */
+
+    const cleanName = name.trim();
+
+    if (!cleanName) {
+      return res.status(400).json({
+        success: false,
+        message: "Person name is required",
+      });
+    }
+
+
+    /* =================================================
+       COMPANY NAME
+    ================================================= */
+
+    const cleanCompanyName = companyName.trim();
+
+    if (!cleanCompanyName) {
+      return res.status(400).json({
+        success: false,
+        message: "Company name is required",
+      });
+    }
+
+
+    /* =================================================
+       COMPANY ADDRESS
+    ================================================= */
+
+    const cleanCompanyAddress = companyAddress.trim();
+
+    if (!cleanCompanyAddress) {
+      return res.status(400).json({
+        success: false,
+        message: "Company address is required",
+      });
+    }
+
+
+    /* =================================================
+       COMPANY STATE
+    ================================================= */
+
+    const cleanCompanyState = companyState.trim();
+
+    if (!cleanCompanyState) {
+      return res.status(400).json({
+        success: false,
+        message: "Company state is required",
+      });
+    }
+
+
+    /* =================================================
+       GST
     ================================================= */
 
     let cleanGST = "";
 
     if (hasGST === true) {
-
       if (!gstNumber) {
         return res.status(400).json({
           success: false,
-          message:
-            "GST number is required",
+          message: "GST number is required",
         });
       }
 
-
-      cleanGST =
-        gstNumber
-          .toUpperCase()
-          .trim();
-
+      cleanGST = gstNumber
+        .toUpperCase()
+        .trim();
 
       const gstRegex =
         /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
-
       if (!gstRegex.test(cleanGST)) {
         return res.status(400).json({
           success: false,
-          message:
-            "Invalid GST number",
+          message: "Invalid GST number",
         });
       }
-
-    } else {
-
-      /*
-        User does not have GST.
-        Therefore GST number blank ठेवतो.
-      */
-
-      cleanGST = "";
-
     }
 
 
     /* =================================================
-       PAN VALIDATION
+       PAN
     ================================================= */
 
     const cleanPAN =
@@ -116,34 +161,28 @@ export const register = async (req, res) => {
         .toUpperCase()
         .trim();
 
-
     const panRegex =
       /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-
 
     if (!panRegex.test(cleanPAN)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid PAN number",
+        message: "Invalid PAN number",
       });
     }
 
 
     /* =================================================
-       MOBILE VALIDATION
+       MOBILE
     ================================================= */
 
     const cleanMobile =
-      mobileNumber
-        .replace(/\D/g, "");
-
+      mobileNumber.replace(/\D/g, "");
 
     if (cleanMobile.length !== 10) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid mobile number",
+        message: "Invalid mobile number",
       });
     }
 
@@ -153,13 +192,11 @@ export const register = async (req, res) => {
     ================================================= */
 
     const cleanEmail =
-      email
-        .toLowerCase()
-        .trim();
+      email.toLowerCase().trim();
 
 
     /* =================================================
-       CHECK EXISTING EMAIL
+       CHECK EMAIL
     ================================================= */
 
     const existingEmail =
@@ -167,36 +204,30 @@ export const register = async (req, res) => {
         email: cleanEmail,
       });
 
-
     if (existingEmail) {
       return res.status(400).json({
         success: false,
-        message:
-          "Email already registered",
+        message: "Email already registered",
       });
     }
 
 
     /* =================================================
-       CHECK EXISTING GST
+       CHECK GST
     ================================================= */
 
     if (hasGST === true) {
-
       const existingGST =
         await User.findOne({
           gstNumber: cleanGST,
         });
 
-
       if (existingGST) {
         return res.status(400).json({
           success: false,
-          message:
-            "GST number already registered",
+          message: "GST number already registered",
         });
       }
-
     }
 
 
@@ -214,10 +245,7 @@ export const register = async (req, res) => {
 
 
     const hashedPassword =
-      await bcrypt.hash(
-        password,
-        10
-      );
+      await bcrypt.hash(password, 10);
 
 
     /* =================================================
@@ -226,6 +254,15 @@ export const register = async (req, res) => {
 
     const user =
       await User.create({
+        name: cleanName,
+
+        companyName: cleanCompanyName,
+
+        companyAddress:
+          cleanCompanyAddress,
+
+        companyState:
+          cleanCompanyState,
 
         hasGST:
           hasGST === true,
@@ -244,12 +281,11 @@ export const register = async (req, res) => {
 
         password:
           hashedPassword,
-
       });
 
 
     /* =================================================
-       JWT TOKEN
+       TOKEN
     ================================================= */
 
     const token =
@@ -261,16 +297,24 @@ export const register = async (req, res) => {
     ================================================= */
 
     return res.status(201).json({
-
       success: true,
 
       message:
         "Registration successful",
 
       user: {
+        id: user._id,
 
-        id:
-          user._id,
+        name: user.name,
+
+        companyName:
+          user.companyName,
+
+        companyAddress:
+          user.companyAddress,
+
+        companyState:
+          user.companyState,
 
         hasGST:
           user.hasGST,
@@ -289,48 +333,29 @@ export const register = async (req, res) => {
 
         role:
           user.role,
-
       },
 
       token,
-
     });
 
   } catch (error) {
-
     console.error(
       "Register Error:",
       error
     );
 
-
-    /* =================================================
-       DUPLICATE KEY ERROR
-    ================================================= */
-
     if (error.code === 11000) {
-
       return res.status(400).json({
-
         success: false,
-
         message:
           "Email or GST number already exists",
-
       });
-
     }
 
-
     return res.status(500).json({
-
       success: false,
-
-      message:
-        "Server error",
-
+      message: "Server error",
     });
-
   }
 };
 
@@ -340,54 +365,35 @@ export const register = async (req, res) => {
 ===================================================== */
 
 export const login = async (req, res) => {
-
   try {
-
     const {
       email,
       password,
     } = req.body;
 
-
     if (!email || !password) {
-
       return res.status(400).json({
-
         success: false,
-
         message:
           "Email and password are required",
-
       });
-
     }
 
-
     const cleanEmail =
-      email
-        .toLowerCase()
-        .trim();
-
+      email.toLowerCase().trim();
 
     const user =
       await User.findOne({
         email: cleanEmail,
       });
 
-
     if (!user) {
-
       return res.status(401).json({
-
         success: false,
-
         message:
           "Invalid email or password",
-
       });
-
     }
-
 
     const isPasswordMatch =
       await bcrypt.compare(
@@ -395,36 +401,36 @@ export const login = async (req, res) => {
         user.password
       );
 
-
     if (!isPasswordMatch) {
-
       return res.status(401).json({
-
         success: false,
-
         message:
           "Invalid email or password",
-
       });
-
     }
-
 
     const token =
       generateToken(user);
 
-
     return res.status(200).json({
-
       success: true,
 
       message:
         "Login successful",
 
       user: {
+        id: user._id,
 
-        id:
-          user._id,
+        name: user.name,
+
+        companyName:
+          user.companyName,
+
+        companyAddress:
+          user.companyAddress,
+
+        companyState:
+          user.companyState,
 
         hasGST:
           user.hasGST,
@@ -443,29 +449,20 @@ export const login = async (req, res) => {
 
         role:
           user.role,
-
       },
 
       token,
-
     });
 
   } catch (error) {
-
     console.error(
       "Login Error:",
       error
     );
 
-
     return res.status(500).json({
-
       success: false,
-
-      message:
-        "Server error",
-
+      message: "Server error",
     });
-
   }
 };

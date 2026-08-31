@@ -3,7 +3,50 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     /* =====================================================
-       GST AVAILABLE OR NOT
+       PERSON NAME
+    ===================================================== */
+
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    /* =====================================================
+       COMPANY NAME
+    ===================================================== */
+
+    companyName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    /* =====================================================
+       COMPANY ADDRESS
+    ===================================================== */
+
+    companyAddress: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    /* =====================================================
+       COMPANY STATE
+
+       GST असेल तर GST मधून मिळू शकतो,
+       पण GST नसल्यास manual state आवश्यक.
+    ===================================================== */
+
+    companyState: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    /* =====================================================
+       GST AVAILABLE
     ===================================================== */
 
     hasGST: {
@@ -11,7 +54,6 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: false,
     },
-
 
     /* =====================================================
        GST NUMBER
@@ -26,9 +68,8 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-
     /* =====================================================
-       PAN NUMBER
+       PAN
     ===================================================== */
 
     panNumber: {
@@ -38,9 +79,8 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-
     /* =====================================================
-       MOBILE NUMBER
+       MOBILE
     ===================================================== */
 
     mobileNumber: {
@@ -48,7 +88,6 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
 
     /* =====================================================
        EMAIL
@@ -62,7 +101,6 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-
     /* =====================================================
        PASSWORD
     ===================================================== */
@@ -71,7 +109,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
 
     /* =====================================================
        ROLE
@@ -89,11 +126,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-
-const User = mongoose.model(
-  "User",
-  userSchema
-);
-
+const User = mongoose.model("User", userSchema);
 
 export default User;

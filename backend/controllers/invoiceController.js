@@ -10,8 +10,14 @@ export const createInvoice = async (req, res) => {
   try {
 
     const {
+      invoice_number,
+      invoice_date,
+
       vendor_name,
+      vendor_has_gst,
       vendor_gstin,
+      vendor_state,
+
       total_amount,
       gst_rate,
       description,
@@ -22,7 +28,23 @@ export const createInvoice = async (req, res) => {
        BASIC VALIDATION
     ================================================= */
 
-    if (!vendor_name) {
+    if (!invoice_number?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invoice number is required",
+      });
+    }
+
+
+    if (!invoice_date) {
+      return res.status(400).json({
+        success: false,
+        message: "Invoice date is required",
+      });
+    }
+
+
+    if (!vendor_name?.trim()) {
       return res.status(400).json({
         success: false,
         message: "Vendor name is required",
@@ -54,11 +76,17 @@ export const createInvoice = async (req, res) => {
     }
 
 
-    const amount = Number(total_amount);
-    const gstRate = Number(gst_rate);
+    const amount =
+      Number(total_amount);
+
+    const gstRate =
+      Number(gst_rate);
 
 
-    if (Number.isNaN(amount) || amount < 0) {
+    if (
+      Number.isNaN(amount) ||
+      amount < 0
+    ) {
       return res.status(400).json({
         success: false,
         message: "Invalid total amount",
@@ -79,10 +107,39 @@ export const createInvoice = async (req, res) => {
 
 
     /* =================================================
-       LOGGED-IN USER
+       DATE
     ================================================= */
 
-    const user = await User.findById(req.user._id);
+    const parsedDate =
+      new Date(invoice_date);
+
+    if (
+      Number.isNaN(
+        parsedDate.getTime()
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid invoice date",
+      });
+    }
+
+
+    const invoiceYear =
+      parsedDate.getFullYear();
+
+    const invoiceMonth =
+      parsedDate.getMonth() + 1;
+
+
+    /* =================================================
+       LOGGED USER
+    ================================================= */
+
+    const user =
+      await User.findById(
+        req.user._id
+      );
 
 
     if (!user) {
@@ -94,89 +151,209 @@ export const createInvoice = async (req, res) => {
 
 
     /* =================================================
-       USER GST CHECK
+       COMPANY STATE
     ================================================= */
 
-    if (!user.hasGST || !user.gstNumber) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "You must have a GST number to create a GST invoice",
-      });
-    }
+    let companyState =
+      user.companyState;
 
 
     /* =================================================
-       CLEAN GST
+       IF USER HAS GST
+       COMPANY STATE FROM GST
     ================================================= */
 
-    const userGST =
+    if (
+      user.hasGST &&
       user.gstNumber
-        .toUpperCase()
-        .trim();
+    ) {
+
+      const userGST =
+        user.gstNumber
+          .toUpperCase()
+          .trim();
 
 
-    const vendorGST =
-      vendor_gstin
-        ? vendor_gstin.toUpperCase().trim()
-        : "";
+      const gstRegex =
+        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
 
-    /* =================================================
-       VENDOR GST REQUIRED
-    ================================================= */
+      if (!gstRegex.test(userGST)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Logged-in user GST number is invalid",
+        });
+      }
 
-    if (!vendorGST) {
+      /*
+
+        GST first two digits are state code.
+
+      */
+
+    }
+
+
+    if (!companyState) {
       return res.status(400).json({
         success: false,
         message:
-          "Vendor GST number is required",
+          "Company state is required",
       });
     }
 
 
     /* =================================================
-       GST FORMAT VALIDATION
+       VENDOR GST
     ================================================= */
 
-    const gstRegex =
-      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    let vendorGST = "";
+
+    let vendorStateFinal =
+      vendor_state?.trim() || "";
+
+    let vendorStateCode = "";
 
 
-    if (!gstRegex.test(userGST)) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Logged-in user GST number is invalid",
-      });
-    }
+    /* =================================================
+       VENDOR HAS GST
+    ================================================= */
+
+    if (vendor_has_gst === true) {
+
+      if (!vendor_gstin) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Vendor GST number is required",
+        });
+      }
 
 
-    if (!gstRegex.test(vendorGST)) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Vendor GST number is invalid",
-      });
+      vendorGST =
+        vendor_gstin
+          .toUpperCase()
+          .trim();
+
+
+      const gstRegex =
+        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+
+      if (!gstRegex.test(vendorGST)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid vendor GST number",
+        });
+      }
+
+
+      /* =================================================
+         GST FIRST 2 DIGITS
+         STATE CODE
+      ================================================= */
+
+      vendorStateCode =
+        vendorGST.substring(0, 2);
+
+
+      /*
+        Frontend ने GST वरून state
+        पाठवला असेल तर तो वापरू.
+
+        नसेल तर code वरून state
+        map करू शकतो.
+      */
+
+      if (!vendorStateFinal) {
+
+        const stateCodeMap = {
+          "01": "Jammu and Kashmir",
+          "02": "Himachal Pradesh",
+          "03": "Punjab",
+          "04": "Chandigarh",
+          "05": "Uttarakhand",
+          "06": "Haryana",
+          "07": "Delhi",
+          "08": "Rajasthan",
+          "09": "Uttar Pradesh",
+          "10": "Bihar",
+          "11": "Sikkim",
+          "12": "Arunachal Pradesh",
+          "13": "Nagaland",
+          "14": "Manipur",
+          "15": "Mizoram",
+          "16": "Tripura",
+          "17": "Meghalaya",
+          "18": "Assam",
+          "19": "West Bengal",
+          "20": "Jharkhand",
+          "21": "Odisha",
+          "22": "Chhattisgarh",
+          "23": "Madhya Pradesh",
+          "24": "Gujarat",
+          "26": "Dadra and Nagar Haveli and Daman and Diu",
+          "27": "Maharashtra",
+          "28": "Andhra Pradesh",
+          "29": "Karnataka",
+          "30": "Goa",
+          "31": "Lakshadweep",
+          "32": "Kerala",
+          "33": "Tamil Nadu",
+          "34": "Puducherry",
+          "35": "Andaman and Nicobar Islands",
+          "36": "Telangana",
+          "37": "Andhra Pradesh",
+          "38": "Ladakh",
+        };
+
+
+        vendorStateFinal =
+          stateCodeMap[
+            vendorStateCode
+          ] || "";
+      }
+
+
+      if (!vendorStateFinal) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Unable to determine vendor state from GST",
+        });
+      }
+
     }
 
 
     /* =================================================
-       STATE CODE
+       VENDOR DOES NOT HAVE GST
 
-       GST च्या पहिल्या 2 digits म्हणजे state code
+       State MANUAL
     ================================================= */
 
-    const userStateCode =
-      userGST.substring(0, 2);
+    else {
 
+      vendorGST = "";
 
-    const vendorStateCode =
-      vendorGST.substring(0, 2);
+      vendorStateCode = "";
+
+      if (!vendorStateFinal) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please select vendor state",
+        });
+      }
+    }
 
 
     /* =================================================
-       TAX CALCULATION
+       TAX TYPE
+
+       Company State vs Vendor State
     ================================================= */
 
     let taxType;
@@ -192,24 +369,16 @@ export const createInvoice = async (req, res) => {
 
     /* =================================================
        SAME STATE
-       
-       CGST + SGST
     ================================================= */
 
     if (
-      userStateCode === vendorStateCode
+      companyState.toLowerCase().trim() ===
+      vendorStateFinal.toLowerCase().trim()
     ) {
 
-      taxType = "CGST_SGST";
+      taxType =
+        "CGST_SGST";
 
-
-      /*
-        Example:
-        GST Rate = 18%
-
-        CGST = 9%
-        SGST = 9%
-      */
 
       cgstRate =
         gstRate / 2;
@@ -242,13 +411,12 @@ export const createInvoice = async (req, res) => {
 
     /* =================================================
        DIFFERENT STATE
-       
-       IGST
     ================================================= */
 
     else {
 
-      taxType = "IGST";
+      taxType =
+        "IGST";
 
 
       igstRate =
@@ -263,7 +431,6 @@ export const createInvoice = async (req, res) => {
             100
           ).toFixed(2)
         );
-
     }
 
 
@@ -295,7 +462,7 @@ export const createInvoice = async (req, res) => {
 
 
     /* =================================================
-       CREATE INVOICE
+       CREATE
     ================================================= */
 
     const invoice =
@@ -304,11 +471,29 @@ export const createInvoice = async (req, res) => {
         user_id:
           user._id,
 
+        invoice_number:
+          invoice_number.trim(),
+
+        invoice_date:
+          parsedDate,
+
+        invoice_year:
+          invoiceYear,
+
+        invoice_month:
+          invoiceMonth,
+
         vendor_name:
           vendor_name.trim(),
 
+        vendor_has_gst:
+          vendor_has_gst === true,
+
         vendor_gstin:
           vendorGST,
+
+        vendor_state:
+          vendorStateFinal,
 
         vendor_state_code:
           vendorStateCode,
@@ -347,16 +532,12 @@ export const createInvoice = async (req, res) => {
           grandTotal,
 
         description:
-          description || "",
+          description?.trim() || "",
 
         status:
           "Pending",
       });
 
-
-    /* =================================================
-       RESPONSE
-    ================================================= */
 
     return res.status(201).json({
 
@@ -366,7 +547,6 @@ export const createInvoice = async (req, res) => {
         "Invoice created successfully",
 
       invoice,
-
     });
 
   } catch (error) {
@@ -375,7 +555,6 @@ export const createInvoice = async (req, res) => {
       "Create Invoice Error:",
       error
     );
-
 
     return res.status(500).json({
 
@@ -386,30 +565,29 @@ export const createInvoice = async (req, res) => {
 
       error:
         error.message,
-
     });
-
   }
 };
 
 
 /* =====================================================
-   GET ALL USER INVOICES
+   GET INVOICES
 ===================================================== */
 
-export const getInvoices = async (req, res) => {
+export const getInvoices = async (
+  req,
+  res
+) => {
 
   try {
 
     const invoices =
       await Invoice.find({
-
         user_id:
           req.user._id,
-
       })
-
       .sort({
+        invoice_date: -1,
         createdAt: -1,
       });
 
@@ -419,7 +597,6 @@ export const getInvoices = async (req, res) => {
       success: true,
 
       invoices,
-
     });
 
   } catch (error) {
@@ -429,26 +606,25 @@ export const getInvoices = async (req, res) => {
       error
     );
 
-
     return res.status(500).json({
 
       success: false,
 
       message:
         "Failed to load invoices",
-
     });
-
   }
-
 };
 
 
 /* =====================================================
-   GET SINGLE INVOICE
+   GET SINGLE
 ===================================================== */
 
-export const getInvoice = async (req, res) => {
+export const getInvoice = async (
+  req,
+  res
+) => {
 
   try {
 
@@ -460,7 +636,6 @@ export const getInvoice = async (req, res) => {
 
         user_id:
           req.user._id,
-
       });
 
 
@@ -472,9 +647,7 @@ export const getInvoice = async (req, res) => {
 
         message:
           "Invoice not found",
-
       });
-
     }
 
 
@@ -483,7 +656,6 @@ export const getInvoice = async (req, res) => {
       success: true,
 
       invoice,
-
     });
 
   } catch (error) {
@@ -493,26 +665,25 @@ export const getInvoice = async (req, res) => {
       error
     );
 
-
     return res.status(500).json({
 
       success: false,
 
       message:
         "Failed to load invoice",
-
     });
-
   }
-
 };
 
 
 /* =====================================================
-   DELETE INVOICE
+   DELETE
 ===================================================== */
 
-export const deleteInvoice = async (req, res) => {
+export const deleteInvoice = async (
+  req,
+  res
+) => {
 
   try {
 
@@ -524,7 +695,6 @@ export const deleteInvoice = async (req, res) => {
 
         user_id:
           req.user._id,
-
       });
 
 
@@ -536,9 +706,7 @@ export const deleteInvoice = async (req, res) => {
 
         message:
           "Invoice not found",
-
       });
-
     }
 
 
@@ -548,7 +716,6 @@ export const deleteInvoice = async (req, res) => {
 
       message:
         "Invoice deleted successfully",
-
     });
 
   } catch (error) {
@@ -558,16 +725,12 @@ export const deleteInvoice = async (req, res) => {
       error
     );
 
-
     return res.status(500).json({
 
       success: false,
 
       message:
         "Failed to delete invoice",
-
     });
-
   }
-
 };

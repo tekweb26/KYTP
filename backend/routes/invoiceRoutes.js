@@ -10,13 +10,12 @@ import {
 } from "../controllers/invoiceController.js";
 
 
-const router = express.Router();
+const router =
+  express.Router();
 
 
 /* =====================================================
    CREATE INVOICE
-
-   POST /api/invoices
 ===================================================== */
 
 router.post(
@@ -28,8 +27,6 @@ router.post(
 
 /* =====================================================
    GET ALL USER INVOICES
-
-   GET /api/invoices
 ===================================================== */
 
 router.get(
@@ -41,8 +38,6 @@ router.get(
 
 /* =====================================================
    GET SINGLE INVOICE
-
-   GET /api/invoices/:id
 ===================================================== */
 
 router.get(
@@ -53,9 +48,7 @@ router.get(
 
 
 /* =====================================================
-   DELETE INVOICE
-
-   DELETE /api/invoices/:id
+   DELETE
 ===================================================== */
 
 router.delete(

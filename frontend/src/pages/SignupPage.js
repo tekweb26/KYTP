@@ -7,11 +7,12 @@ import "./SignupPage.css";
 export default function SignupPage({ onLogin }) {
   const navigate = useNavigate();
 
-  /* =====================================================
-     FORM STATES
-  ===================================================== */
-
   const [hasGST, setHasGST] = useState("");
+
+  const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [companyState, setCompanyState] = useState("");
 
   const [gstNumber, setGstNumber] = useState("");
   const [panNumber, setPanNumber] = useState("");
@@ -24,11 +25,53 @@ export default function SignupPage({ onLogin }) {
 
 
   /* =====================================================
+     STATES
+  ===================================================== */
+
+  const states = [
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Delhi",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Puducherry",
+    "Chandigarh",
+  ];
+
+
+  /* =====================================================
      GST VALIDATION
   ===================================================== */
 
   const validateGST = (gst) => {
-    const cleanGST = gst.toUpperCase().trim();
+    const cleanGST =
+      gst.toUpperCase().trim();
 
     const gstRegex =
       /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
@@ -50,13 +93,15 @@ export default function SignupPage({ onLogin }) {
 
 
   /* =====================================================
-     PAN VALIDATION
+     PAN
   ===================================================== */
 
   const validatePAN = (pan) => {
-    const cleanPAN = pan.toUpperCase().trim();
+    const cleanPAN =
+      pan.toUpperCase().trim();
 
-    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    const panRegex =
+      /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 
     return panRegex.test(cleanPAN);
   };
@@ -67,15 +112,18 @@ export default function SignupPage({ onLogin }) {
   ===================================================== */
 
   const handleGSTChange = (e) => {
-    const value = e.target.value
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "")
-      .slice(0, 15);
+    const value =
+      e.target.value
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 15);
 
     setGstNumber(value);
 
     if (value.length > 0) {
-      setGstError(validateGST(value));
+      setGstError(
+        validateGST(value)
+      );
     } else {
       setGstError("");
     }
@@ -83,27 +131,29 @@ export default function SignupPage({ onLogin }) {
 
 
   /* =====================================================
-     PAN CHANGE
+     PAN
   ===================================================== */
 
   const handlePANChange = (e) => {
-    const value = e.target.value
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "")
-      .slice(0, 10);
+    const value =
+      e.target.value
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 10);
 
     setPanNumber(value);
   };
 
 
   /* =====================================================
-     MOBILE CHANGE
+     MOBILE
   ===================================================== */
 
   const handleMobileChange = (e) => {
-    const value = e.target.value
-      .replace(/\D/g, "")
-      .slice(0, 10);
+    const value =
+      e.target.value
+        .replace(/\D/g, "")
+        .slice(0, 10);
 
     setMobileNumber(value);
   };
@@ -116,22 +166,58 @@ export default function SignupPage({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    /* ---------------------------------------------
-       GST SELECTION
-    --------------------------------------------- */
+    const cleanName =
+      name.trim();
 
-    if (!hasGST) {
-      toast.error("Please select whether you have GST");
+    if (!cleanName) {
+      toast.error(
+        "Please enter your name"
+      );
       return;
     }
 
 
-    /* ---------------------------------------------
-       GST VALIDATION
-    --------------------------------------------- */
+    const cleanCompanyName =
+      companyName.trim();
+
+    if (!cleanCompanyName) {
+      toast.error(
+        "Please enter company name"
+      );
+      return;
+    }
+
+
+    const cleanCompanyAddress =
+      companyAddress.trim();
+
+    if (!cleanCompanyAddress) {
+      toast.error(
+        "Please enter company address"
+      );
+      return;
+    }
+
+
+    if (!companyState) {
+      toast.error(
+        "Please select company state"
+      );
+      return;
+    }
+
+
+    if (!hasGST) {
+      toast.error(
+        "Please select whether you have GST"
+      );
+      return;
+    }
+
 
     if (hasGST === "yes") {
-      const error = validateGST(gstNumber);
+      const error =
+        validateGST(gstNumber);
 
       if (error) {
         setGstError(error);
@@ -141,19 +227,13 @@ export default function SignupPage({ onLogin }) {
     }
 
 
-    /* ---------------------------------------------
-       PAN VALIDATION
-    --------------------------------------------- */
-
     if (!validatePAN(panNumber)) {
-      toast.error("Please enter a valid PAN number");
+      toast.error(
+        "Please enter a valid PAN number"
+      );
       return;
     }
 
-
-    /* ---------------------------------------------
-       MOBILE VALIDATION
-    --------------------------------------------- */
 
     if (mobileNumber.length !== 10) {
       toast.error(
@@ -163,21 +243,16 @@ export default function SignupPage({ onLogin }) {
     }
 
 
-    /* ---------------------------------------------
-       EMAIL VALIDATION
-    --------------------------------------------- */
-
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail =
+      email.trim().toLowerCase();
 
     if (!cleanEmail) {
-      toast.error("Please enter email address");
+      toast.error(
+        "Please enter email address"
+      );
       return;
     }
 
-
-    /* ---------------------------------------------
-       PASSWORD VALIDATION
-    --------------------------------------------- */
 
     if (password.length < 6) {
       toast.error(
@@ -187,50 +262,53 @@ export default function SignupPage({ onLogin }) {
     }
 
 
-    /* ---------------------------------------------
-       PREPARE SIGNUP DATA
-    --------------------------------------------- */
-
     const signupData = {
-      hasGST: hasGST === "yes",
+      name: cleanName,
+
+      companyName:
+        cleanCompanyName,
+
+      companyAddress:
+        cleanCompanyAddress,
+
+      companyState,
+
+      hasGST:
+        hasGST === "yes",
 
       gstNumber:
         hasGST === "yes"
           ? gstNumber.trim().toUpperCase()
           : "",
 
-      panNumber: panNumber.trim().toUpperCase(),
+      panNumber:
+        panNumber.trim().toUpperCase(),
 
-      mobileNumber: mobileNumber.trim(),
+      mobileNumber:
+        mobileNumber.trim(),
 
-      email: cleanEmail,
+      email:
+        cleanEmail,
 
       password,
     };
 
 
-    /* ---------------------------------------------
-       API CALL
-    --------------------------------------------- */
-
     setLoading(true);
 
     try {
-      const response = await authAPI.register(
-        signupData
-      );
+      const response =
+        await authAPI.register(
+          signupData
+        );
 
-      const data = response.data;
+      const data =
+        response.data;
 
       console.log(
         "Signup Response:",
         data
       );
-
-
-      /* ---------------------------------------------
-         SUCCESS
-      --------------------------------------------- */
 
       if (data.success) {
         toast.success(
@@ -245,11 +323,6 @@ export default function SignupPage({ onLogin }) {
 
         return;
       }
-
-
-      /* ---------------------------------------------
-         FAILED
-      --------------------------------------------- */
 
       toast.error(
         data.message ||
@@ -273,22 +346,12 @@ export default function SignupPage({ onLogin }) {
   };
 
 
-  /* =====================================================
-     JSX
-  ===================================================== */
-
   return (
     <div className="kytp-signup-page">
 
       <div className="kytp-signup-card">
 
-
-        {/* =================================================
-            LOGO
-        ================================================= */}
-
         <div className="kytp-signup-logo">
-
           <div className="kytp-signup-logo-box">
             🇮🇳 KYTP
           </div>
@@ -296,16 +359,10 @@ export default function SignupPage({ onLogin }) {
           <p>
             GST Payment Platform
           </p>
-
         </div>
 
 
-        {/* =================================================
-            HEADING
-        ================================================= */}
-
         <div className="kytp-signup-heading">
-
           <h1>
             Create Account
           </h1>
@@ -313,23 +370,108 @@ export default function SignupPage({ onLogin }) {
           <p>
             Register to start using the GST Payment Platform
           </p>
-
         </div>
 
-
-        {/* =================================================
-            FORM
-        ================================================= */}
 
         <form
           onSubmit={handleSubmit}
           className="kytp-signup-form"
         >
 
+          {/* PERSON NAME */}
 
-          {/* =================================================
-              GST QUESTION
-          ================================================= */}
+          <div className="kytp-form-group">
+            <label>
+              Person Name
+            </label>
+
+            <input
+              type="text"
+              value={name}
+              onChange={(e) =>
+                setName(e.target.value)
+              }
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
+
+
+          {/* COMPANY NAME */}
+
+          <div className="kytp-form-group">
+            <label>
+              Company Name
+            </label>
+
+            <input
+              type="text"
+              value={companyName}
+              onChange={(e) =>
+                setCompanyName(
+                  e.target.value
+                )
+              }
+              placeholder="Enter company name"
+              required
+            />
+          </div>
+
+
+          {/* COMPANY ADDRESS */}
+
+          <div className="kytp-form-group">
+            <label>
+              Company Address
+            </label>
+
+            <textarea
+              value={companyAddress}
+              onChange={(e) =>
+                setCompanyAddress(
+                  e.target.value
+                )
+              }
+              placeholder="Enter complete company address"
+              rows="3"
+              required
+            />
+          </div>
+
+
+          {/* COMPANY STATE */}
+
+          <div className="kytp-form-group">
+            <label>
+              Company State
+            </label>
+
+            <select
+              value={companyState}
+              onChange={(e) =>
+                setCompanyState(
+                  e.target.value
+                )
+              }
+              required
+            >
+              <option value="">
+                Select State
+              </option>
+
+              {states.map((state) => (
+                <option
+                  key={state}
+                  value={state}
+                >
+                  {state}
+                </option>
+              ))}
+            </select>
+          </div>
+
+
+          {/* GST QUESTION */}
 
           <div className="kytp-form-group">
 
@@ -340,14 +482,17 @@ export default function SignupPage({ onLogin }) {
             <div className="kytp-gst-options">
 
               <label className="kytp-radio-option">
-
                 <input
                   type="radio"
                   name="hasGST"
                   value="yes"
-                  checked={hasGST === "yes"}
+                  checked={
+                    hasGST === "yes"
+                  }
                   onChange={(e) => {
-                    setHasGST(e.target.value);
+                    setHasGST(
+                      e.target.value
+                    );
                     setGstError("");
                   }}
                 />
@@ -355,19 +500,22 @@ export default function SignupPage({ onLogin }) {
                 <span>
                   Yes
                 </span>
-
               </label>
 
 
               <label className="kytp-radio-option">
-
                 <input
                   type="radio"
                   name="hasGST"
                   value="no"
-                  checked={hasGST === "no"}
+                  checked={
+                    hasGST === "no"
+                  }
                   onChange={(e) => {
-                    setHasGST(e.target.value);
+                    setHasGST(
+                      e.target.value
+                    );
+
                     setGstNumber("");
                     setGstError("");
                   }}
@@ -376,7 +524,6 @@ export default function SignupPage({ onLogin }) {
                 <span>
                   No
                 </span>
-
               </label>
 
             </div>
@@ -384,23 +531,21 @@ export default function SignupPage({ onLogin }) {
           </div>
 
 
-          {/* =================================================
-              GST NUMBER
-          ================================================= */}
+          {/* GST */}
 
           {hasGST === "yes" && (
-
             <div className="kytp-form-group">
 
-              <label htmlFor="gstNumber">
+              <label>
                 GST Number
               </label>
 
               <input
-                id="gstNumber"
                 type="text"
                 value={gstNumber}
-                onChange={handleGSTChange}
+                onChange={
+                  handleGSTChange
+                }
                 placeholder="Enter 15 digit GSTIN"
                 maxLength={15}
                 autoComplete="off"
@@ -425,137 +570,109 @@ export default function SignupPage({ onLogin }) {
                 )}
 
             </div>
-
           )}
 
 
-          {/* =================================================
-              PAN
-          ================================================= */}
+          {/* PAN */}
 
           <div className="kytp-form-group">
-
-            <label htmlFor="panNumber">
+            <label>
               PAN Number
             </label>
 
             <input
-              id="panNumber"
               type="text"
               value={panNumber}
-              onChange={handlePANChange}
+              onChange={
+                handlePANChange
+              }
               placeholder="Enter PAN number"
               maxLength={10}
-              autoComplete="off"
               required
             />
-
           </div>
 
 
-          {/* =================================================
-              MOBILE
-          ================================================= */}
+          {/* MOBILE */}
 
           <div className="kytp-form-group">
-
-            <label htmlFor="mobileNumber">
+            <label>
               Mobile Number
             </label>
 
             <input
-              id="mobileNumber"
               type="tel"
               value={mobileNumber}
-              onChange={handleMobileChange}
+              onChange={
+                handleMobileChange
+              }
               placeholder="Enter 10 digit mobile number"
               maxLength={10}
-              autoComplete="tel"
               required
             />
-
           </div>
 
 
-          {/* =================================================
-              EMAIL
-          ================================================= */}
+          {/* EMAIL */}
 
           <div className="kytp-form-group">
-
-            <label htmlFor="email">
+            <label>
               Email Address
             </label>
 
             <input
-              id="email"
               type="email"
               value={email}
               onChange={(e) =>
                 setEmail(e.target.value)
               }
               placeholder="Enter your email"
-              autoComplete="email"
               required
             />
-
           </div>
 
 
-          {/* =================================================
-              PASSWORD
-          ================================================= */}
+          {/* PASSWORD */}
 
           <div className="kytp-form-group">
-
-            <label htmlFor="password">
+            <label>
               Password
             </label>
 
             <input
-              id="password"
               type="password"
               value={password}
               onChange={(e) =>
-                setPassword(e.target.value)
+                setPassword(
+                  e.target.value
+                )
               }
               placeholder="Create a password"
-              autoComplete="new-password"
               required
             />
 
             <small className="kytp-password-hint">
               Password must be at least 6 characters
             </small>
-
           </div>
 
 
-          {/* =================================================
-              SUBMIT
-          ================================================= */}
+          {/* SUBMIT */}
 
           <button
             type="submit"
             disabled={loading}
             className="kytp-signup-button"
           >
-
             {loading
               ? "Creating Account..."
               : "Create Account"}
-
           </button>
 
         </form>
 
 
-        {/* =================================================
-            LOGIN LINK
-        ================================================= */}
-
         <div className="kytp-signup-switch">
-
           <span>
             Already have an account?
           </span>
@@ -568,18 +685,11 @@ export default function SignupPage({ onLogin }) {
           >
             Login
           </button>
-
         </div>
 
 
-        {/* =================================================
-            FOOTER
-        ================================================= */}
-
         <div className="kytp-signup-footer">
-
           © 2026 KYTP • GST Payment Platform
-
         </div>
 
       </div>
