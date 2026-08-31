@@ -1,3 +1,4 @@
+
 /* =====================================================
    INVOICES PAGE
 ===================================================== */
@@ -5,18 +6,14 @@
 .invoices-page {
     width: 100%;
     min-height: 100vh;
-
     padding: 45px 40px;
-
     background: #f5f7fb;
-
     box-sizing: border-box;
 }
 
 .invoices-container {
     width: 100%;
     max-width: 1100px;
-
     margin: 0 auto;
 }
 
@@ -27,30 +24,23 @@
 
 .invoices-header {
     width: 75%;
-
     margin: 0 auto 30px;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     gap: 50px;
 }
 
 .invoices-title {
     margin: 0;
-
     font-size: 34px;
     font-weight: 700;
-
     color: #172033;
 }
 
 .invoices-subtitle {
     margin: 7px 0 0;
-
     font-size: 15px;
-
     color: #6b7280;
 }
 
@@ -61,25 +51,17 @@
 
 .invoice-primary-btn {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
-
     gap: 9px;
-
     padding: 12px 20px;
-
     border: none;
     border-radius: 8px;
-
     background: #2563eb;
     color: #fff;
-
     font-size: 15px;
     font-weight: 600;
-
     cursor: pointer;
-
     white-space: nowrap;
 }
 
@@ -89,7 +71,6 @@
 
 .invoice-primary-btn:disabled {
     opacity: 0.6;
-
     cursor: not-allowed;
 }
 
@@ -100,78 +81,52 @@
 
 .invoice-form-card {
     width: 80%;
-
     margin: 0 auto 30px;
-
     padding: 30px;
-
     box-sizing: border-box;
-
     background: #fff;
-
     border: 1px solid #e5e7eb;
-
     border-radius: 12px;
-
-    box-shadow:
-        0 5px 20px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 5px 20px rgba(15, 23, 42, 0.06);
 }
 
 .invoice-form-title {
     margin: 0 0 24px;
-
     font-size: 24px;
     font-weight: 700;
-
     text-align: center;
-
     color: #172033;
 }
 
 .invoice-form-grid {
     display: grid;
-
-    grid-template-columns:
-        repeat(2, 1fr);
-
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
 }
 
 .invoice-form-group {
     display: flex;
-
     flex-direction: column;
-
     margin-bottom: 20px;
 }
 
 .invoice-form-group label {
     margin-bottom: 8px;
-
     font-size: 14px;
     font-weight: 600;
-
     color: #374151;
 }
 
 .invoice-form-group input,
 .invoice-form-group textarea {
     width: 100%;
-
     box-sizing: border-box;
-
     padding: 12px 14px;
-
     border: 1px solid #d1d5db;
-
     border-radius: 8px;
-
     background: #fff;
-
     font-size: 15px;
-
     color: #111827;
-
     outline: none;
 }
 
@@ -181,39 +136,30 @@
 
 .invoice-form-group textarea {
     min-height: 100px;
-
     resize: vertical;
 }
 
 .invoice-form-group input:focus,
 .invoice-form-group textarea:focus {
     border-color: #2563eb;
-
-    box-shadow:
-        0 0 0 3px rgba(37, 99, 235, 0.10);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .invoice-field-hint {
     margin-top: 6px;
-
     font-size: 12px;
-
     color: #94a3b8;
 }
 
 .kytp-error-text {
     margin-top: 6px;
-
     font-size: 12px;
-
     color: #dc2626;
 }
 
 .kytp-success-text {
     margin-top: 6px;
-
     font-size: 12px;
-
     color: #16a34a;
 }
 
@@ -224,23 +170,14 @@
 
 .invoice-tax-info {
     display: flex;
-
     flex-direction: column;
-
     gap: 5px;
-
     margin: 5px 0 22px;
-
     padding: 14px 16px;
-
     background: #f8fafc;
-
     border: 1px solid #e5e7eb;
-
     border-radius: 8px;
-
     font-size: 13px;
-
     color: #64748b;
 }
 
@@ -255,27 +192,19 @@
 
 .invoice-form-actions {
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     gap: 14px;
 }
 
 .invoice-secondary-btn {
     padding: 12px 20px;
-
     border: none;
-
     border-radius: 8px;
-
     background: #e5e7eb;
-
     color: #374151;
-
     font-size: 15px;
     font-weight: 600;
-
     cursor: pointer;
 }
 
@@ -285,7 +214,6 @@
 
 .invoice-secondary-btn:disabled {
     opacity: 0.6;
-
     cursor: not-allowed;
 }
 
@@ -296,32 +224,22 @@
 
 .invoice-table-card {
     width: 80%;
-
     margin: 0 auto;
-
     background: #fff;
-
     border: 1px solid #e5e7eb;
-
     border-radius: 12px;
-
     overflow: hidden;
-
-    box-shadow:
-        0 6px 20px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
 }
 
 .invoice-table-wrapper {
     width: 100%;
-
     overflow-x: auto;
 }
 
 .invoice-table {
     width: 100%;
-
     min-width: 850px;
-
     border-collapse: collapse;
 }
 
@@ -331,31 +249,20 @@
 
 .invoice-table th {
     padding: 16px 20px;
-
     text-align: center;
-
     font-size: 14px;
-
     font-weight: 700;
-
     color: #475569;
-
     border-bottom: 1px solid #e5e7eb;
-
     white-space: nowrap;
 }
 
 .invoice-table td {
     padding: 17px 20px;
-
     text-align: center;
-
     font-size: 15px;
-
     color: #374151;
-
     border-bottom: 1px solid #eef0f3;
-
     vertical-align: middle;
 }
 
@@ -370,13 +277,9 @@
 
 .invoice-number-cell {
     display: inline-block;
-
     font-size: 14px;
-
     font-weight: 700;
-
     color: #2563eb;
-
     white-space: nowrap;
 }
 
@@ -387,17 +290,13 @@
 
 .invoice-vendor-name {
     font-size: 15px;
-
     font-weight: 600;
-
     color: #172033;
 }
 
 .invoice-vendor-gstin {
     margin-top: 4px;
-
     font-size: 12px;
-
     color: #94a3b8;
 }
 
@@ -406,31 +305,17 @@
    AMOUNT
 ===================================================== */
 
-.invoices-page
-.invoice-table
-td
-.invoice-amount {
-
+.invoices-page .invoice-table td .invoice-amount {
     display: inline-flex;
-
     font-size: 14px !important;
-
     font-weight: 600 !important;
-
     color: #374151 !important;
-
     text-decoration: none !important;
 }
 
-.invoices-page
-.invoice-table
-td
-.invoice-grand-total {
-
+.invoices-page .invoice-table td .invoice-grand-total {
     font-size: 14px !important;
-
     font-weight: 700 !important;
-
     color: #374151 !important;
 }
 
@@ -441,9 +326,7 @@ td
 
 .invoice-tax {
     font-size: 14px;
-
     font-weight: 500;
-
     color: #374151;
 }
 
@@ -454,17 +337,11 @@ td
 
 .invoice-status {
     display: inline-flex;
-
     padding: 6px 12px;
-
     border-radius: 20px;
-
     background: #eff6ff;
-
     color: #e40b0b;
-
     font-size: 13px;
-
     font-weight: 600;
 }
 
@@ -475,28 +352,20 @@ td
 
 .invoice-actions {
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     gap: 8px;
 }
 
 .invoice-action-btn {
     width: 36px;
     height: 36px;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     border: none;
-
     border-radius: 7px;
-
     background: transparent;
-
     cursor: pointer;
 }
 
@@ -531,48 +400,43 @@ td
 
 .invoice-empty {
     padding: 60px 20px;
-
     text-align: center;
-
     font-size: 15px;
-
     color: #94a3b8;
 }
 
 .invoice-loading {
     min-height: 350px;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     color: #64748b;
 }
 
 
 /* =====================================================
-   MODAL OVERLAY
+   INVOICE VIEW MODAL
 ===================================================== */
 
 .invoice-modal-overlay {
     position: fixed;
-
     inset: 0;
-
     z-index: 9999;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
+    width: 100%;
+    height: 100vh;
+
     padding: 20px;
-
-    background:
-        rgba(15, 23, 42, 0.65);
-
     box-sizing: border-box;
+
+    background: rgba(15, 23, 42, 0.65);
+
+    /* बाहेरचा page scroll बंद */
+    overflow: hidden;
 }
 
 
@@ -581,66 +445,66 @@ td
 ===================================================== */
 
 .invoice-print-modal {
-    width: 100%;
+    position: relative;
 
-    max-width: 850px;
+    width: 800px;
+    max-width: calc(100vw - 40px);
 
-    height: 95vh;
-
-    max-height: 95vh;
+    height: 92vh;
+    max-height: 92vh;
 
     display: flex;
-
     flex-direction: column;
 
-    background: #f1f5f9;
+    flex-shrink: 0;
 
+    background: #f1f5f9;
     border-radius: 12px;
 
+    /* Modal स्वतः scroll होणार नाही */
     overflow: hidden;
 
-    box-shadow:
-        0 25px 70px
-        rgba(15, 23, 42, 0.3);
+    box-shadow: 0 25px 70px rgba(15, 23, 42, 0.3);
+
+    box-sizing: border-box;
 }
 
 
 /* =====================================================
    PREVIEW TOOLBAR
-   FIXED / NON-SCROLLING
 ===================================================== */
 
 .invoice-preview-toolbar {
+    position: relative;
+
     flex: 0 0 62px;
 
+    width: 100%;
+    height: 62px;
     min-height: 62px;
 
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
 
     padding: 0 18px;
 
-    background: #fff;
-
+    background: #ffffff;
     border-bottom: 1px solid #e5e7eb;
 
     box-sizing: border-box;
+
+    z-index: 10;
 }
 
 .invoice-preview-toolbar strong {
     color: #172033;
-
     font-size: 16px;
 }
 
 .invoice-preview-actions {
     display: flex;
-
     align-items: center;
-
     gap: 10px;
 }
 
@@ -651,23 +515,18 @@ td
 
 .invoice-print-btn {
     display: inline-flex;
-
     align-items: center;
-
     gap: 8px;
 
     padding: 10px 16px;
 
     border: none;
-
     border-radius: 7px;
 
     background: #2563eb;
-
     color: #fff;
 
     font-size: 14px;
-
     font-weight: 600;
 
     cursor: pointer;
@@ -687,16 +546,13 @@ td
     height: 36px;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
     border: none;
-
     border-radius: 7px;
 
     background: #f1f5f9;
-
     color: #475569;
 
     cursor: pointer;
@@ -708,40 +564,45 @@ td
 
 
 /* =====================================================
-   NEW SCROLL AREA
-   ONLY INVOICE WILL SCROLL
+   ⭐ MAIN PREVIEW SCROLL AREA ⭐
+   फक्त VERTICAL scrollbar
 ===================================================== */
 
 .invoice-preview-scroll {
-    flex: 1 1 auto;
+    position: relative;
 
-    min-height: 0;
+    flex: 1 1 auto;
 
     width: 100%;
 
-    overflow-y: auto;
-
-    overflow-x: auto;
-
-    padding: 20px 0;
+    min-height: 0;
+    min-width: 0;
 
     box-sizing: border-box;
 
-    scrollbar-width: auto;
+    padding: 20px;
 
-    scrollbar-color:
-        #94a3b8
-        #e2e8f0;
+    background: #f1f5f9;
+
+    /* फक्त vertical scroll */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    scrollbar-gutter: stable;
+
+    /* Firefox */
+    scrollbar-width: auto;
+    scrollbar-color: #64748b #e2e8f0;
 }
 
 
 /* =====================================================
-   SCROLLBAR
+   VERTICAL SCROLLBAR
 ===================================================== */
 
 .invoice-preview-scroll::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 14px;
+    height: 0;
 }
 
 .invoice-preview-scroll::-webkit-scrollbar-track {
@@ -749,24 +610,34 @@ td
 }
 
 .invoice-preview-scroll::-webkit-scrollbar-thumb {
-    background: #94a3b8;
-
+    background: #64748b;
     border-radius: 10px;
-
-    border: 2px solid #e2e8f0;
+    border: 3px solid #e2e8f0;
 }
 
 .invoice-preview-scroll::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
+    background: #475569;
+}
+
+
+/* Horizontal scrollbar पूर्ण बंद */
+
+.invoice-preview-scroll::-webkit-scrollbar:horizontal {
+    height: 0;
+}
+
+.invoice-preview-scroll > * {
+    flex-shrink: 0;
 }
 
 
 /* =====================================================
-   A4 PAPER
+   A4 INVOICE PAPER
 ===================================================== */
 
 .tax-invoice-paper {
     width: 794px;
+    min-width: 794px;
 
     min-height: 1123px;
 
@@ -776,8 +647,7 @@ td
 
     box-sizing: border-box;
 
-    background: #fff;
-
+    background: #ffffff;
     color: #111827;
 
     font-family:
@@ -785,7 +655,14 @@ td
         Helvetica,
         sans-serif;
 
+    /* Paper स्वतः scroll होणार नाही */
     overflow: visible;
+
+    /*
+       IMPORTANT:
+       Horizontal overflow दिसू नये
+    */
+    max-width: 100%;
 }
 
 
@@ -828,9 +705,7 @@ td
 
 .tax-invoice-top-grid {
     display: grid;
-
-    grid-template-columns:
-        1fr 270px;
+    grid-template-columns: 1fr 270px;
 
     border: 1px solid #d1d5db;
 }
@@ -863,9 +738,7 @@ td
 
 .invoice-meta div {
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
 
     gap: 15px;
@@ -881,7 +754,6 @@ td
 
 .invoice-meta span {
     font-size: 11px;
-
     color: #6b7280;
 }
 
@@ -910,7 +782,6 @@ td
     margin-bottom: 8px;
 
     font-size: 10px;
-
     font-weight: 700;
 
     color: #6b7280;
@@ -959,7 +830,6 @@ td
     text-align: center;
 
     font-size: 11px;
-
     font-weight: 700;
 
     color: #374151;
@@ -991,8 +861,7 @@ td
 .invoice-bottom-grid {
     display: grid;
 
-    grid-template-columns:
-        1fr 320px;
+    grid-template-columns: 1fr 320px;
 
     gap: 30px;
 
@@ -1035,7 +904,6 @@ td
     display: flex;
 
     align-items: center;
-
     justify-content: space-between;
 
     gap: 20px;
@@ -1092,7 +960,6 @@ td
     display: flex;
 
     align-items: center;
-
     justify-content: space-between;
 
     margin-top: 20px;
@@ -1123,7 +990,6 @@ td
     display: flex;
 
     align-items: flex-end;
-
     justify-content: space-between;
 
     gap: 30px;
@@ -1177,6 +1043,311 @@ td
 
 
 /* =====================================================
+   INVOICE PERIOD
+===================================================== */
+
+.invoice-period-wrapper {
+    width: 100%;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    margin: 0 auto 32px;
+
+    padding: 0 15px;
+
+    box-sizing: border-box;
+}
+
+.invoice-period-bar {
+    width: 100%;
+
+    max-width: 720px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 24px;
+
+    padding: 18px 24px;
+
+    background: #ffffff;
+
+    border: 1px solid #dbe3f0;
+
+    border-radius: 14px;
+
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.08);
+
+    box-sizing: border-box;
+}
+
+.invoice-period-title {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    color: #172033;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.invoice-period-icon {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #eff6ff;
+
+    border: 1px solid #bfdbfe;
+
+    border-radius: 9px;
+
+    color: #2563eb;
+}
+
+.invoice-period-selects {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+}
+
+.invoice-period-select {
+    height: 44px;
+
+    padding: 0 38px 0 14px;
+
+    border: 1px solid #cbd5e1;
+
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #172033;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    outline: none;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.invoice-period-select:hover {
+    border-color: #93c5fd;
+
+    background: #f8fbff;
+}
+
+.invoice-period-select:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.invoice-year-select {
+    width: 120px;
+    min-width: 120px;
+}
+
+.invoice-month-select {
+    width: 160px;
+    min-width: 160px;
+}
+
+.invoice-period-select option {
+    background: #ffffff;
+
+    color: #172033;
+
+    font-size: 14px;
+}
+
+.invoice-selected-period {
+    width: 100%;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 12px;
+}
+
+.invoice-selected-period span {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 7px 16px;
+
+    background: #f1f5f9;
+
+    border: 1px solid #dbe3f0;
+
+    border-radius: 20px;
+
+    color: #334155;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+.invoice-period-content {
+    width: 100%;
+
+    margin-top: 22px;
+
+    animation: invoicePeriodFade 0.25s ease;
+}
+
+@keyframes invoicePeriodFade {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.invoice-period-content-header {
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 15px;
+
+    padding: 0 4px;
+
+    box-sizing: border-box;
+}
+
+.invoice-period-content-header h2 {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 20px;
+
+    font-weight: 700;
+}
+
+.invoice-period-content-header span {
+    color: #64748b;
+
+    font-size: 14px;
+
+    font-weight: 500;
+}
+
+.invoice-period-empty {
+    width: 100%;
+
+    min-height: 150px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    background: #ffffff;
+
+    border: 1px dashed #cbd5e1;
+
+    border-radius: 14px;
+
+    color: #64748b;
+
+    box-sizing: border-box;
+}
+
+.invoice-period-empty strong {
+    margin-bottom: 5px;
+
+    color: #334155;
+
+    font-size: 16px;
+}
+
+.invoice-period-navigation {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+}
+
+.invoice-period-nav-btn {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #dbe3f0;
+
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #2563eb;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.invoice-period-nav-btn:hover {
+    background: #eff6ff;
+
+    transform: translateY(-1px);
+}
+
+
+/* =====================================================
    TABLET
 ===================================================== */
 
@@ -1193,11 +1364,52 @@ td
     }
 
     .invoice-print-modal {
-        max-width: 95%;
+        width: 800px;
+        max-width: calc(100vw - 40px);
     }
 
     .tax-invoice-paper {
         width: 794px;
+        min-width: 794px;
+    }
+}
+
+
+/* =====================================================
+   PERIOD TABLET
+===================================================== */
+
+@media (max-width: 900px) {
+
+    .invoice-period-wrapper {
+        padding: 0 10px;
+    }
+
+    .invoice-period-bar {
+        max-width: 650px;
+
+        gap: 18px;
+
+        padding: 16px 20px;
+    }
+
+    .invoice-period-title {
+        font-size: 15px;
+    }
+
+    .invoice-period-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .invoice-year-select {
+        width: 110px;
+        min-width: 110px;
+    }
+
+    .invoice-month-select {
+        width: 145px;
+        min-width: 145px;
     }
 }
 
@@ -1261,15 +1473,15 @@ td
 
         align-items: stretch;
         justify-content: stretch;
+
+        overflow: hidden;
     }
 
     .invoice-print-modal {
         width: 100%;
-
-        height: 100vh;
-
         max-width: 100%;
 
+        height: 100vh;
         max-height: 100vh;
 
         border-radius: 0;
@@ -1278,6 +1490,7 @@ td
     .invoice-preview-toolbar {
         flex: 0 0 58px;
 
+        height: 58px;
         min-height: 58px;
 
         padding: 0 12px;
@@ -1295,24 +1508,98 @@ td
         display: none;
     }
 
+
+    /* =================================================
+       ⭐ MOBILE PREVIEW - ONLY VERTICAL SCROLL ⭐
+    ================================================= */
+
     .invoice-preview-scroll {
-        padding: 15px 0;
 
-        overflow-x: auto;
-        overflow-y: auto;
-    }
+        flex: 1 1 auto;
 
-    .tax-invoice-paper {
+        min-height: 0;
+        min-width: 0;
+
         width: 100%;
 
-        min-height: auto;
-
-        margin: 0;
-
-        padding: 22px;
+        padding: 15px;
 
         box-sizing: border-box;
+
+        /* फक्त vertical scrollbar */
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+
+        scrollbar-gutter: stable;
+
+        scrollbar-width: auto;
+
+        scrollbar-color: #64748b #e2e8f0;
     }
+
+
+    /* Vertical scrollbar */
+
+    .invoice-preview-scroll::-webkit-scrollbar {
+        width: 14px;
+        height: 0;
+    }
+
+    .invoice-preview-scroll::-webkit-scrollbar-track {
+        background: #e2e8f0;
+    }
+
+    .invoice-preview-scroll::-webkit-scrollbar-thumb {
+        background: #64748b;
+
+        border-radius: 10px;
+
+        border: 3px solid #e2e8f0;
+    }
+
+    .invoice-preview-scroll::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+    }
+
+    /* Horizontal scrollbar बंद */
+
+    .invoice-preview-scroll::-webkit-scrollbar:horizontal {
+        height: 0;
+    }
+
+
+    /* =================================================
+       MOBILE A4 PAPER
+       Horizontal scrollbar पूर्ण बंद
+    ================================================= */
+
+    .tax-invoice-paper {
+
+        /*
+           Screen पेक्षा जास्त width होऊ नये
+        */
+
+        width: 100% !important;
+        min-width: 0 !important;
+
+        min-height: 1123px !important;
+
+        margin: 0 auto !important;
+
+        padding: 25px !important;
+
+        box-sizing: border-box;
+
+        overflow: hidden !important;
+
+        max-width: 100% !important;
+    }
+
+
+    /*
+       Mobile वर invoice मधील grid
+       screen मध्ये fit करण्यासाठी
+    */
 
     .tax-invoice-top-grid {
         grid-template-columns: 1fr;
@@ -1320,37 +1607,206 @@ td
 
     .seller-details {
         border-right: none;
-
         border-bottom: 1px solid #d1d5db;
     }
 
     .invoice-bottom-grid {
         grid-template-columns: 1fr;
+        gap: 15px;
     }
 
-    .tax-invoice-footer {
+    .tax-invoice-table {
+        table-layout: fixed;
+    }
+
+    .tax-invoice-table .item-description {
+        min-width: 0;
+        width: 30%;
+    }
+}
+
+
+/* =====================================================
+   PERIOD MOBILE
+===================================================== */
+
+@media (max-width: 650px) {
+
+    .invoice-period-wrapper {
+        width: 100%;
+
+        padding: 0;
+
+        margin-bottom: 24px;
+    }
+
+    .invoice-period-bar {
+        width: 100%;
+
+        max-width: 420px;
+
+        display: flex;
+
         flex-direction: column;
 
-        align-items: stretch;
+        align-items: center;
+        justify-content: center;
+
+        gap: 14px;
+
+        padding: 18px;
+
+        border-radius: 14px;
     }
 
-    .signature-box {
-        margin-left: auto;
+    .invoice-period-title {
+        width: 100%;
+
+        justify-content: center;
+
+        font-size: 16px;
     }
 
+    .invoice-period-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .invoice-period-selects {
+        width: 100%;
+
+        display: grid;
+
+        grid-template-columns: 1fr 1.3fr;
+
+        gap: 10px;
+    }
+
+    .invoice-period-select {
+        width: 100%;
+
+        min-width: 0;
+
+        height: 44px;
+
+        padding-left: 12px;
+        padding-right: 30px;
+
+        font-size: 14px;
+    }
+
+    .invoice-year-select,
+    .invoice-month-select {
+        width: 100%;
+
+        min-width: 0;
+    }
+
+    .invoice-selected-period {
+        margin-top: 10px;
+    }
+
+    .invoice-selected-period span {
+        max-width: 90%;
+
+        padding: 6px 13px;
+
+        font-size: 12px;
+
+        text-align: center;
+    }
+
+    .invoice-period-content-header {
+        flex-direction: column;
+
+        align-items: center;
+        justify-content: center;
+
+        text-align: center;
+
+        gap: 5px;
+    }
+
+    .invoice-period-content-header h2 {
+        font-size: 18px;
+    }
+
+    .invoice-period-content-header span {
+        font-size: 13px;
+    }
+}
+
+
+/* =====================================================
+   SMALL MOBILE
+===================================================== */
+
+@media (max-width: 400px) {
+
+    .invoice-period-bar {
+        max-width: 100%;
+
+        padding: 16px;
+
+        border-radius: 13px;
+    }
+
+    .invoice-period-selects {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-period-select {
+        height: 44px;
+
+        font-size: 14px;
+    }
+
+    .invoice-period-title {
+        font-size: 15px;
+    }
+
+    .invoice-period-content-header h2 {
+        font-size: 17px;
+    }
+}
+
+
+/* =====================================================
+   VERY SMALL DEVICES
+===================================================== */
+
+@media (max-width: 320px) {
+
+    .invoice-period-bar {
+        padding: 14px;
+    }
+
+    .invoice-period-title {
+        font-size: 14px;
+    }
+
+    .invoice-period-select {
+        font-size: 13px;
+    }
+
+    .invoice-selected-period span {
+        max-width: 100%;
+
+        font-size: 11px;
+
+        text-align: center;
+    }
 }
 
 
 /* =====================================================
    PRINT
-   ONLY TAX INVOICE WILL PRINT
 ===================================================== */
 
 @media print {
 
     @page {
         size: A4;
-
         margin: 0;
     }
 
@@ -1361,7 +1817,6 @@ td
         min-height: 297mm;
 
         margin: 0;
-
         padding: 0;
 
         background: #fff !important;
@@ -1377,6 +1832,7 @@ td
     }
 
     .invoice-modal-overlay {
+
         position: absolute !important;
 
         inset: 0 !important;
@@ -1388,9 +1844,12 @@ td
         margin: 0 !important;
 
         background: #fff !important;
+
+        overflow: visible !important;
     }
 
     .invoice-print-modal {
+
         position: static !important;
 
         width: 100% !important;
@@ -1400,6 +1859,8 @@ td
         height: auto !important;
 
         max-height: none !important;
+
+        display: block !important;
 
         overflow: visible !important;
 
@@ -1415,6 +1876,7 @@ td
     }
 
     .invoice-preview-scroll {
+
         display: block !important;
 
         width: 100% !important;
@@ -1423,15 +1885,20 @@ td
 
         max-height: none !important;
 
+        min-height: auto !important;
+
         overflow: visible !important;
 
         padding: 0 !important;
     }
 
     .tax-invoice-paper {
+
         display: block !important;
 
         width: 210mm !important;
+
+        min-width: 210mm !important;
 
         min-height: 297mm !important;
 
@@ -1456,598 +1923,6 @@ td
 
     .tax-invoice-footer {
         page-break-inside: avoid;
-    }
-
-}
-
-/* =====================================================
-   INVOICE PERIOD / YEAR / MONTH
-   PROFESSIONAL CENTER DESIGN
-===================================================== */
-
-.invoice-period-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0 auto 32px;
-    padding: 0 15px;
-    box-sizing: border-box;
-}
-
-
-/* =====================================================
-   MAIN PERIOD BAR
-===================================================== */
-
-.invoice-period-bar {
-    width: 100%;
-    max-width: 720px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    gap: 24px;
-
-    padding: 18px 24px;
-
-    background: #ffffff;
-
-    border: 1px solid #dbe3f0;
-    border-radius: 14px;
-
-    box-shadow:
-        0 8px 25px rgba(15, 23, 42, 0.08);
-
-    box-sizing: border-box;
-}
-
-
-/* =====================================================
-   TITLE
-===================================================== */
-
-.invoice-period-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    gap: 9px;
-
-    color: #172033;
-
-    font-size: 16px;
-    font-weight: 700;
-
-    white-space: nowrap;
-}
-
-
-/* =====================================================
-   CALENDAR ICON
-===================================================== */
-
-.invoice-period-icon {
-    width: 38px;
-    height: 38px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #eff6ff;
-
-    border: 1px solid #bfdbfe;
-    border-radius: 9px;
-
-    color: #2563eb;
-}
-
-
-/* =====================================================
-   SELECT GROUP
-===================================================== */
-
-.invoice-period-selects {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    gap: 12px;
-}
-
-
-/* =====================================================
-   SELECT BOX
-===================================================== */
-
-.invoice-period-select {
-    height: 44px;
-
-    padding: 0 38px 0 14px;
-
-    border: 1px solid #cbd5e1;
-    border-radius: 9px;
-
-    background: #ffffff;
-
-    color: #172033;
-
-    font-size: 14px;
-    font-weight: 600;
-
-    outline: none;
-
-    cursor: pointer;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
-}
-
-
-.invoice-period-select:hover {
-    border-color: #93c5fd;
-    background: #f8fbff;
-}
-
-
-.invoice-period-select:focus {
-    border-color: #2563eb;
-
-    box-shadow:
-        0 0 0 3px rgba(37, 99, 235, 0.10);
-}
-
-
-/* =====================================================
-   YEAR SELECT
-===================================================== */
-
-.invoice-year-select {
-    width: 120px;
-    min-width: 120px;
-}
-
-
-/* =====================================================
-   MONTH SELECT
-===================================================== */
-
-.invoice-month-select {
-    width: 160px;
-    min-width: 160px;
-}
-
-
-/* =====================================================
-   SELECT OPTIONS
-===================================================== */
-
-.invoice-period-select option {
-    background: #ffffff;
-    color: #172033;
-
-    font-size: 14px;
-}
-
-
-/* =====================================================
-   SELECTED PERIOD
-===================================================== */
-
-.invoice-selected-period {
-    width: 100%;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    margin-top: 12px;
-}
-
-
-.invoice-selected-period span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 7px 16px;
-
-    background: #f1f5f9;
-
-    border: 1px solid #dbe3f0;
-
-    border-radius: 20px;
-
-    color: #334155;
-
-    font-size: 13px;
-    font-weight: 600;
-}
-
-
-/* =====================================================
-   MONTH INVOICE LIST CONTAINER
-===================================================== */
-
-.invoice-period-content {
-    width: 100%;
-
-    margin-top: 22px;
-
-    animation: invoicePeriodFade 0.25s ease;
-}
-
-
-@keyframes invoicePeriodFade {
-
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-/* =====================================================
-   MONTH HEADER
-===================================================== */
-
-.invoice-period-content-header {
-    width: 100%;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    margin-bottom: 15px;
-
-    padding: 0 4px;
-
-    box-sizing: border-box;
-}
-
-
-.invoice-period-content-header h2 {
-    margin: 0;
-
-    color: #172033;
-
-    font-size: 20px;
-    font-weight: 700;
-}
-
-
-.invoice-period-content-header span {
-    color: #64748b;
-
-    font-size: 14px;
-    font-weight: 500;
-}
-
-
-/* =====================================================
-   EMPTY STATE
-===================================================== */
-
-.invoice-period-empty {
-    width: 100%;
-
-    min-height: 150px;
-
-    display: flex;
-    flex-direction: column;
-
-    align-items: center;
-    justify-content: center;
-
-    text-align: center;
-
-    background: #ffffff;
-
-    border: 1px dashed #cbd5e1;
-
-    border-radius: 14px;
-
-    color: #64748b;
-
-    box-sizing: border-box;
-}
-
-
-.invoice-period-empty strong {
-    margin-bottom: 5px;
-
-    color: #334155;
-
-    font-size: 16px;
-}
-
-
-/* =====================================================
-   YEAR / MONTH NAVIGATION
-===================================================== */
-
-.invoice-period-navigation {
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    gap: 10px;
-}
-
-
-.invoice-period-nav-btn {
-    width: 38px;
-    height: 38px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: 1px solid #dbe3f0;
-
-    border-radius: 9px;
-
-    background: #ffffff;
-
-    color: #2563eb;
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease;
-}
-
-
-.invoice-period-nav-btn:hover {
-    background: #eff6ff;
-
-    transform: translateY(-1px);
-}
-
-
-/* =====================================================
-   TABLET
-===================================================== */
-
-@media (max-width: 900px) {
-
-    .invoice-period-wrapper {
-        padding: 0 10px;
-    }
-
-
-    .invoice-period-bar {
-        max-width: 650px;
-
-        gap: 18px;
-
-        padding: 16px 20px;
-    }
-
-
-    .invoice-period-title {
-        font-size: 15px;
-    }
-
-
-    .invoice-period-icon {
-        width: 36px;
-        height: 36px;
-    }
-
-
-    .invoice-year-select {
-        width: 110px;
-        min-width: 110px;
-    }
-
-
-    .invoice-month-select {
-        width: 145px;
-        min-width: 145px;
-    }
-}
-
-
-/* =====================================================
-   MOBILE
-===================================================== */
-
-@media (max-width: 650px) {
-
-    .invoice-period-wrapper {
-        width: 100%;
-
-        padding: 0;
-
-        margin-bottom: 24px;
-    }
-
-
-    .invoice-period-bar {
-        width: 100%;
-
-        max-width: 420px;
-
-        display: flex;
-
-        flex-direction: column;
-
-        align-items: center;
-        justify-content: center;
-
-        gap: 14px;
-
-        padding: 18px;
-
-        border-radius: 14px;
-    }
-
-
-    .invoice-period-title {
-        width: 100%;
-
-        justify-content: center;
-
-        font-size: 16px;
-    }
-
-
-    .invoice-period-icon {
-        width: 36px;
-        height: 36px;
-    }
-
-
-    .invoice-period-selects {
-        width: 100%;
-
-        display: grid;
-
-        grid-template-columns: 1fr 1.3fr;
-
-        gap: 10px;
-    }
-
-
-    .invoice-period-select {
-        width: 100%;
-
-        min-width: 0;
-
-        height: 44px;
-
-        padding-left: 12px;
-        padding-right: 30px;
-
-        font-size: 14px;
-    }
-
-
-    .invoice-year-select,
-    .invoice-month-select {
-        width: 100%;
-        min-width: 0;
-    }
-
-
-    .invoice-selected-period {
-        margin-top: 10px;
-    }
-
-
-    .invoice-selected-period span {
-        max-width: 90%;
-
-        padding: 6px 13px;
-
-        font-size: 12px;
-
-        text-align: center;
-    }
-
-
-    .invoice-period-content-header {
-        flex-direction: column;
-
-        align-items: center;
-
-        justify-content: center;
-
-        text-align: center;
-
-        gap: 5px;
-    }
-
-
-    .invoice-period-content-header h2 {
-        font-size: 18px;
-    }
-
-
-    .invoice-period-content-header span {
-        font-size: 13px;
-    }
-}
-
-
-/* =====================================================
-   SMALL MOBILE
-===================================================== */
-
-@media (max-width: 400px) {
-
-    .invoice-period-bar {
-        max-width: 100%;
-
-        padding: 16px;
-
-        border-radius: 13px;
-    }
-
-
-    .invoice-period-selects {
-        grid-template-columns: 1fr;
-    }
-
-
-    .invoice-period-select {
-        height: 44px;
-
-        font-size: 14px;
-    }
-
-
-    .invoice-period-title {
-        font-size: 15px;
-    }
-
-
-    .invoice-period-content-header h2 {
-        font-size: 17px;
-    }
-}
-
-
-/* =====================================================
-   VERY SMALL DEVICES
-===================================================== */
-
-@media (max-width: 320px) {
-
-    .invoice-period-bar {
-        padding: 14px;
-    }
-
-
-    .invoice-period-title {
-        font-size: 14px;
-    }
-
-
-    .invoice-period-select {
-        font-size: 13px;
-    }
-
-
-    .invoice-selected-period span {
-        max-width: 100%;
-
-        font-size: 11px;
-
-        text-align: center;
     }
 }
 
