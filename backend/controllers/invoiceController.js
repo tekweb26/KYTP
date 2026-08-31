@@ -1,3 +1,4 @@
+
 import Invoice from "../models/Invoice.js";
 import User from "../models/User.js";
 
@@ -186,12 +187,6 @@ export const createInvoice = async (req, res) => {
         });
       }
 
-      /*
-
-        GST first two digits are state code.
-
-      */
-
     }
 
 
@@ -259,17 +254,14 @@ export const createInvoice = async (req, res) => {
         vendorGST.substring(0, 2);
 
 
-      /*
-        Frontend ने GST वरून state
-        पाठवला असेल तर तो वापरू.
-
-        नसेल तर code वरून state
-        map करू शकतो.
-      */
+      /* =================================================
+         GST STATE MAP
+      ================================================= */
 
       if (!vendorStateFinal) {
 
         const stateCodeMap = {
+
           "01": "Jammu and Kashmir",
           "02": "Himachal Pradesh",
           "03": "Punjab",
@@ -307,6 +299,7 @@ export const createInvoice = async (req, res) => {
           "36": "Telangana",
           "37": "Andhra Pradesh",
           "38": "Ladakh",
+
         };
 
 
@@ -330,8 +323,7 @@ export const createInvoice = async (req, res) => {
 
     /* =================================================
        VENDOR DOES NOT HAVE GST
-
-       State MANUAL
+       STATE MANUAL
     ================================================= */
 
     else {
@@ -340,6 +332,7 @@ export const createInvoice = async (req, res) => {
 
       vendorStateCode = "";
 
+
       if (!vendorStateFinal) {
         return res.status(400).json({
           success: false,
@@ -347,13 +340,12 @@ export const createInvoice = async (req, res) => {
             "Please select vendor state",
         });
       }
+
     }
 
 
     /* =================================================
        TAX TYPE
-
-       Company State vs Vendor State
     ================================================= */
 
     let taxType;
@@ -431,6 +423,7 @@ export const createInvoice = async (req, res) => {
             100
           ).toFixed(2)
         );
+
     }
 
 
@@ -536,6 +529,7 @@ export const createInvoice = async (req, res) => {
 
         status:
           "Pending",
+
       });
 
 
@@ -547,6 +541,7 @@ export const createInvoice = async (req, res) => {
         "Invoice created successfully",
 
       invoice,
+
     });
 
   } catch (error) {
@@ -565,13 +560,18 @@ export const createInvoice = async (req, res) => {
 
       error:
         error.message,
+
     });
+
   }
 };
 
 
 /* =====================================================
    GET INVOICES
+   IMPORTANT:
+   Populate USER details so frontend gets
+   companyName, companyAddress, companyState, gstNumber
 ===================================================== */
 
 export const getInvoices = async (
@@ -583,12 +583,21 @@ export const getInvoices = async (
 
     const invoices =
       await Invoice.find({
+
         user_id:
           req.user._id,
+
       })
+      .populate(
+        "user_id",
+        "name companyName companyAddress companyState hasGST gstNumber"
+      )
       .sort({
+
         invoice_date: -1,
+
         createdAt: -1,
+
       });
 
 
@@ -597,6 +606,7 @@ export const getInvoices = async (
       success: true,
 
       invoices,
+
     });
 
   } catch (error) {
@@ -612,13 +622,17 @@ export const getInvoices = async (
 
       message:
         "Failed to load invoices",
+
     });
+
   }
 };
 
 
 /* =====================================================
-   GET SINGLE
+   GET SINGLE INVOICE
+   IMPORTANT:
+   Populate USER details here too
 ===================================================== */
 
 export const getInvoice = async (
@@ -636,7 +650,12 @@ export const getInvoice = async (
 
         user_id:
           req.user._id,
-      });
+
+      })
+      .populate(
+        "user_id",
+        "name companyName companyAddress companyState hasGST gstNumber"
+      );
 
 
     if (!invoice) {
@@ -647,7 +666,9 @@ export const getInvoice = async (
 
         message:
           "Invoice not found",
+
       });
+
     }
 
 
@@ -656,6 +677,7 @@ export const getInvoice = async (
       success: true,
 
       invoice,
+
     });
 
   } catch (error) {
@@ -671,13 +693,15 @@ export const getInvoice = async (
 
       message:
         "Failed to load invoice",
+
     });
+
   }
 };
 
 
 /* =====================================================
-   DELETE
+   DELETE INVOICE
 ===================================================== */
 
 export const deleteInvoice = async (
@@ -695,6 +719,7 @@ export const deleteInvoice = async (
 
         user_id:
           req.user._id,
+
       });
 
 
@@ -706,7 +731,9 @@ export const deleteInvoice = async (
 
         message:
           "Invoice not found",
+
       });
+
     }
 
 
@@ -716,6 +743,7 @@ export const deleteInvoice = async (
 
       message:
         "Invoice deleted successfully",
+
     });
 
   } catch (error) {
@@ -731,6 +759,9 @@ export const deleteInvoice = async (
 
       message:
         "Failed to delete invoice",
+
     });
+
   }
 };
+
