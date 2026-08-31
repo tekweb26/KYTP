@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { invoiceAPI } from "../api/api";
 import toast from "react-hot-toast";
@@ -5,9 +6,10 @@ import {
   Plus,
   Trash2,
   Edit2,
+  Eye,
+  X,
 } from "lucide-react";
 import "./InvoicesPage.css";
-
 
 export default function InvoicesPage() {
 
@@ -23,6 +25,13 @@ export default function InvoicesPage() {
 
   const [creating, setCreating] = useState(false);
 
+  /* =====================================================
+     VIEW MODAL
+  ===================================================== */
+
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  const [showViewModal, setShowViewModal] = useState(false);
 
   /* =====================================================
      FORM DATA
@@ -36,13 +45,11 @@ export default function InvoicesPage() {
     description: "",
   });
 
-
   /* =====================================================
      GST ERROR
   ===================================================== */
 
   const [gstError, setGstError] = useState("");
-
 
   /* =====================================================
      LOAD INVOICES
@@ -52,28 +59,19 @@ export default function InvoicesPage() {
     loadInvoices();
   }, []);
 
-
   const loadInvoices = async () => {
-
     try {
 
       const response = await invoiceAPI.list();
 
       const data = response.data;
 
-
       if (Array.isArray(data)) {
-
         setInvoices(data);
-
       } else if (Array.isArray(data?.invoices)) {
-
         setInvoices(data.invoices);
-
       } else {
-
         setInvoices([]);
-
       }
 
     } catch (error) {
@@ -93,9 +91,7 @@ export default function InvoicesPage() {
       setLoading(false);
 
     }
-
   };
-
 
   /* =====================================================
      FORM CHANGE
@@ -108,9 +104,7 @@ export default function InvoicesPage() {
       value,
     } = e.target;
 
-
     let finalValue = value;
-
 
     /* ---------------------------------------------
        VENDOR GST
@@ -126,7 +120,6 @@ export default function InvoicesPage() {
       validateVendorGST(finalValue);
     }
 
-
     /* ---------------------------------------------
        GST RATE
     --------------------------------------------- */
@@ -137,7 +130,6 @@ export default function InvoicesPage() {
         .replace(/[^0-9.]/g, "");
 
     }
-
 
     /* ---------------------------------------------
        TOTAL AMOUNT
@@ -150,14 +142,12 @@ export default function InvoicesPage() {
 
     }
 
-
     setFormData((prev) => ({
       ...prev,
       [name]: finalValue,
     }));
 
   };
-
 
   /* =====================================================
      VALIDATE VENDOR GST
@@ -173,21 +163,18 @@ export default function InvoicesPage() {
 
     }
 
-
     if (gst.length < 15) {
 
       setGstError(
-        `GST number must be 15 characters`
+        "GST number must be 15 characters"
       );
 
       return false;
 
     }
 
-
     const gstRegex =
       /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-
 
     if (!gstRegex.test(gst)) {
 
@@ -199,13 +186,10 @@ export default function InvoicesPage() {
 
     }
 
-
     setGstError("");
 
     return true;
-
   };
-
 
   /* =====================================================
      RESET FORM
@@ -225,7 +209,6 @@ export default function InvoicesPage() {
 
   };
 
-
   /* =====================================================
      CREATE INVOICE
   ===================================================== */
@@ -233,7 +216,6 @@ export default function InvoicesPage() {
   const handleSubmit = async (e) => {
 
     e.preventDefault();
-
 
     /* ---------------------------------------------
        VENDOR NAME
@@ -246,9 +228,7 @@ export default function InvoicesPage() {
       );
 
       return;
-
     }
-
 
     /* ---------------------------------------------
        VENDOR GST
@@ -259,7 +239,6 @@ export default function InvoicesPage() {
         .toUpperCase()
         .trim();
 
-
     if (!cleanGST) {
 
       toast.error(
@@ -267,9 +246,7 @@ export default function InvoicesPage() {
       );
 
       return;
-
     }
-
 
     if (!validateVendorGST(cleanGST)) {
 
@@ -278,9 +255,7 @@ export default function InvoicesPage() {
       );
 
       return;
-
     }
-
 
     /* ---------------------------------------------
        TOTAL AMOUNT
@@ -293,13 +268,10 @@ export default function InvoicesPage() {
       );
 
       return;
-
     }
-
 
     const totalAmount =
       Number(formData.total_amount);
-
 
     if (
       Number.isNaN(totalAmount) ||
@@ -311,9 +283,7 @@ export default function InvoicesPage() {
       );
 
       return;
-
     }
-
 
     /* ---------------------------------------------
        GST RATE
@@ -326,13 +296,10 @@ export default function InvoicesPage() {
       );
 
       return;
-
     }
-
 
     const gstRate =
       Number(formData.gst_rate);
-
 
     if (
       Number.isNaN(gstRate) ||
@@ -345,16 +312,13 @@ export default function InvoicesPage() {
       );
 
       return;
-
     }
-
 
     /* ---------------------------------------------
        CREATE
     --------------------------------------------- */
 
     setCreating(true);
-
 
     try {
 
@@ -377,35 +341,29 @@ export default function InvoicesPage() {
 
       };
 
-
       console.log(
         "Invoice Data:",
         invoiceData
       );
-
 
       const response =
         await invoiceAPI.create(
           invoiceData
         );
 
-
       const data =
         response.data;
-
 
       console.log(
         "Invoice Response:",
         data
       );
 
-
       if (data?.success) {
 
         toast.success(
           "Invoice created successfully"
         );
-
 
         resetForm();
 
@@ -429,7 +387,6 @@ export default function InvoicesPage() {
         error
       );
 
-
       toast.error(
         error?.response?.data?.message ||
         error?.response?.data?.error ||
@@ -444,7 +401,6 @@ export default function InvoicesPage() {
 
   };
 
-
   /* =====================================================
      DELETE INVOICE
   ===================================================== */
@@ -456,21 +412,17 @@ export default function InvoicesPage() {
         "Are you sure you want to delete this invoice?"
       );
 
-
     if (!confirmed) {
       return;
     }
-
 
     try {
 
       await invoiceAPI.delete(id);
 
-
       toast.success(
         "Invoice deleted successfully"
       );
-
 
       await loadInvoices();
 
@@ -481,7 +433,6 @@ export default function InvoicesPage() {
         error
       );
 
-
       toast.error(
         error?.response?.data?.message ||
         "Failed to delete invoice"
@@ -490,7 +441,6 @@ export default function InvoicesPage() {
     }
 
   };
-
 
   /* =====================================================
      FORMAT CURRENCY
@@ -508,6 +458,29 @@ export default function InvoicesPage() {
 
   };
 
+  /* =====================================================
+     VIEW INVOICE
+  ===================================================== */
+
+  const handleView = (invoice) => {
+
+    setSelectedInvoice(invoice);
+
+    setShowViewModal(true);
+
+  };
+
+  /* =====================================================
+     CLOSE VIEW MODAL
+  ===================================================== */
+
+  const closeViewModal = () => {
+
+    setShowViewModal(false);
+
+    setSelectedInvoice(null);
+
+  };
 
   /* =====================================================
      LOADING
@@ -523,7 +496,6 @@ export default function InvoicesPage() {
 
   }
 
-
   /* =====================================================
      PAGE
   ===================================================== */
@@ -533,7 +505,6 @@ export default function InvoicesPage() {
     <div className="invoices-page">
 
       <div className="invoices-container">
-
 
         {/* =================================================
             HEADER
@@ -553,7 +524,6 @@ export default function InvoicesPage() {
 
           </div>
 
-
           <button
             type="button"
             onClick={() =>
@@ -572,7 +542,6 @@ export default function InvoicesPage() {
 
         </div>
 
-
         {/* =================================================
             CREATE FORM
         ================================================= */}
@@ -585,16 +554,11 @@ export default function InvoicesPage() {
               Create Invoice
             </h2>
 
-
             <form onSubmit={handleSubmit}>
-
 
               <div className="invoice-form-grid">
 
-
-                {/* -----------------------------------------
-                    VENDOR NAME
-                ----------------------------------------- */}
+                {/* VENDOR NAME */}
 
                 <div className="invoice-form-group">
 
@@ -616,10 +580,7 @@ export default function InvoicesPage() {
 
                 </div>
 
-
-                {/* -----------------------------------------
-                    VENDOR GST
-                ----------------------------------------- */}
+                {/* VENDOR GST */}
 
                 <div className="invoice-form-group">
 
@@ -641,7 +602,6 @@ export default function InvoicesPage() {
                     required
                   />
 
-
                   {gstError && (
 
                     <small className="kytp-error-text">
@@ -649,7 +609,6 @@ export default function InvoicesPage() {
                     </small>
 
                   )}
-
 
                   {!gstError &&
                     formData.vendor_gstin.length === 15 && (
@@ -662,10 +621,7 @@ export default function InvoicesPage() {
 
                 </div>
 
-
-                {/* -----------------------------------------
-                    TOTAL AMOUNT
-                ----------------------------------------- */}
+                {/* TOTAL AMOUNT */}
 
                 <div className="invoice-form-group">
 
@@ -689,10 +645,7 @@ export default function InvoicesPage() {
 
                 </div>
 
-
-                {/* -----------------------------------------
-                    GST RATE
-                ----------------------------------------- */}
+                {/* GST RATE */}
 
                 <div className="invoice-form-group">
 
@@ -723,10 +676,7 @@ export default function InvoicesPage() {
 
               </div>
 
-
-              {/* =================================================
-                  GST INFORMATION
-              ================================================= */}
+              {/* GST INFORMATION */}
 
               <div className="invoice-tax-info">
 
@@ -750,10 +700,7 @@ export default function InvoicesPage() {
 
               </div>
 
-
-              {/* =================================================
-                  DESCRIPTION
-              ================================================= */}
+              {/* DESCRIPTION */}
 
               <div className="invoice-form-group">
 
@@ -774,10 +721,7 @@ export default function InvoicesPage() {
 
               </div>
 
-
-              {/* =================================================
-                  BUTTONS
-              ================================================= */}
+              {/* BUTTONS */}
 
               <div className="invoice-form-actions">
 
@@ -792,7 +736,6 @@ export default function InvoicesPage() {
                     : "Create"}
 
                 </button>
-
 
                 <button
                   type="button"
@@ -817,7 +760,6 @@ export default function InvoicesPage() {
 
         )}
 
-
         {/* =================================================
             INVOICE TABLE
         ================================================= */}
@@ -832,38 +774,23 @@ export default function InvoicesPage() {
 
                 <tr>
 
-                  <th>
-                    Vendor
-                  </th>
+                  <th>Vendor</th>
 
-                  <th>
-                    Amount
-                  </th>
+                  <th>Amount</th>
 
-                  <th>
-                    GST Rate
-                  </th>
+                  <th>GST Rate</th>
 
-                  <th>
-                    Tax
-                  </th>
+                  <th>Tax</th>
 
-                  <th>
-                    Grand Total
-                  </th>
+                  <th>Grand Total</th>
 
-                  <th>
-                    Status
-                  </th>
+                  <th>Status</th>
 
-                  <th>
-                    Actions
-                  </th>
+                  <th>Actions</th>
 
                 </tr>
 
               </thead>
-
 
               <tbody>
 
@@ -878,10 +805,7 @@ export default function InvoicesPage() {
                       }
                     >
 
-
-                      {/* -----------------------------------------
-                          VENDOR
-                      ----------------------------------------- */}
+                      {/* VENDOR */}
 
                       <td>
 
@@ -891,7 +815,6 @@ export default function InvoicesPage() {
                             "Unknown Vendor"}
 
                         </div>
-
 
                         {invoice.vendor_gstin && (
 
@@ -905,10 +828,7 @@ export default function InvoicesPage() {
 
                       </td>
 
-
-                      {/* -----------------------------------------
-                          AMOUNT
-                      ----------------------------------------- */}
+                      {/* AMOUNT */}
 
                       <td>
 
@@ -923,10 +843,7 @@ export default function InvoicesPage() {
 
                       </td>
 
-
-                      {/* -----------------------------------------
-                          GST RATE
-                      ----------------------------------------- */}
+                      {/* GST RATE */}
 
                       <td>
 
@@ -938,21 +855,19 @@ export default function InvoicesPage() {
 
                       </td>
 
-
-                      {/* -----------------------------------------
-                          TAX
-                      ----------------------------------------- */}
+                      {/* TAX */}
 
                       <td>
 
                         {invoice.tax_type ===
-                          "CGST_SGST" ? (
+                        "CGST_SGST" ? (
 
                           <div>
 
                             <div>
-                              CGST{" "}
-                              ({invoice.cgst_rate || 0}%):
+                              CGST (
+                              {invoice.cgst_rate || 0}
+                              %):
                               ₹
                               {formatAmount(
                                 invoice.cgst_amount
@@ -960,8 +875,9 @@ export default function InvoicesPage() {
                             </div>
 
                             <div>
-                              SGST{" "}
-                              ({invoice.sgst_rate || 0}%):
+                              SGST (
+                              {invoice.sgst_rate || 0}
+                              %):
                               ₹
                               {formatAmount(
                                 invoice.sgst_amount
@@ -975,8 +891,9 @@ export default function InvoicesPage() {
                           <div>
 
                             <div>
-                              IGST{" "}
-                              ({invoice.igst_rate || 0}%):
+                              IGST (
+                              {invoice.igst_rate || 0}
+                              %):
                               ₹
                               {formatAmount(
                                 invoice.igst_amount
@@ -989,14 +906,11 @@ export default function InvoicesPage() {
 
                       </td>
 
-
-                      {/* -----------------------------------------
-                          GRAND TOTAL
-                      ----------------------------------------- */}
+                      {/* GRAND TOTAL */}
 
                       <td>
 
-                        <strong className="invoice-amount">
+                        <strong className="invoice-grand-total">
 
                           ₹
                           {formatAmount(
@@ -1007,10 +921,7 @@ export default function InvoicesPage() {
 
                       </td>
 
-
-                      {/* -----------------------------------------
-                          STATUS
-                      ----------------------------------------- */}
+                      {/* STATUS */}
 
                       <td>
 
@@ -1023,15 +934,26 @@ export default function InvoicesPage() {
 
                       </td>
 
-
-                      {/* -----------------------------------------
-                          ACTIONS
-                      ----------------------------------------- */}
+                      {/* ACTIONS */}
 
                       <td>
 
                         <div className="invoice-actions">
 
+                          {/* VIEW */}
+
+                          <button
+                            type="button"
+                            className="invoice-action-btn invoice-view-btn"
+                            title="View Invoice"
+                            onClick={() =>
+                              handleView(invoice)
+                            }
+                          >
+
+                            <Eye size={17} />
+
+                          </button>
 
                           {/* EDIT */}
 
@@ -1049,7 +971,6 @@ export default function InvoicesPage() {
                             <Edit2 size={17} />
 
                           </button>
-
 
                           {/* DELETE */}
 
@@ -1114,8 +1035,304 @@ export default function InvoicesPage() {
 
       </div>
 
+      {/* =====================================================
+          VIEW INVOICE MODAL
+      ===================================================== */}
+
+      {showViewModal &&
+        selectedInvoice && (
+
+          <div
+            className="invoice-modal-overlay"
+            onClick={closeViewModal}
+          >
+
+            <div
+              className="invoice-view-modal"
+              onClick={(e) =>
+                e.stopPropagation()
+              }
+            >
+
+              {/* MODAL HEADER */}
+
+              <div className="invoice-modal-header">
+
+                <div>
+
+                  <h2>
+                    Invoice Details
+                  </h2>
+
+                  <p>
+                    Complete invoice information
+                  </p>
+
+                </div>
+
+                <button
+                  type="button"
+                  className="invoice-modal-close"
+                  onClick={closeViewModal}
+                  title="Close"
+                >
+
+                  <X size={20} />
+
+                </button>
+
+              </div>
+
+              {/* MODAL BODY */}
+
+              <div className="invoice-modal-body">
+
+                {/* VENDOR DETAILS */}
+
+                <div className="invoice-detail-section">
+
+                  <h3>
+                    Vendor Details
+                  </h3>
+
+                  <div className="invoice-detail-grid">
+
+                    <div className="invoice-detail-item">
+
+                      <span>
+                        Vendor Name
+                      </span>
+
+                      <strong>
+                        {selectedInvoice.vendor_name ||
+                          "N/A"}
+                      </strong>
+
+                    </div>
+
+                    <div className="invoice-detail-item">
+
+                      <span>
+                        Vendor GSTIN
+                      </span>
+
+                      <strong>
+                        {selectedInvoice.vendor_gstin ||
+                          "N/A"}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* AMOUNT DETAILS */}
+
+                <div className="invoice-detail-section">
+
+                  <h3>
+                    Amount Details
+                  </h3>
+
+                  <div className="invoice-detail-grid">
+
+                    <div className="invoice-detail-item">
+
+                      <span>
+                        Total Amount
+                      </span>
+
+                      <strong className="invoice-modal-amount">
+                        ₹
+                        {formatAmount(
+                          selectedInvoice.total_amount
+                        )}
+                      </strong>
+
+                    </div>
+
+                    <div className="invoice-detail-item">
+
+                      <span>
+                        GST Rate
+                      </span>
+
+                      <strong>
+                        {selectedInvoice.gst_rate ||
+                          0}
+                        %
+                      </strong>
+
+                    </div>
+
+                    <div className="invoice-detail-item">
+
+                      <span>
+                        Tax Type
+                      </span>
+
+                      <strong>
+                        {selectedInvoice.tax_type ||
+                          "N/A"}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* TAX DETAILS */}
+
+                <div className="invoice-detail-section">
+
+                  <h3>
+                    Tax Details
+                  </h3>
+
+                  {selectedInvoice.tax_type ===
+                  "CGST_SGST" ? (
+
+                    <div className="invoice-tax-detail-box">
+
+                      <div>
+
+                        <span>
+                          CGST
+                        </span>
+
+                        <strong>
+                          {selectedInvoice.cgst_rate ||
+                            0}
+                          % — ₹
+                          {formatAmount(
+                            selectedInvoice.cgst_amount
+                          )}
+                        </strong>
+
+                      </div>
+
+                      <div>
+
+                        <span>
+                          SGST
+                        </span>
+
+                        <strong>
+                          {selectedInvoice.sgst_rate ||
+                            0}
+                          % — ₹
+                          {formatAmount(
+                            selectedInvoice.sgst_amount
+                          )}
+                        </strong>
+
+                      </div>
+
+                    </div>
+
+                  ) : (
+
+                    <div className="invoice-tax-detail-box">
+
+                      <div>
+
+                        <span>
+                          IGST
+                        </span>
+
+                        <strong>
+                          {selectedInvoice.igst_rate ||
+                            0}
+                          % — ₹
+                          {formatAmount(
+                            selectedInvoice.igst_amount
+                          )}
+                        </strong>
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+                {/* GRAND TOTAL */}
+
+                <div className="invoice-grand-total-box">
+
+                  <span>
+                    Grand Total
+                  </span>
+
+                  <strong>
+                    ₹
+                    {formatAmount(
+                      selectedInvoice.grand_total
+                    )}
+                  </strong>
+
+                </div>
+
+                {/* STATUS */}
+
+                <div className="invoice-detail-section">
+
+                  <h3>
+                    Invoice Status
+                  </h3>
+
+                  <span className="invoice-modal-status">
+
+                    {selectedInvoice.status ||
+                      "Pending"}
+
+                  </span>
+
+                </div>
+
+                {/* DESCRIPTION */}
+
+                <div className="invoice-detail-section">
+
+                  <h3>
+                    Description
+                  </h3>
+
+                  <div className="invoice-description-box">
+
+                    {selectedInvoice.description ||
+                      "No description provided."}
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* MODAL FOOTER */}
+
+              <div className="invoice-modal-footer">
+
+                <button
+                  type="button"
+                  className="invoice-secondary-btn"
+                  onClick={closeViewModal}
+                >
+                  Close
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
     </div>
-
   );
-
 }
+
