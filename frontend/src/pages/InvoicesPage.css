@@ -388,11 +388,11 @@
 ===================================================== */
 
 .invoice-amount {
-    font-size: 15px;
+    font-size: 10px;
 
     font-weight: 600;
 
-    color: #172033;
+    color: rgb(30, 185, 89);
 }
 
 .invoice-tax {
@@ -417,7 +417,7 @@
 
     background: #eff6ff;
 
-    color: #2563eb;
+    color: #e40b0b;
 
     font-size: 13px;
 
