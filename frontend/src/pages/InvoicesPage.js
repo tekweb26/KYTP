@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 
 import { invoiceAPI } from "../api/api";
@@ -16,9 +15,13 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
+import EditInvoiceModal from "./EditInvoiceModal";
+
 import "./InvoicesPage.css";
 
+
 export default function InvoicesPage() {
+
   /* =====================================================
      STATE
   ===================================================== */
@@ -31,18 +34,25 @@ export default function InvoicesPage() {
 
   const [creating, setCreating] = useState(false);
 
-  const [editingId, setEditingId] = useState(null);
+  // EDIT आणि VIEW साठी वेगळे states
+  const [selectedEditInvoice, setSelectedEditInvoice] =
+    useState(null);
 
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [selectedViewInvoice, setSelectedViewInvoice] =
+    useState(null);
 
-  const [showViewModal, setShowViewModal] = useState(false);
+  const [showViewModal, setShowViewModal] =
+    useState(false);
 
-  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedYear, setSelectedYear] =
+    useState(null);
 
-  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [selectedMonth, setSelectedMonth] =
+    useState(null);
+
 
   /* =====================================================
-     FORM
+     CREATE FORM
   ===================================================== */
 
   const emptyForm = {
@@ -57,9 +67,12 @@ export default function InvoicesPage() {
     description: "",
   };
 
-  const [formData, setFormData] = useState(emptyForm);
+  const [formData, setFormData] =
+    useState(emptyForm);
 
-  const [gstError, setGstError] = useState("");
+  const [gstError, setGstError] =
+    useState("");
+
 
   /* =====================================================
      STATES
@@ -101,6 +114,7 @@ export default function InvoicesPage() {
     "Chandigarh",
   ];
 
+
   const monthNames = [
     "January",
     "February",
@@ -116,6 +130,7 @@ export default function InvoicesPage() {
     "December",
   ];
 
+
   /* =====================================================
      LOAD INVOICES
   ===================================================== */
@@ -124,285 +139,384 @@ export default function InvoicesPage() {
     loadInvoices();
   }, []);
 
+
   const loadInvoices = async () => {
+
     try {
-      const response = await invoiceAPI.list();
+
+      const response =
+        await invoiceAPI.list();
 
       const data = response.data;
 
       if (Array.isArray(data)) {
+
         setInvoices(data);
-      } else if (Array.isArray(data?.invoices)) {
+
+      } else if (
+        Array.isArray(data?.invoices)
+      ) {
+
         setInvoices(data.invoices);
+
+      } else if (
+        Array.isArray(data?.data)
+      ) {
+
+        setInvoices(data.data);
+
       } else {
+
         setInvoices([]);
+
       }
+
     } catch (error) {
-      console.error("Invoice Load Error:", error);
+
+      console.error(
+        "Invoice Load Error:",
+        error
+      );
 
       toast.error(
         error?.response?.data?.message ||
-          "Failed to load invoices"
+        "Failed to load invoices"
       );
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
+
 
   /* =====================================================
      FORM CHANGE
   ===================================================== */
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+
+    const {
+      name,
+      value,
+    } = e.target;
 
     let finalValue = value;
 
-    if (name === "vendor_gstin") {
-      finalValue = value
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 15);
 
-      validateVendorGST(finalValue);
+    /* GST */
+
+    if (
+      name === "vendor_gstin"
+    ) {
+
+      finalValue =
+        value
+          .toUpperCase()
+          .replace(
+            /[^A-Z0-9]/g,
+            ""
+          )
+          .slice(0, 15);
+
+      validateVendorGST(
+        finalValue
+      );
+
     }
 
-    if (name === "total_amount") {
-      finalValue = value.replace(/[^0-9.]/g, "");
+
+    /* AMOUNT */
+
+    if (
+      name === "total_amount"
+    ) {
+
+      finalValue =
+        value.replace(
+          /[^0-9.]/g,
+          ""
+        );
+
     }
 
-    if (name === "gst_rate") {
-      finalValue = value.replace(/[^0-9.]/g, "");
+
+    /* GST RATE */
+
+    if (
+      name === "gst_rate"
+    ) {
+
+      finalValue =
+        value.replace(
+          /[^0-9.]/g,
+          ""
+        );
+
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: finalValue,
-    }));
+
+    setFormData(
+      (prev) => ({
+        ...prev,
+        [name]: finalValue,
+      })
+    );
+
   };
+
 
   /* =====================================================
      GST VALIDATION
   ===================================================== */
 
-  const validateVendorGST = (gst) => {
+  const validateVendorGST = (
+    gst
+  ) => {
+
     if (!gst) {
+
       setGstError("");
+
       return false;
+
     }
 
-    if (gst.length < 15) {
+
+    if (
+      gst.length < 15
+    ) {
+
       setGstError(
         "GST number must be 15 characters"
       );
+
       return false;
+
     }
+
 
     const gstRegex =
       /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
-    if (!gstRegex.test(gst)) {
+
+    if (
+      !gstRegex.test(gst)
+    ) {
+
       setGstError(
         "Please enter a valid GST number"
       );
+
       return false;
+
     }
+
 
     setGstError("");
 
     return true;
+
   };
+
 
   /* =====================================================
      RESET FORM
   ===================================================== */
 
   const resetForm = () => {
-    setFormData({ ...emptyForm });
-
-    setGstError("");
-
-    setEditingId(null);
-  };
-
-  /* =====================================================
-     OPEN EDIT
-  ===================================================== */
-
-  const handleEdit = (invoice) => {
-    if (!invoice) return;
-
-    let invoiceDate = "";
-
-    if (invoice.invoice_date) {
-      invoiceDate = new Date(invoice.invoice_date)
-        .toISOString()
-        .split("T")[0];
-    }
 
     setFormData({
-      invoice_number:
-        invoice.invoice_number || "",
-
-      invoice_date: invoiceDate,
-
-      vendor_name:
-        invoice.vendor_name || "",
-
-      vendor_has_gst:
-        invoice.vendor_has_gst ? "yes" : "no",
-
-      vendor_gstin:
-        invoice.vendor_gstin || "",
-
-      vendor_state:
-        invoice.vendor_state || "",
-
-      total_amount:
-        invoice.total_amount !== undefined &&
-        invoice.total_amount !== null
-          ? String(invoice.total_amount)
-          : "",
-
-      gst_rate:
-        invoice.gst_rate !== undefined &&
-        invoice.gst_rate !== null
-          ? String(invoice.gst_rate)
-          : "",
-
-      description:
-        invoice.description || "",
+      ...emptyForm,
     });
-
-    setEditingId(invoice._id);
 
     setGstError("");
 
-    setShowForm(true);
-
-    // Edit form दिसण्यासाठी वर नेणे
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
   };
 
+
   /* =====================================================
-     SUBMIT CREATE / UPDATE
+     CREATE INVOICE
   ===================================================== */
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (
+    e
+  ) => {
+
     e.preventDefault();
 
-    /* ---------------------------------------------
-       BASIC VALIDATION
-    --------------------------------------------- */
 
-    if (!formData.invoice_number.trim()) {
-      toast.error("Please enter invoice number");
+    if (
+      !formData.invoice_number.trim()
+    ) {
+
+      toast.error(
+        "Please enter invoice number"
+      );
+
       return;
+
     }
 
-    if (!formData.invoice_date) {
-      toast.error("Please select invoice date");
+
+    if (
+      !formData.invoice_date
+    ) {
+
+      toast.error(
+        "Please select invoice date"
+      );
+
       return;
+
     }
 
-    if (!formData.vendor_name.trim()) {
-      toast.error("Please enter vendor name");
+
+    if (
+      !formData.vendor_name.trim()
+    ) {
+
+      toast.error(
+        "Please enter vendor name"
+      );
+
       return;
+
     }
 
-    if (formData.vendor_has_gst === "") {
+
+    if (
+      formData.vendor_has_gst === ""
+    ) {
+
       toast.error(
         "Please select whether vendor has GST"
       );
+
       return;
+
     }
 
-    /* ---------------------------------------------
-       GST VALIDATION
-    --------------------------------------------- */
 
-    if (formData.vendor_has_gst === "yes") {
+    /* GST */
+
+    if (
+      formData.vendor_has_gst ===
+      "yes"
+    ) {
+
       if (
         !validateVendorGST(
           formData.vendor_gstin
         )
       ) {
+
         toast.error(
           "Please enter valid vendor GST number"
         );
+
         return;
+
       }
+
     }
 
-    /* ---------------------------------------------
-       STATE VALIDATION
-    --------------------------------------------- */
+
+    /* STATE */
 
     if (
-      formData.vendor_has_gst === "no" &&
+      formData.vendor_has_gst ===
+        "no" &&
       !formData.vendor_state
     ) {
-      toast.error("Please select vendor state");
+
+      toast.error(
+        "Please select vendor state"
+      );
+
       return;
+
     }
 
-    /* ---------------------------------------------
-       AMOUNT VALIDATION
-    --------------------------------------------- */
 
-    if (formData.total_amount === "") {
-      toast.error("Please enter total amount");
+    /* AMOUNT */
+
+    if (
+      formData.total_amount === ""
+    ) {
+
+      toast.error(
+        "Please enter total amount"
+      );
+
       return;
+
     }
 
-    const totalAmount = Number(
-      formData.total_amount
-    );
+
+    const totalAmount =
+      Number(
+        formData.total_amount
+      );
+
 
     if (
       Number.isNaN(totalAmount) ||
       totalAmount <= 0
     ) {
+
       toast.error(
         "Please enter valid total amount"
       );
+
       return;
+
     }
 
-    /* ---------------------------------------------
-       GST RATE VALIDATION
-    --------------------------------------------- */
 
-    if (formData.gst_rate === "") {
-      toast.error("Please enter GST rate");
+    /* GST RATE */
+
+    if (
+      formData.gst_rate === ""
+    ) {
+
+      toast.error(
+        "Please enter GST rate"
+      );
+
       return;
+
     }
 
-    const gstRate = Number(
-      formData.gst_rate
-    );
+
+    const gstRate =
+      Number(
+        formData.gst_rate
+      );
+
 
     if (
       Number.isNaN(gstRate) ||
       gstRate < 0 ||
       gstRate > 100
     ) {
+
       toast.error(
         "GST rate must be between 0 and 100"
       );
+
       return;
+
     }
+
 
     setCreating(true);
 
-    /* ---------------------------------------------
-       DATA
-    --------------------------------------------- */
 
     const invoiceData = {
+
       invoice_number:
         formData.invoice_number.trim(),
 
@@ -413,10 +527,12 @@ export default function InvoicesPage() {
         formData.vendor_name.trim(),
 
       vendor_has_gst:
-        formData.vendor_has_gst === "yes",
+        formData.vendor_has_gst ===
+        "yes",
 
       vendor_gstin:
-        formData.vendor_has_gst === "yes"
+        formData.vendor_has_gst ===
+        "yes"
           ? formData.vendor_gstin
           : "",
 
@@ -431,136 +547,183 @@ export default function InvoicesPage() {
 
       description:
         formData.description.trim(),
+
     };
 
+
     try {
-      /* ---------------------------------------------
-         UPDATE
-      --------------------------------------------- */
 
-      if (editingId) {
-        const response =
-          await invoiceAPI.update(
-            editingId,
-            invoiceData
-          );
-
-        const data = response.data;
-
-        if (
-          data?.success === false
-        ) {
-          toast.error(
-            data?.message ||
-              "Failed to update invoice"
-          );
-          return;
-        }
-
-        toast.success(
-          "Invoice updated successfully"
+      const response =
+        await invoiceAPI.create(
+          invoiceData
         );
 
-      } else {
-        /* -------------------------------------------
-           CREATE
-        ------------------------------------------- */
 
-        const response =
-          await invoiceAPI.create(
-            invoiceData
-          );
+      const data =
+        response.data;
 
-        const data = response.data;
 
-        if (!data?.success) {
-          toast.error(
-            data?.message ||
-              "Failed to create invoice"
-          );
-          return;
-        }
+      if (
+        data?.success === false
+      ) {
 
-        toast.success(
-          "Invoice created successfully"
+        toast.error(
+          data?.message ||
+          "Failed to create invoice"
         );
+
+        return;
+
       }
 
-      /* ---------------------------------------------
-         AFTER SAVE
-      --------------------------------------------- */
+
+      toast.success(
+        "Invoice created successfully"
+      );
+
 
       resetForm();
 
       setShowForm(false);
 
+      setSelectedYear(null);
+
+      setSelectedMonth(null);
+
       await loadInvoices();
 
+
     } catch (error) {
+
       console.error(
-        editingId
-          ? "Invoice Update Error:"
-          : "Invoice Create Error:",
+        "Invoice Create Error:",
         error
       );
 
       toast.error(
         error?.response?.data?.message ||
-          (
-            editingId
-              ? "Failed to update invoice"
-              : "Failed to create invoice"
-          )
+        "Failed to create invoice"
       );
+
     } finally {
+
       setCreating(false);
+
     }
+
   };
+
+
+  /* =====================================================
+     EDIT
+     
+     फक्त Edit Modal उघडेल
+  ===================================================== */
+
+  const handleEdit = (
+    invoice
+  ) => {
+
+    if (!invoice) return;
+
+    setSelectedEditInvoice(
+      invoice
+    );
+
+  };
+
+
+  /* =====================================================
+     CLOSE EDIT MODAL
+  ===================================================== */
+
+  const closeEditModal = () => {
+
+    setSelectedEditInvoice(
+      null
+    );
+
+  };
+
+
+  /* =====================================================
+     AFTER EDIT UPDATE
+  ===================================================== */
+
+  const handleInvoiceUpdated =
+    async () => {
+
+      setSelectedEditInvoice(
+        null
+      );
+
+      await loadInvoices();
+
+    };
+
 
   /* =====================================================
      DELETE
   ===================================================== */
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (
+    id
+  ) => {
+
     if (!id) {
-      toast.error("Invoice ID not found");
+
+      toast.error(
+        "Invoice ID not found"
+      );
+
       return;
+
     }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this invoice?"
-    );
+
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to delete this invoice?"
+      );
+
 
     if (!confirmed) return;
 
+
     try {
-      await invoiceAPI.delete(id);
+
+      await invoiceAPI.delete(
+        id
+      );
+
 
       toast.success(
         "Invoice deleted successfully"
       );
 
-      /*
-       * IMPORTANT:
-       * Delete झाल्यावर जुना year/month state
-       * ठेवायचा नाही.
-       *
-       * यामुळे:
-       * Cannot read properties of undefined
-       * (reading '8')
-       * error येणार नाही.
-       */
 
       setSelectedYear(null);
+
       setSelectedMonth(null);
 
-      setSelectedInvoice(null);
+      setSelectedEditInvoice(
+        null
+      );
 
-      setShowViewModal(false);
+      setSelectedViewInvoice(
+        null
+      );
+
+      setShowViewModal(
+        false
+      );
+
 
       await loadInvoices();
 
+
     } catch (error) {
+
       console.error(
         "Delete Error:",
         error
@@ -568,17 +731,27 @@ export default function InvoicesPage() {
 
       toast.error(
         error?.response?.data?.message ||
-          "Failed to delete invoice"
+        "Failed to delete invoice"
       );
+
     }
+
   };
+
 
   /* =====================================================
      AMOUNT FORMAT
   ===================================================== */
 
-  const formatAmount = (amount) => {
-    const number = Number(amount || 0);
+  const formatAmount = (
+    amount
+  ) => {
+
+    const number =
+      Number(
+        amount || 0
+      );
+
 
     return number.toLocaleString(
       "en-IN",
@@ -587,138 +760,223 @@ export default function InvoicesPage() {
         maximumFractionDigits: 2,
       }
     );
+
   };
+
 
   /* =====================================================
      VIEW
   ===================================================== */
 
-  const handleView = (invoice) => {
+  const handleView = (
+    invoice
+  ) => {
+
     if (!invoice) return;
 
-    setSelectedInvoice(invoice);
 
-    setShowViewModal(true);
+    setSelectedEditInvoice(
+      null
+    );
 
-    document.body.style.overflow = "hidden";
+    setSelectedViewInvoice(
+      invoice
+    );
+
+    setShowViewModal(
+      true
+    );
+
+    document.body.style.overflow =
+      "hidden";
+
   };
+
+
+  /* =====================================================
+     CLOSE VIEW
+  ===================================================== */
 
   const closeViewModal = () => {
-    setSelectedInvoice(null);
 
-    setShowViewModal(false);
+    setSelectedViewInvoice(
+      null
+    );
 
-    document.body.style.overflow = "";
+    setShowViewModal(
+      false
+    );
+
+    document.body.style.overflow =
+      "";
+
   };
+
 
   /* =====================================================
      PRINT
   ===================================================== */
 
   const handlePrint = () => {
+
     window.print();
+
   };
+
 
   /* =====================================================
      DATE
   ===================================================== */
 
-  const getInvoiceDate = (invoice) => {
-    if (!invoice?.invoice_date) {
+  const getInvoiceDate = (
+    invoice
+  ) => {
+
+    if (
+      !invoice?.invoice_date
+    ) {
+
       return "N/A";
+
     }
 
-    const date = new Date(
-      invoice.invoice_date
-    );
 
-    if (Number.isNaN(date.getTime())) {
+    const date =
+      new Date(
+        invoice.invoice_date
+      );
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
       return "N/A";
+
     }
+
 
     return date.toLocaleDateString(
       "en-IN"
     );
+
   };
 
+
   /* =====================================================
-     GROUP BY YEAR / MONTH
+     GROUP YEAR / MONTH
   ===================================================== */
 
-  const groupedInvoices = invoices.reduce(
-    (acc, invoice) => {
-      if (!invoice) return acc;
+  const groupedInvoices =
+    invoices.reduce(
+      (
+        acc,
+        invoice
+      ) => {
 
-      const invoiceDate = new Date(
-        invoice.invoice_date ||
-          invoice.createdAt
+        if (!invoice) {
+          return acc;
+        }
+
+
+        const invoiceDate =
+          new Date(
+            invoice.invoice_date ||
+            invoice.createdAt
+          );
+
+
+        const year =
+          invoice.invoice_year ||
+          (
+            Number.isNaN(
+              invoiceDate.getTime()
+            )
+              ? new Date().getFullYear()
+              : invoiceDate.getFullYear()
+          );
+
+
+        const month =
+          invoice.invoice_month ||
+          (
+            Number.isNaN(
+              invoiceDate.getTime()
+            )
+              ? new Date().getMonth() + 1
+              : invoiceDate.getMonth() + 1
+          );
+
+
+        if (!acc[year]) {
+
+          acc[year] = {};
+
+        }
+
+
+        if (
+          !acc[year][month]
+        ) {
+
+          acc[year][month] = [];
+
+        }
+
+
+        acc[year][month].push(
+          invoice
+        );
+
+
+        return acc;
+
+      },
+      {}
+    );
+
+
+  /* =====================================================
+     SORT YEARS
+  ===================================================== */
+
+  const sortedYears =
+    Object.keys(
+      groupedInvoices
+    )
+      .map(Number)
+      .sort(
+        (a, b) => b - a
       );
 
-      const year =
-        invoice.invoice_year ||
-        (
-          Number.isNaN(
-            invoiceDate.getTime()
-          )
-            ? new Date().getFullYear()
-            : invoiceDate.getFullYear()
-        );
-
-      const month =
-        invoice.invoice_month ||
-        (
-          Number.isNaN(
-            invoiceDate.getTime()
-          )
-            ? new Date().getMonth() + 1
-            : invoiceDate.getMonth() + 1
-        );
-
-      if (!acc[year]) {
-        acc[year] = {};
-      }
-
-      if (!acc[year][month]) {
-        acc[year][month] = [];
-      }
-
-      acc[year][month].push(invoice);
-
-      return acc;
-    },
-    {}
-  );
-
-  /* =====================================================
-     SORTED YEARS
-  ===================================================== */
-
-  const sortedYears = Object.keys(
-    groupedInvoices
-  )
-    .map(Number)
-    .sort((a, b) => b - a);
 
   /* =====================================================
      LOADING
   ===================================================== */
 
   if (loading) {
+
     return (
       <div className="invoice-loading">
         Loading invoices...
       </div>
     );
+
   }
+
 
   /* =====================================================
      PAGE
   ===================================================== */
 
   return (
+
     <div className="invoices-page">
 
       <div className="invoices-container">
+
 
         {/* =================================================
             HEADER
@@ -738,15 +996,20 @@ export default function InvoicesPage() {
 
           </div>
 
+
           <button
             type="button"
             onClick={() => {
 
               if (showForm) {
+
                 resetForm();
+
               }
 
-              setShowForm(!showForm);
+              setShowForm(
+                !showForm
+              );
 
             }}
             className="invoice-primary-btn"
@@ -764,7 +1027,7 @@ export default function InvoicesPage() {
 
 
         {/* =================================================
-            CREATE / EDIT FORM
+            CREATE FORM
         ================================================= */}
 
         {showForm && (
@@ -772,15 +1035,15 @@ export default function InvoicesPage() {
           <div className="invoice-form-card">
 
             <h2 className="invoice-form-title">
-
-              {editingId
-                ? "Edit Invoice"
-                : "Create Invoice"}
-
+              Create Invoice
             </h2>
 
 
-            <form onSubmit={handleSubmit}>
+            <form
+              onSubmit={
+                handleSubmit
+              }
+            >
 
               <div className="invoice-form-grid">
 
@@ -799,7 +1062,9 @@ export default function InvoicesPage() {
                     value={
                       formData.invoice_number
                     }
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Example: INV-001"
                     required
                   />
@@ -807,7 +1072,7 @@ export default function InvoicesPage() {
                 </div>
 
 
-                {/* INVOICE DATE */}
+                {/* DATE */}
 
                 <div className="invoice-form-group">
 
@@ -821,7 +1086,9 @@ export default function InvoicesPage() {
                     value={
                       formData.invoice_date
                     }
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     required
                   />
 
@@ -842,7 +1109,9 @@ export default function InvoicesPage() {
                     value={
                       formData.vendor_name
                     }
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Enter vendor name"
                     required
                   />
@@ -875,10 +1144,8 @@ export default function InvoicesPage() {
                           setFormData(
                             (prev) => ({
                               ...prev,
-
                               vendor_has_gst:
                                 "yes",
-
                               vendor_state:
                                 "",
                             })
@@ -911,10 +1178,8 @@ export default function InvoicesPage() {
                           setFormData(
                             (prev) => ({
                               ...prev,
-
                               vendor_has_gst:
                                 "no",
-
                               vendor_gstin:
                                 "",
                             })
@@ -936,7 +1201,7 @@ export default function InvoicesPage() {
                 </div>
 
 
-                {/* VENDOR GST */}
+                {/* GSTIN */}
 
                 {formData.vendor_has_gst ===
                   "yes" && (
@@ -953,11 +1218,14 @@ export default function InvoicesPage() {
                       value={
                         formData.vendor_gstin
                       }
-                      onChange={handleChange}
+                      onChange={
+                        handleChange
+                      }
                       placeholder="Enter 15 digit GSTIN"
                       maxLength={15}
                       autoComplete="off"
                     />
+
 
                     {gstError && (
 
@@ -966,6 +1234,7 @@ export default function InvoicesPage() {
                       </small>
 
                     )}
+
 
                     {!gstError &&
                       formData.vendor_gstin.length ===
@@ -986,7 +1255,7 @@ export default function InvoicesPage() {
                 )}
 
 
-                {/* VENDOR STATE */}
+                {/* STATE */}
 
                 {formData.vendor_has_gst ===
                   "no" && (
@@ -1002,7 +1271,9 @@ export default function InvoicesPage() {
                       value={
                         formData.vendor_state
                       }
-                      onChange={handleChange}
+                      onChange={
+                        handleChange
+                      }
                       required
                     >
 
@@ -1050,7 +1321,9 @@ export default function InvoicesPage() {
                     value={
                       formData.total_amount
                     }
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Enter total amount"
                     required
                   />
@@ -1075,7 +1348,9 @@ export default function InvoicesPage() {
                     value={
                       formData.gst_rate
                     }
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Example: 18"
                     required
                   />
@@ -1117,7 +1392,9 @@ export default function InvoicesPage() {
                   value={
                     formData.description
                   }
-                  onChange={handleChange}
+                  onChange={
+                    handleChange
+                  }
                   placeholder="Enter invoice description"
                   rows="3"
                 />
@@ -1136,12 +1413,8 @@ export default function InvoicesPage() {
                 >
 
                   {creating
-                    ? editingId
-                      ? "Updating..."
-                      : "Creating..."
-                    : editingId
-                      ? "Update Invoice"
-                      : "Create"}
+                    ? "Creating..."
+                    : "Create"}
 
                 </button>
 
@@ -1153,7 +1426,9 @@ export default function InvoicesPage() {
 
                     resetForm();
 
-                    setShowForm(false);
+                    setShowForm(
+                      false
+                    );
 
                   }}
                   disabled={creating}
@@ -1168,6 +1443,7 @@ export default function InvoicesPage() {
             </form>
 
           </div>
+
         )}
 
 
@@ -1222,7 +1498,9 @@ export default function InvoicesPage() {
                       type="button"
                       className="invoice-year-item"
                       onClick={() =>
-                        setSelectedYear(year)
+                        setSelectedYear(
+                          year
+                        )
                       }
                     >
 
@@ -1244,6 +1522,7 @@ export default function InvoicesPage() {
             )}
 
           </div>
+
         )}
 
 
@@ -1253,7 +1532,9 @@ export default function InvoicesPage() {
 
         {selectedYear &&
           !selectedMonth &&
-          groupedInvoices[selectedYear] && (
+          groupedInvoices[
+            selectedYear
+          ] && (
 
           <div className="invoice-table-card">
 
@@ -1262,7 +1543,9 @@ export default function InvoicesPage() {
               <button
                 type="button"
                 onClick={() =>
-                  setSelectedYear(null)
+                  setSelectedYear(
+                    null
+                  )
                 }
               >
 
@@ -1274,6 +1557,7 @@ export default function InvoicesPage() {
 
               </button>
 
+
               <h2>
                 {selectedYear}
               </h2>
@@ -1284,7 +1568,9 @@ export default function InvoicesPage() {
             <div className="invoice-month-list">
 
               {Object.keys(
-                groupedInvoices[selectedYear] || {}
+                groupedInvoices[
+                  selectedYear
+                ] || {}
               )
                 .map(Number)
                 .sort(
@@ -1306,7 +1592,9 @@ export default function InvoicesPage() {
                         type="button"
                         className="invoice-month-item"
                         onClick={() =>
-                          setSelectedMonth(month)
+                          setSelectedMonth(
+                            month
+                          )
                         }
                       >
 
@@ -1326,9 +1614,12 @@ export default function InvoicesPage() {
                               monthInvoices.length
                             }{" "}
                             invoice
-                            {monthInvoices.length !== 1
-                              ? "s"
-                              : ""}
+                            {
+                              monthInvoices.length !==
+                              1
+                                ? "s"
+                                : ""
+                            }
                           </small>
 
                         </div>
@@ -1340,22 +1631,26 @@ export default function InvoicesPage() {
                       </button>
 
                     );
+
                   }
                 )}
 
             </div>
 
           </div>
+
         )}
 
 
         {/* =================================================
-            INVOICES OF SELECTED MONTH
+            SELECTED MONTH
         ================================================= */}
 
         {selectedYear &&
           selectedMonth &&
-          groupedInvoices[selectedYear]?.[
+          groupedInvoices[
+            selectedYear
+          ]?.[
             selectedMonth
           ] && (
 
@@ -1366,7 +1661,9 @@ export default function InvoicesPage() {
               <button
                 type="button"
                 onClick={() =>
-                  setSelectedMonth(null)
+                  setSelectedMonth(
+                    null
+                  )
                 }
               >
 
@@ -1399,8 +1696,9 @@ export default function InvoicesPage() {
                   {
                     groupedInvoices[
                       selectedYear
-                    ]?.[selectedMonth]
-                      ?.length || 0
+                    ]?.[
+                      selectedMonth
+                    ]?.length || 0
                   }{" "}
 
                   invoices
@@ -1462,7 +1760,9 @@ export default function InvoicesPage() {
                   {(
                     groupedInvoices[
                       selectedYear
-                    ]?.[selectedMonth] || []
+                    ]?.[
+                      selectedMonth
+                    ] || []
                   ).map(
                     (invoice) => (
 
@@ -1573,23 +1873,19 @@ export default function InvoicesPage() {
                             <div>
 
                               <div>
-
                                 CGST (
                                 {
                                   invoice.cgst_rate ||
                                   0
                                 }%)
-
                               </div>
 
                               <div>
-
                                 SGST (
                                 {
                                   invoice.sgst_rate ||
                                   0
                                 }%)
-
                               </div>
 
                             </div>
@@ -1659,11 +1955,15 @@ export default function InvoicesPage() {
                               className="invoice-action-btn invoice-view-btn"
                               title="View Invoice"
                               onClick={() =>
-                                handleView(invoice)
+                                handleView(
+                                  invoice
+                                )
                               }
                             >
 
-                              <Eye size={17} />
+                              <Eye
+                                size={17}
+                              />
 
                             </button>
 
@@ -1675,11 +1975,15 @@ export default function InvoicesPage() {
                               className="invoice-action-btn invoice-edit-btn"
                               title="Edit Invoice"
                               onClick={() =>
-                                handleEdit(invoice)
+                                handleEdit(
+                                  invoice
+                                )
                               }
                             >
 
-                              <Edit2 size={17} />
+                              <Edit2
+                                size={17}
+                              />
 
                             </button>
 
@@ -1697,10 +2001,11 @@ export default function InvoicesPage() {
                               }
                             >
 
-                              <Trash2 size={17} />
+                              <Trash2
+                                size={17}
+                              />
 
                             </button>
-
 
                           </div>
 
@@ -1718,9 +2023,35 @@ export default function InvoicesPage() {
             </div>
 
           </div>
+
         )}
 
       </div>
+
+
+      {/* =====================================================
+          EDIT INVOICE MODAL
+      ===================================================== */}
+
+      {selectedEditInvoice && (
+
+        <EditInvoiceModal
+
+          invoice={
+            selectedEditInvoice
+          }
+
+          onClose={
+            closeEditModal
+          }
+
+          onUpdated={
+            handleInvoiceUpdated
+          }
+
+        />
+
+      )}
 
 
       {/* =====================================================
@@ -1728,11 +2059,13 @@ export default function InvoicesPage() {
       ===================================================== */}
 
       {showViewModal &&
-        selectedInvoice && (
+        selectedViewInvoice && (
 
         <div
           className="invoice-modal-overlay"
-          onClick={closeViewModal}
+          onClick={
+            closeViewModal
+          }
         >
 
           <div
@@ -1741,6 +2074,7 @@ export default function InvoicesPage() {
               e.stopPropagation()
             }
           >
+
 
             {/* TOOLBAR */}
 
@@ -1756,10 +2090,14 @@ export default function InvoicesPage() {
                 <button
                   type="button"
                   className="invoice-print-btn"
-                  onClick={handlePrint}
+                  onClick={
+                    handlePrint
+                  }
                 >
 
-                  <Printer size={17} />
+                  <Printer
+                    size={17}
+                  />
 
                   Print Invoice
 
@@ -1769,10 +2107,14 @@ export default function InvoicesPage() {
                 <button
                   type="button"
                   className="invoice-close-btn"
-                  onClick={closeViewModal}
+                  onClick={
+                    closeViewModal
+                  }
                 >
 
-                  <X size={19} />
+                  <X
+                    size={19}
+                  />
 
                 </button>
 
@@ -1785,9 +2127,11 @@ export default function InvoicesPage() {
 
             <div className="invoice-preview-scroll">
 
+
               {/* INVOICE PAPER */}
 
               <div className="tax-invoice-paper">
+
 
                 {/* HEADING */}
 
@@ -1804,7 +2148,7 @@ export default function InvoicesPage() {
                 </div>
 
 
-                {/* SELLER DETAILS */}
+                {/* SELLER */}
 
                 <div className="tax-invoice-top-grid">
 
@@ -1813,9 +2157,9 @@ export default function InvoicesPage() {
                     <h2>
 
                       {
-                        selectedInvoice.user_id?.companyName ||
-                        selectedInvoice.user?.companyName ||
-                        selectedInvoice.companyName ||
+                        selectedViewInvoice.user_id?.companyName ||
+                        selectedViewInvoice.user?.companyName ||
+                        selectedViewInvoice.companyName ||
                         "Your Business Name"
                       }
 
@@ -1825,9 +2169,9 @@ export default function InvoicesPage() {
                     <p>
 
                       {
-                        selectedInvoice.user_id?.companyAddress ||
-                        selectedInvoice.user?.companyAddress ||
-                        selectedInvoice.companyAddress ||
+                        selectedViewInvoice.user_id?.companyAddress ||
+                        selectedViewInvoice.user?.companyAddress ||
+                        selectedViewInvoice.companyAddress ||
                         "Company Address"
                       }
 
@@ -1837,9 +2181,9 @@ export default function InvoicesPage() {
                     <p>
 
                       {
-                        selectedInvoice.user_id?.companyState ||
-                        selectedInvoice.user?.companyState ||
-                        selectedInvoice.companyState ||
+                        selectedViewInvoice.user_id?.companyState ||
+                        selectedViewInvoice.user?.companyState ||
+                        selectedViewInvoice.companyState ||
                         ""
                       }
 
@@ -1847,9 +2191,9 @@ export default function InvoicesPage() {
 
 
                     {(
-                      selectedInvoice.user_id?.gstNumber ||
-                      selectedInvoice.user?.gstNumber ||
-                      selectedInvoice.gstNumber
+                      selectedViewInvoice.user_id?.gstNumber ||
+                      selectedViewInvoice.user?.gstNumber ||
+                      selectedViewInvoice.gstNumber
                     ) && (
 
                       <p>
@@ -1859,9 +2203,9 @@ export default function InvoicesPage() {
                         </strong>{" "}
 
                         {
-                          selectedInvoice.user_id?.gstNumber ||
-                          selectedInvoice.user?.gstNumber ||
-                          selectedInvoice.gstNumber
+                          selectedViewInvoice.user_id?.gstNumber ||
+                          selectedViewInvoice.user?.gstNumber ||
+                          selectedViewInvoice.gstNumber
                         }
 
                       </p>
@@ -1871,7 +2215,7 @@ export default function InvoicesPage() {
                   </div>
 
 
-                  {/* INVOICE META */}
+                  {/* META */}
 
                   <div className="invoice-meta">
 
@@ -1884,7 +2228,7 @@ export default function InvoicesPage() {
                       <strong>
 
                         {
-                          selectedInvoice.invoice_number ||
+                          selectedViewInvoice.invoice_number ||
                           "-"
                         }
 
@@ -1903,7 +2247,7 @@ export default function InvoicesPage() {
 
                         {
                           getInvoiceDate(
-                            selectedInvoice
+                            selectedViewInvoice
                           )
                         }
 
@@ -1921,7 +2265,7 @@ export default function InvoicesPage() {
                       <strong>
 
                         {
-                          selectedInvoice.status ||
+                          selectedViewInvoice.status ||
                           "Pending"
                         }
 
@@ -1945,21 +2289,21 @@ export default function InvoicesPage() {
                   <h3>
 
                     {
-                      selectedInvoice.vendor_name ||
+                      selectedViewInvoice.vendor_name ||
                       "-"
                     }
 
                   </h3>
 
 
-                  {selectedInvoice.vendor_has_gst ? (
+                  {selectedViewInvoice.vendor_has_gst ? (
 
                     <p>
 
                       GSTIN:{" "}
 
                       {
-                        selectedInvoice.vendor_gstin ||
+                        selectedViewInvoice.vendor_gstin ||
                         "-"
                       }
 
@@ -1972,7 +2316,7 @@ export default function InvoicesPage() {
                       State:{" "}
 
                       {
-                        selectedInvoice.vendor_state ||
+                        selectedViewInvoice.vendor_state ||
                         "-"
                       }
 
@@ -2027,7 +2371,7 @@ export default function InvoicesPage() {
                       <td className="item-description">
 
                         {
-                          selectedInvoice.description ||
+                          selectedViewInvoice.description ||
                           "Invoice Services"
                         }
 
@@ -2042,7 +2386,7 @@ export default function InvoicesPage() {
                         ₹
                         {
                           formatAmount(
-                            selectedInvoice.total_amount
+                            selectedViewInvoice.total_amount
                           )
                         }
 
@@ -2053,7 +2397,7 @@ export default function InvoicesPage() {
                         ₹
                         {
                           formatAmount(
-                            selectedInvoice.total_amount
+                            selectedViewInvoice.total_amount
                           )
                         }
 
@@ -2082,7 +2426,7 @@ export default function InvoicesPage() {
 
                       {
                         numberToWords(
-                          selectedInvoice.grand_total
+                          selectedViewInvoice.grand_total
                         )
                       }{" "}
 
@@ -2095,7 +2439,6 @@ export default function InvoicesPage() {
 
                   <div className="invoice-calculation">
 
-                    {/* TAXABLE */}
 
                     <div>
 
@@ -2108,7 +2451,7 @@ export default function InvoicesPage() {
                         ₹
                         {
                           formatAmount(
-                            selectedInvoice.total_amount
+                            selectedViewInvoice.total_amount
                           )
                         }
 
@@ -2117,9 +2460,7 @@ export default function InvoicesPage() {
                     </div>
 
 
-                    {/* CGST + SGST */}
-
-                    {selectedInvoice.tax_type ===
+                    {selectedViewInvoice.tax_type ===
                     "CGST_SGST" ? (
 
                       <>
@@ -2130,7 +2471,7 @@ export default function InvoicesPage() {
 
                             CGST (
                             {
-                              selectedInvoice.cgst_rate ||
+                              selectedViewInvoice.cgst_rate ||
                               0
                             }%)
 
@@ -2141,7 +2482,7 @@ export default function InvoicesPage() {
                             ₹
                             {
                               formatAmount(
-                                selectedInvoice.cgst_amount
+                                selectedViewInvoice.cgst_amount
                               )
                             }
 
@@ -2156,7 +2497,7 @@ export default function InvoicesPage() {
 
                             SGST (
                             {
-                              selectedInvoice.sgst_rate ||
+                              selectedViewInvoice.sgst_rate ||
                               0
                             }%)
 
@@ -2167,7 +2508,7 @@ export default function InvoicesPage() {
                             ₹
                             {
                               formatAmount(
-                                selectedInvoice.sgst_amount
+                                selectedViewInvoice.sgst_amount
                               )
                             }
 
@@ -2179,15 +2520,13 @@ export default function InvoicesPage() {
 
                     ) : (
 
-                      /* IGST */
-
                       <div>
 
                         <span>
 
                           IGST (
                           {
-                            selectedInvoice.igst_rate ||
+                            selectedViewInvoice.igst_rate ||
                             0
                           }%)
 
@@ -2198,7 +2537,7 @@ export default function InvoicesPage() {
                           ₹
                           {
                             formatAmount(
-                              selectedInvoice.igst_amount
+                              selectedViewInvoice.igst_amount
                             )
                           }
 
@@ -2208,8 +2547,6 @@ export default function InvoicesPage() {
 
                     )}
 
-
-                    {/* GRAND TOTAL */}
 
                     <div className="invoice-final-total">
 
@@ -2222,7 +2559,7 @@ export default function InvoicesPage() {
                         ₹
                         {
                           formatAmount(
-                            selectedInvoice.grand_total
+                            selectedViewInvoice.grand_total
                           )
                         }
 
@@ -2246,7 +2583,7 @@ export default function InvoicesPage() {
                   <strong>
 
                     {
-                      selectedInvoice.status ||
+                      selectedViewInvoice.status ||
                       "Pending"
                     }
 
@@ -2296,9 +2633,11 @@ export default function InvoicesPage() {
           </div>
 
         </div>
+
       )}
 
     </div>
+
   );
 
 
@@ -2306,18 +2645,31 @@ export default function InvoicesPage() {
      NUMBER TO WORDS
   ===================================================== */
 
-  function numberToWords(num) {
-    num = Math.floor(
-      Number(num || 0)
-    );
+  function numberToWords(
+    num
+  ) {
 
-    if (!Number.isFinite(num)) {
+    num =
+      Math.floor(
+        Number(num || 0)
+      );
+
+
+    if (
+      !Number.isFinite(num)
+    ) {
+
       return "Zero";
+
     }
+
 
     if (num === 0) {
+
       return "Zero";
+
     }
+
 
     const ones = [
       "",
@@ -2342,6 +2694,7 @@ export default function InvoicesPage() {
       "Nineteen",
     ];
 
+
     const tens = [
       "",
       "",
@@ -2355,77 +2708,129 @@ export default function InvoicesPage() {
       "Ninety",
     ];
 
-    const convert = (n) => {
+
+    const convert = (
+      n
+    ) => {
+
       if (n < 20) {
-        return ones[n] || "";
+
+        return (
+          ones[n] || ""
+        );
+
       }
 
+
       if (n < 100) {
+
         return (
-          tens[Math.floor(n / 10)] +
+          tens[
+            Math.floor(
+              n / 10
+            )
+          ] +
           (
             n % 10
-              ? " " + ones[n % 10]
+              ? " " +
+                ones[
+                  n % 10
+                ]
               : ""
           )
         );
+
       }
 
+
       if (n < 1000) {
+
         return (
-          ones[Math.floor(n / 100)] +
+          ones[
+            Math.floor(
+              n / 100
+            )
+          ] +
           " Hundred" +
           (
             n % 100
-              ? " " + convert(n % 100)
+              ? " " +
+                convert(
+                  n % 100
+                )
               : ""
           )
         );
+
       }
 
+
       if (n < 100000) {
+
         return (
           convert(
-            Math.floor(n / 1000)
+            Math.floor(
+              n / 1000
+            )
           ) +
           " Thousand" +
           (
             n % 1000
-              ? " " + convert(n % 1000)
+              ? " " +
+                convert(
+                  n % 1000
+                )
               : ""
           )
         );
+
       }
 
+
       if (n < 10000000) {
+
         return (
           convert(
-            Math.floor(n / 100000)
+            Math.floor(
+              n / 100000
+            )
           ) +
           " Lakh" +
           (
             n % 100000
-              ? " " + convert(n % 100000)
+              ? " " +
+                convert(
+                  n % 100000
+                )
               : ""
           )
         );
+
       }
+
 
       return (
         convert(
-          Math.floor(n / 10000000)
+          Math.floor(
+            n / 10000000
+          )
         ) +
         " Crore" +
         (
           n % 10000000
             ? " " +
-              convert(n % 10000000)
+              convert(
+                n % 10000000
+              )
             : ""
         )
       );
+
     };
 
-    return convert(num);
-  }
-}
 
+    return convert(num);
+
+  }
+
+}

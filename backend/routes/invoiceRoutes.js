@@ -6,6 +6,7 @@ import {
   createInvoice,
   getInvoices,
   getInvoice,
+  updateInvoice,
   deleteInvoice,
 } from "../controllers/invoiceController.js";
 
@@ -46,7 +47,15 @@ router.get(
   getInvoice
 );
 
+/* =====================================================
+   UPDATE INVOICE
+===================================================== */
 
+router.put(
+  "/:id",
+  authMiddleware,
+  updateInvoice
+);
 /* =====================================================
    DELETE
 ===================================================== */

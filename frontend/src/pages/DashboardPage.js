@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import "./DashboardPage.css";
 
@@ -24,7 +25,6 @@ import {
 import { invoiceAPI, paymentAPI } from "../api/api";
 import toast from "react-hot-toast";
 
-
 export default function DashboardPage({ user }) {
 
   /* =====================================================
@@ -49,8 +49,6 @@ export default function DashboardPage({ user }) {
 
   /* =====================================================
      DUMMY SALES + GST DATA
-     
-     Later this will come from MongoDB.
   ===================================================== */
 
   const gstChartData = [
@@ -147,16 +145,11 @@ export default function DashboardPage({ user }) {
       return user.email.split("@")[0];
     }
 
-    /* -----------------------------------------------
-       If user prop is not passed, check localStorage
-    ------------------------------------------------ */
-
     try {
 
-      const savedUser =
-        JSON.parse(
-          localStorage.getItem("user")
-        );
+      const savedUser = JSON.parse(
+        localStorage.getItem("user")
+      );
 
       if (savedUser?.name) {
         return savedUser.name;
@@ -219,17 +212,60 @@ export default function DashboardPage({ user }) {
       let paymentData = [];
 
 
-      /* -----------------------------------------------
+      /* =================================================
          LOAD INVOICES
-      ------------------------------------------------ */
+      ================================================= */
 
       try {
 
         const invoiceResponse =
           await invoiceAPI.list();
 
-        invoiceData =
-          invoiceResponse?.data || [];
+        const responseData =
+          invoiceResponse?.data;
+
+
+        /*
+          Backend can return:
+
+          1. [ ... ]
+
+          OR
+
+          2. { invoices: [ ... ] }
+
+          OR
+
+          3. { data: [ ... ] }
+        */
+
+        if (Array.isArray(responseData)) {
+
+          invoiceData = responseData;
+
+        } else if (
+          Array.isArray(
+            responseData?.invoices
+          )
+        ) {
+
+          invoiceData =
+            responseData.invoices;
+
+        } else if (
+          Array.isArray(
+            responseData?.data
+          )
+        ) {
+
+          invoiceData =
+            responseData.data;
+
+        } else {
+
+          invoiceData = [];
+
+        }
 
       } catch (error) {
 
@@ -238,82 +274,137 @@ export default function DashboardPage({ user }) {
           error
         );
 
+        invoiceData = [];
+
       }
 
 
-      /* -----------------------------------------------
+      /* =================================================
          LOAD PAYMENTS
-      ------------------------------------------------ */
+      ================================================= */
 
       try {
 
         const paymentResponse =
           await paymentAPI.list();
 
-        paymentData =
-          paymentResponse?.data || [];
+        const responseData =
+          paymentResponse?.data;
+
+
+        if (Array.isArray(responseData)) {
+
+          paymentData = responseData;
+
+        } else if (
+          Array.isArray(
+            responseData?.payments
+          )
+        ) {
+
+          paymentData =
+            responseData.payments;
+
+        } else if (
+          Array.isArray(
+            responseData?.data
+          )
+        ) {
+
+          paymentData =
+            responseData.data;
+
+        } else {
+
+          paymentData = [];
+
+        }
 
       } catch (error) {
+
+        /*
+          Payments API नसल्यास किंवा
+          /api/payments 404 असल्यास
+          Dashboard crash होऊ नये.
+        */
 
         console.log(
           "Payment API unavailable:",
           error
         );
 
+        paymentData = [];
+
       }
 
 
+      /* =================================================
+         SET RECENT DATA
+      ================================================= */
+
       setInvoices(
-        invoiceData.slice(0, 5)
+        Array.isArray(invoiceData)
+          ? invoiceData.slice(0, 5)
+          : []
       );
+
 
       setPayments(
-        paymentData.slice(0, 5)
+        Array.isArray(paymentData)
+          ? paymentData.slice(0, 5)
+          : []
       );
 
 
-      /* -----------------------------------------------
+      /* =================================================
          CALCULATE STATS
-      ------------------------------------------------ */
+      ================================================= */
 
       const totalInvoices =
-        invoiceData.length;
+        Array.isArray(invoiceData)
+          ? invoiceData.length
+          : 0;
+
 
       const totalPayments =
-        paymentData.length;
+        Array.isArray(paymentData)
+          ? paymentData.length
+          : 0;
 
 
       const invoiceTotal =
-        invoiceData.reduce(
-          (sum, invoice) =>
-            sum +
-            Number(
-              invoice.total_amount ||
-              invoice.totalAmount ||
-              invoice.amount ||
+        Array.isArray(invoiceData)
+          ? invoiceData.reduce(
+              (sum, invoice) =>
+                sum +
+                Number(
+                  invoice?.total_amount ||
+                  invoice?.totalAmount ||
+                  invoice?.amount ||
+                  0
+                ),
               0
-            ),
-          0
-        );
+            )
+          : 0;
 
 
       const paidAmount =
-        paymentData.reduce(
-          (sum, payment) =>
-            sum +
-            Number(
-              payment.amount ||
+        Array.isArray(paymentData)
+          ? paymentData.reduce(
+              (sum, payment) =>
+                sum +
+                Number(
+                  payment?.amount || 0
+                ),
               0
-            ),
-          0
-        );
+            )
+          : 0;
 
 
       const outstandingAmount =
         Math.max(
           0,
-          invoiceTotal -
-          paidAmount
+          invoiceTotal - paidAmount
         );
 
 
@@ -408,7 +499,6 @@ export default function DashboardPage({ user }) {
       </section>
 
 
-
       {/* =================================================
           MAIN CONTAINER
       ================================================= */}
@@ -472,7 +562,6 @@ export default function DashboardPage({ user }) {
                   tick={{
                     fill: "#6b7280",
                   }}
-
                   tickFormatter={(value) =>
                     `₹${value / 1000}K`
                   }
@@ -482,16 +571,12 @@ export default function DashboardPage({ user }) {
                   formatter={(value) =>
                     `₹${Number(
                       value
-                    ).toLocaleString(
-                      "en-IN"
-                    )}`
+                    ).toLocaleString("en-IN")}`
                   }
                 />
 
                 <Legend />
 
-
-                {/* SALES */}
 
                 <Line
                   type="monotone"
@@ -508,8 +593,6 @@ export default function DashboardPage({ user }) {
                 />
 
 
-                {/* GST COLLECTED */}
-
                 <Line
                   type="monotone"
                   dataKey="gstCollected"
@@ -524,8 +607,6 @@ export default function DashboardPage({ user }) {
                   }}
                 />
 
-
-                {/* GST PAID */}
 
                 <Line
                   type="monotone"
@@ -548,7 +629,6 @@ export default function DashboardPage({ user }) {
           </div>
 
         </section>
-
 
 
         {/* =================================================
@@ -742,7 +822,6 @@ export default function DashboardPage({ user }) {
         </section>
 
 
-
         {/* =================================================
             SECONDARY CHARTS
         ================================================= */}
@@ -788,6 +867,7 @@ export default function DashboardPage({ user }) {
 
                   <Legend />
 
+
                   <Line
                     type="monotone"
                     dataKey="invoices"
@@ -795,6 +875,7 @@ export default function DashboardPage({ user }) {
                     stroke="#2563eb"
                     strokeWidth={3}
                   />
+
 
                   <Line
                     type="monotone"
@@ -859,6 +940,7 @@ export default function DashboardPage({ user }) {
 
                   <Legend />
 
+
                   <Line
                     type="monotone"
                     dataKey="revenue"
@@ -879,7 +961,6 @@ export default function DashboardPage({ user }) {
           </div>
 
         </section>
-
 
 
         {/* =================================================
@@ -930,7 +1011,9 @@ export default function DashboardPage({ user }) {
                         <div className="recent-subtitle">
 
                           Invoice #
-                          {invoice.id ||
+                          {invoice.invoice_number ||
+                            invoice.invoiceNumber ||
+                            invoice.id ||
                             invoice._id ||
                             "N/A"}
 
@@ -983,7 +1066,6 @@ export default function DashboardPage({ user }) {
             )}
 
           </div>
-
 
 
           {/* RECENT PAYMENTS */}
@@ -1083,7 +1165,6 @@ export default function DashboardPage({ user }) {
         </section>
 
 
-
         {/* =================================================
             QUICK ACTIONS
         ================================================= */}
@@ -1120,11 +1201,8 @@ export default function DashboardPage({ user }) {
 
       </main>
 
-
-
-
-
     </div>
 
   );
+
 }
