@@ -1,0 +1,1127 @@
+/* =====================================================
+   INVOICE LIST CARD
+===================================================== */
+
+.invoice-list-card {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 30px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.invoice-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    padding: 25px 30px;
+    border-bottom: 1px solid #e5e7eb;
+    box-sizing: border-box;
+}
+
+.invoice-list-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #172033;
+}
+
+.invoice-list-header p {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+
+/* =====================================================
+   NEW INVOICE BUTTON
+   NOTE:
+   History page वर हा button वापरायचा नसेल तर
+   JSX मधून <button className="invoice-list-new-btn"> काढा.
+===================================================== */
+
+.invoice-list-new-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+
+.invoice-list-new-btn:hover {
+    background: #1d4ed8;
+}
+
+
+/* =====================================================
+   YEAR LIST
+===================================================== */
+
+.invoice-year-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 25px 30px;
+}
+
+.invoice-year-item {
+    width: 100%;
+    min-height: 60px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 18px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #172033;
+
+    font-size: 17px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+
+    box-sizing: border-box;
+}
+
+.invoice-year-item:hover {
+    background: #f8fbff;
+    border-color: #93c5fd;
+    transform: translateY(-1px);
+}
+
+.invoice-year-item svg {
+    color: #2563eb;
+}
+
+
+/* =====================================================
+   BREADCRUMB
+===================================================== */
+
+.invoice-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    padding: 25px 30px;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    box-sizing: border-box;
+}
+
+.invoice-breadcrumb > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 9px 13px;
+
+    border: 1px solid #dbe3f0;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #2563eb;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+
+    flex-shrink: 0;
+}
+
+.invoice-breadcrumb > button:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.invoice-breadcrumb > div {
+    flex: 1;
+    min-width: 0;
+}
+
+.invoice-breadcrumb h2 {
+    margin: 0;
+
+    font-size: 23px;
+    font-weight: 700;
+
+    color: #172033;
+}
+
+.invoice-breadcrumb p {
+    margin: 5px 0 0;
+
+    font-size: 14px;
+    color: #64748b;
+}
+
+
+/* =====================================================
+   MONTH LIST
+===================================================== */
+
+.invoice-month-list {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 14px;
+
+    padding: 25px 30px;
+
+    box-sizing: border-box;
+}
+
+.invoice-month-item {
+    width: 100%;
+    min-height: 78px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 16px 18px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+
+    box-sizing: border-box;
+}
+
+.invoice-month-item:hover {
+    background: #f8fbff;
+    border-color: #93c5fd;
+    transform: translateY(-1px);
+}
+
+.invoice-month-item strong {
+    display: block;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    color: #172033;
+}
+
+.invoice-month-item small {
+    display: block;
+
+    margin-top: 5px;
+
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.invoice-month-item svg {
+    color: #2563eb;
+    flex-shrink: 0;
+}
+
+
+/* =====================================================
+   EMPTY
+===================================================== */
+
+.invoice-list-empty {
+    min-height: 220px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+
+    text-align: center;
+
+    color: #94a3b8;
+
+    box-sizing: border-box;
+}
+
+.invoice-list-empty p {
+    margin: 0 0 15px;
+
+    font-size: 15px;
+}
+
+.invoice-list-empty button {
+    padding: 10px 18px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #2563eb;
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.invoice-list-empty button:hover {
+    background: #1d4ed8;
+}
+
+
+/* =====================================================
+   TABLE WRAPPER
+   IMPORTANT:
+   Horizontal scrollbar completely removed.
+===================================================== */
+
+.invoice-list-card .invoice-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+
+    overflow-x: hidden;
+    overflow-y: visible;
+
+    box-sizing: border-box;
+}
+
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.invoice-list-card .invoice-table {
+    width: 100%;
+    max-width: 100%;
+
+    min-width: 0;
+
+    border-collapse: collapse;
+    table-layout: fixed;
+
+    box-sizing: border-box;
+}
+
+
+/* =====================================================
+   TABLE HEADER
+===================================================== */
+
+.invoice-list-card .invoice-table thead {
+    background: #f8fafc;
+}
+
+.invoice-list-card .invoice-table th {
+    padding: 15px 10px;
+
+    text-align: center;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    color: #475569;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    white-space: normal;
+
+    word-break: normal;
+
+    box-sizing: border-box;
+}
+
+
+/* =====================================================
+   TABLE BODY
+===================================================== */
+
+.invoice-list-card .invoice-table td {
+    padding: 15px 10px;
+
+    text-align: center;
+
+    font-size: 14px;
+    color: #374151;
+
+    border-bottom: 1px solid #eef0f3;
+
+    vertical-align: middle;
+
+    white-space: normal;
+
+    word-break: break-word;
+
+    overflow-wrap: anywhere;
+
+    box-sizing: border-box;
+}
+
+.invoice-list-card .invoice-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+
+/* =====================================================
+   COLUMN WIDTHS
+===================================================== */
+
+.invoice-list-card .invoice-table th:nth-child(1),
+.invoice-list-card .invoice-table td:nth-child(1) {
+    width: 11%;
+}
+
+.invoice-list-card .invoice-table th:nth-child(2),
+.invoice-list-card .invoice-table td:nth-child(2) {
+    width: 10%;
+}
+
+.invoice-list-card .invoice-table th:nth-child(3),
+.invoice-list-card .invoice-table td:nth-child(3) {
+    width: 17%;
+}
+
+.invoice-list-card .invoice-table th:nth-child(4),
+.invoice-list-card .invoice-table td:nth-child(4) {
+    width: 12%;
+}
+
+.invoice-list-card .invoice-table th:nth-child(5),
+.invoice-list-card .invoice-table td:nth-child(5) {
+    width: 13%;
+}
+
+.invoice-list-card .invoice-table th:nth-child(6),
+.invoice-list-card .invoice-table td:nth-child(6) {
+    width: 14%;
+}
+
+.invoice-list-card .invoice-table th:nth-child(7),
+.invoice-list-card .invoice-table td:nth-child(7) {
+    width: 9%;
+}
+
+.invoice-list-card .invoice-table th:nth-child(8),
+.invoice-list-card .invoice-table td:nth-child(8) {
+    width: 14%;
+}
+
+
+/* =====================================================
+   INVOICE NUMBER
+===================================================== */
+
+.invoice-list-card .invoice-table td:first-child strong {
+    color: #2563eb;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* =====================================================
+   VENDOR
+===================================================== */
+
+.invoice-list-card .invoice-vendor-name {
+    font-size: 14px;
+    font-weight: 600;
+
+    color: #172033;
+
+    word-break: break-word;
+}
+
+.invoice-list-card .invoice-vendor-gstin {
+    margin-top: 4px;
+
+    font-size: 11px;
+
+    color: #94a3b8;
+
+    word-break: break-all;
+}
+
+
+/* =====================================================
+   AMOUNT
+===================================================== */
+
+.invoice-list-card .invoice-amount {
+    display: inline-flex;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    color: #374151;
+
+    white-space: nowrap;
+}
+
+.invoice-list-card .invoice-grand-total {
+    font-size: 14px;
+    font-weight: 700;
+
+    color: #374151;
+
+    white-space: nowrap;
+}
+
+
+/* =====================================================
+   GST
+===================================================== */
+
+.invoice-list-card .invoice-table td:nth-child(5) {
+    line-height: 1.6;
+    font-size: 12px;
+}
+
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+.invoice-list-card .invoice-status {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    background: #eff6ff;
+
+    color: #e40b0b;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+/* =====================================================
+   ACTIONS
+===================================================== */
+
+.invoice-list-card .invoice-actions {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    flex-wrap: nowrap;
+}
+
+.invoice-list-card .invoice-action-btn {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 7px;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    flex-shrink: 0;
+}
+
+.invoice-list-card .invoice-view-btn {
+    color: #16a34a;
+}
+
+.invoice-list-card .invoice-view-btn:hover {
+    background: #f0fdf4;
+}
+
+.invoice-list-card .invoice-edit-btn {
+    color: #2563eb;
+}
+
+.invoice-list-card .invoice-edit-btn:hover {
+    background: #eff6ff;
+}
+
+.invoice-list-card .invoice-delete-btn {
+    color: #dc2626;
+}
+
+.invoice-list-card .invoice-delete-btn:hover {
+    background: #fef2f2;
+}
+
+
+/* =====================================================
+   INVOICE HISTORY FILTERS
+===================================================== */
+
+.invoice-history-filters {
+    width: 100%;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+
+    gap: 18px;
+
+    padding: 25px 30px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.invoice-history-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    min-width: 180px;
+}
+
+.invoice-history-field label {
+    font-size: 13px;
+    font-weight: 600;
+
+    color: #374151;
+}
+
+
+/* =====================================================
+   YEAR / MONTH DROPDOWN
+===================================================== */
+
+.invoice-history-select {
+    width: 100%;
+    height: 44px;
+
+    padding: 0 38px 0 14px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+
+    background-color: #ffffff;
+    color: #172033;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    outline: none;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+
+    appearance: auto;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.invoice-history-select:hover {
+    border-color: #93c5fd;
+    background-color: #f8fbff;
+}
+
+.invoice-history-select:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.invoice-history-select:disabled {
+    background-color: #f8fafc;
+
+    color: #94a3b8;
+
+    cursor: not-allowed;
+
+    opacity: 0.8;
+}
+
+
+/* =====================================================
+   SELECTED PERIOD
+===================================================== */
+
+.invoice-selected-period {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin: 20px 30px 0;
+
+    padding: 20px;
+
+    background: #f8fafc;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 9px;
+
+    box-sizing: border-box;
+}
+
+.invoice-selected-period span {
+    color: #172033;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.invoice-selected-period strong {
+    color: #64748b;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   EMPTY PERIOD
+===================================================== */
+
+.invoice-period-empty {
+    min-height: 160px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    margin: 20px 30px 30px;
+
+    padding: 25px;
+
+    text-align: center;
+
+    background: #ffffff;
+
+    border: 1px dashed #cbd5e1;
+
+    border-radius: 12px;
+
+    box-sizing: border-box;
+
+    color: #64748b;
+}
+
+.invoice-period-empty strong {
+    margin-bottom: 5px;
+
+    color: #334155;
+
+    font-size: 16px;
+}
+
+.invoice-period-empty p {
+    margin: 0;
+
+    font-size: 13px;
+
+    color: #94a3b8;
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1000px) {
+
+    .invoice-list-card {
+        width: 100%;
+    }
+
+    .invoice-list-header {
+        padding: 22px;
+    }
+
+    .invoice-breadcrumb {
+        padding: 22px;
+    }
+
+    .invoice-year-list,
+    .invoice-month-list {
+        padding: 22px;
+    }
+
+    .invoice-list-card .invoice-table th,
+    .invoice-list-card .invoice-table td {
+        padding: 12px 7px;
+        font-size: 12px;
+    }
+
+    .invoice-list-card .invoice-table td:first-child strong {
+        font-size: 12px;
+    }
+
+    .invoice-list-card .invoice-vendor-name {
+        font-size: 12px;
+    }
+
+    .invoice-list-card .invoice-vendor-gstin {
+        font-size: 10px;
+    }
+
+    .invoice-list-card .invoice-action-btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .invoice-list-card .invoice-action-btn svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .invoice-list-card .invoice-status {
+        padding: 5px 7px;
+        font-size: 10px;
+    }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+
+    .invoice-list-card {
+        width: 100%;
+
+        border-radius: 10px;
+    }
+
+    /* HEADER */
+
+    .invoice-list-header {
+        flex-direction: column;
+
+        align-items: center;
+
+        text-align: center;
+
+        padding: 22px 18px;
+    }
+
+    .invoice-list-header h2 {
+        font-size: 22px;
+    }
+
+    .invoice-list-header p {
+        font-size: 13px;
+    }
+
+    .invoice-list-new-btn {
+        width: 100%;
+    }
+
+
+    /* YEAR */
+
+    .invoice-year-list {
+        padding: 18px;
+    }
+
+    .invoice-year-item {
+        min-height: 56px;
+
+        padding: 0 15px;
+
+        font-size: 16px;
+    }
+
+
+    /* BREADCRUMB */
+
+    .invoice-breadcrumb {
+        padding: 20px 18px;
+
+        gap: 12px;
+    }
+
+    .invoice-breadcrumb > button {
+        flex-shrink: 0;
+    }
+
+    .invoice-breadcrumb h2 {
+        font-size: 20px;
+    }
+
+    .invoice-breadcrumb p {
+        font-size: 13px;
+    }
+
+
+    /* MONTH */
+
+    .invoice-month-list {
+        grid-template-columns: 1fr;
+
+        padding: 18px;
+    }
+
+    .invoice-month-item {
+        min-height: 70px;
+    }
+
+
+    /* =================================================
+       MOBILE TABLE
+       No horizontal scrollbar
+    ================================================= */
+
+    .invoice-list-card .invoice-table-wrapper {
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    .invoice-list-card .invoice-table {
+        width: 100%;
+        min-width: 0;
+
+        table-layout: fixed;
+    }
+
+    .invoice-list-card .invoice-table th {
+        padding: 10px 4px;
+
+        font-size: 9px;
+
+        line-height: 1.3;
+    }
+
+    .invoice-list-card .invoice-table td {
+        padding: 10px 4px;
+
+        font-size: 10px;
+
+        line-height: 1.35;
+    }
+
+    .invoice-list-card .invoice-table td:first-child strong {
+        font-size: 10px;
+
+        white-space: normal;
+
+        word-break: break-word;
+    }
+
+    .invoice-list-card .invoice-vendor-name {
+        font-size: 10px;
+    }
+
+    .invoice-list-card .invoice-vendor-gstin {
+        font-size: 8px;
+    }
+
+    .invoice-list-card .invoice-amount {
+        font-size: 10px;
+
+        white-space: normal;
+
+        word-break: break-word;
+    }
+
+    .invoice-list-card .invoice-grand-total {
+        font-size: 10px;
+
+        white-space: normal;
+
+        word-break: break-word;
+    }
+
+    .invoice-list-card .invoice-table td:nth-child(5) {
+        font-size: 9px;
+    }
+
+    .invoice-list-card .invoice-status {
+        padding: 4px 5px;
+
+        font-size: 8px;
+
+        white-space: normal;
+    }
+
+    .invoice-list-card .invoice-actions {
+        gap: 2px;
+
+        flex-wrap: wrap;
+    }
+
+    .invoice-list-card .invoice-action-btn {
+        width: 27px;
+        height: 27px;
+    }
+
+    .invoice-list-card .invoice-action-btn svg {
+        width: 13px;
+        height: 13px;
+    }
+
+
+    /* FILTERS */
+
+    .invoice-history-filters {
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 14px;
+
+        padding: 20px 18px;
+    }
+
+    .invoice-history-field {
+        width: 100%;
+
+        min-width: 0;
+    }
+
+    .invoice-selected-period {
+        margin-left: 18px;
+
+        margin-right: 18px;
+
+        flex-direction: column;
+
+        align-items: center;
+
+        text-align: center;
+    }
+
+    .invoice-period-empty {
+        margin-left: 18px;
+
+        margin-right: 18px;
+    }
+}
+
+
+/* =====================================================
+   SMALL MOBILE
+===================================================== */
+
+@media (max-width: 400px) {
+
+    .invoice-list-header {
+        padding: 18px 14px;
+    }
+
+    .invoice-year-list,
+    .invoice-month-list {
+        padding: 14px;
+    }
+
+    .invoice-breadcrumb {
+        padding: 18px 14px;
+    }
+
+    .invoice-breadcrumb > button {
+        padding: 8px 10px;
+
+        font-size: 13px;
+    }
+
+    .invoice-breadcrumb h2 {
+        font-size: 18px;
+    }
+
+    .invoice-month-item strong {
+        font-size: 15px;
+    }
+
+    .invoice-list-card .invoice-table th {
+        padding: 8px 2px;
+
+        font-size: 8px;
+    }
+
+    .invoice-list-card .invoice-table td {
+        padding: 8px 2px;
+
+        font-size: 9px;
+    }
+
+    .invoice-list-card .invoice-vendor-name {
+        font-size: 9px;
+    }
+
+    .invoice-list-card .invoice-vendor-gstin {
+        font-size: 7px;
+    }
+
+    .invoice-list-card .invoice-action-btn {
+        width: 24px;
+        height: 24px;
+    }
+
+    .invoice-list-card .invoice-action-btn svg {
+        width: 11px;
+        height: 11px;
+    }
+}
