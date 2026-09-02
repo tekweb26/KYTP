@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from "react";
 import {
   Eye,
@@ -30,6 +31,43 @@ export default function ListInvoiceModal({
     "November",
     "December",
   ];
+
+  /* =====================================================
+     GET INVOICE DATE
+  ===================================================== */
+
+  const getDateValue = (invoice) => {
+    if (!invoice) return 0;
+
+    const date =
+      invoice.invoice_date ||
+      invoice.createdAt ||
+      invoice.updatedAt;
+
+    const timestamp = new Date(date).getTime();
+
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+  };
+
+  /* =====================================================
+     SORT ALL INVOICES - LATEST FIRST
+  ===================================================== */
+
+  const sortedInvoices = useMemo(() => {
+    return [...invoices]
+      .filter(Boolean)
+      .sort((a, b) => {
+        return getDateValue(b) - getDateValue(a);
+      });
+  }, [invoices]);
+
+  /* =====================================================
+     RECENT 10 INVOICES
+  ===================================================== */
+
+  const recentInvoices = useMemo(() => {
+    return sortedInvoices.slice(0, 10);
+  }, [sortedInvoices]);
 
   /* =====================================================
      GROUP INVOICES
@@ -92,7 +130,7 @@ export default function ListInvoiceModal({
         groupedInvoices[selectedYear] || {}
       )
         .map(Number)
-        .sort((a, b) => a - b)
+        .sort((a, b) => b - a)
     : [];
 
   /* =====================================================
@@ -133,13 +171,15 @@ export default function ListInvoiceModal({
   ===================================================== */
 
   const getInvoiceDate = (invoice) => {
-    if (!invoice?.invoice_date) {
+    const rawDate =
+      invoice?.invoice_date ||
+      invoice?.createdAt;
+
+    if (!rawDate) {
       return "N/A";
     }
 
-    const date = new Date(
-      invoice.invoice_date
-    );
+    const date = new Date(rawDate);
 
     if (Number.isNaN(date.getTime())) {
       return "N/A";
@@ -154,10 +194,161 @@ export default function ListInvoiceModal({
 
   const monthInvoices =
     selectedYear && selectedMonth
-      ? groupedInvoices[selectedYear]?.[
-          selectedMonth
-        ] || []
+      ? [
+          ...(groupedInvoices[selectedYear]?.[
+            selectedMonth
+          ] || []),
+        ].sort(
+          (a, b) =>
+            getDateValue(b) -
+            getDateValue(a)
+        )
       : [];
+
+  /* =====================================================
+     INVOICE ROW
+  ===================================================== */
+
+  const renderInvoiceRow = (invoice) => (
+    <tr
+      key={
+        invoice._id ||
+        invoice.id ||
+        invoice.invoice_number
+      }
+    >
+      {/* Invoice Number */}
+
+      <td>
+        <strong className="invoice-number-cell">
+          {invoice.invoice_number || "-"}
+        </strong>
+      </td>
+
+      {/* Date */}
+
+      <td>
+        {getInvoiceDate(invoice)}
+      </td>
+
+      {/* Vendor */}
+
+      <td>
+        <div className="invoice-vendor-name">
+          {invoice.vendor_name || "-"}
+        </div>
+
+        {invoice.vendor_has_gst &&
+          invoice.vendor_gstin && (
+            <div className="invoice-vendor-gstin">
+              {invoice.vendor_gstin}
+            </div>
+          )}
+
+        {!invoice.vendor_has_gst && (
+          <div className="invoice-vendor-gstin">
+            {invoice.vendor_state || "-"}
+          </div>
+        )}
+      </td>
+
+      {/* Amount */}
+
+      <td>
+        <span className="invoice-amount">
+          ₹
+          {formatAmount(
+            invoice.total_amount
+          )}
+        </span>
+      </td>
+
+      {/* GST */}
+
+      <td>
+        {invoice.tax_type ===
+        "CGST_SGST" ? (
+          <div className="invoice-tax">
+            <div>
+              CGST (
+              {invoice.cgst_rate || 0}
+              %)
+            </div>
+
+            <div>
+              SGST (
+              {invoice.sgst_rate || 0}
+              %)
+            </div>
+          </div>
+        ) : (
+          <div className="invoice-tax">
+            IGST (
+            {invoice.igst_rate || 0}
+            %)
+          </div>
+        )}
+      </td>
+
+      {/* Grand Total */}
+
+      <td>
+        <strong className="invoice-grand-total">
+          ₹
+          {formatAmount(
+            invoice.grand_total
+          )}
+        </strong>
+      </td>
+
+      {/* Status */}
+
+      <td>
+        <span className="invoice-status">
+          {invoice.status || "Pending"}
+        </span>
+      </td>
+
+      {/* Actions */}
+
+      <td>
+        <div className="invoice-actions">
+          <button
+            type="button"
+            className="invoice-action-btn invoice-view-btn"
+            title="View Invoice"
+            onClick={() =>
+              onView?.(invoice)
+            }
+          >
+            <Eye size={17} />
+          </button>
+
+          <button
+            type="button"
+            className="invoice-action-btn invoice-edit-btn"
+            title="Edit Invoice"
+            onClick={() =>
+              onEdit?.(invoice)
+            }
+          >
+            <Edit2 size={17} />
+          </button>
+
+          <button
+            type="button"
+            className="invoice-action-btn invoice-delete-btn"
+            title="Delete Invoice"
+            onClick={() =>
+              onDelete?.(invoice)
+            }
+          >
+            <Trash2 size={17} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
 
   /* =====================================================
      PAGE
@@ -171,17 +362,72 @@ export default function ListInvoiceModal({
       ================================================= */}
 
       <div className="invoice-list-header">
-
         <div>
           <h2>Invoice History</h2>
 
           <p>
-            Select a year and month to view invoices
+            Recent invoices and invoice history
           </p>
         </div>
-
       </div>
 
+      {/* =================================================
+          RECENT 10 INVOICES
+      ================================================= */}
+
+      {!selectedYear && !selectedMonth && (
+        <>
+          <div className="invoice-selected-period">
+            <span>Recent Invoices</span>
+
+            <strong>
+              {recentInvoices.length}{" "}
+              invoice
+              {recentInvoices.length !== 1
+                ? "s"
+                : ""}
+            </strong>
+          </div>
+
+          {recentInvoices.length > 0 ? (
+            <div className="invoice-table-wrapper">
+              <table className="invoice-table">
+
+                <thead>
+                  <tr>
+                    <th>Invoice No.</th>
+                    <th>Date</th>
+                    <th>Vendor</th>
+                    <th>Amount</th>
+                    <th>GST</th>
+                    <th>Grand Total</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {recentInvoices.map(
+                    renderInvoiceRow
+                  )}
+                </tbody>
+
+              </table>
+            </div>
+          ) : (
+            <div className="invoice-period-empty">
+              <strong>
+                No invoices found
+              </strong>
+
+              <p>
+                Create your first invoice to
+                see it here.
+              </p>
+            </div>
+          )}
+        </>
+      )}
 
       {/* =================================================
           FILTERS
@@ -192,7 +438,6 @@ export default function ListInvoiceModal({
         {/* YEAR */}
 
         <div className="invoice-history-field">
-
           <label htmlFor="invoice-year">
             Select Year
           </label>
@@ -203,7 +448,6 @@ export default function ListInvoiceModal({
             onChange={handleYearChange}
             className="invoice-history-select"
           >
-
             <option value="">
               Select Year
             </option>
@@ -216,16 +460,12 @@ export default function ListInvoiceModal({
                 {year}
               </option>
             ))}
-
           </select>
-
         </div>
-
 
         {/* MONTH */}
 
         <div className="invoice-history-field">
-
           <label htmlFor="invoice-month">
             Select Month
           </label>
@@ -237,28 +477,26 @@ export default function ListInvoiceModal({
             disabled={!selectedYear}
             className="invoice-history-select"
           >
-
             <option value="">
               {selectedYear
                 ? "Select Month"
                 : "Select Year First"}
             </option>
 
-            {availableMonths.map((month) => (
-              <option
-                key={month}
-                value={month}
-              >
-                {monthNames[month - 1]}
-              </option>
-            ))}
-
+            {availableMonths.map(
+              (month) => (
+                <option
+                  key={month}
+                  value={month}
+                >
+                  {monthNames[month - 1]}
+                </option>
+              )
+            )}
           </select>
-
         </div>
 
       </div>
-
 
       {/* =================================================
           SELECTED PERIOD
@@ -268,7 +506,9 @@ export default function ListInvoiceModal({
         <div className="invoice-selected-period">
 
           <span>
-            {monthNames[selectedMonth - 1]}{" "}
+            {monthNames[
+              selectedMonth - 1
+            ]}{" "}
             {selectedYear}
           </span>
 
@@ -283,28 +523,25 @@ export default function ListInvoiceModal({
         </div>
       )}
 
-
       {/* =================================================
           NO MONTH SELECTED
       ================================================= */}
 
-      {!selectedMonth && (
+      {selectedYear && !selectedMonth && (
         <div className="invoice-period-empty">
-
           <strong>
             Select a month
           </strong>
 
           <p>
-            Choose a month to view your invoices.
+            Choose a month to view your
+            invoices.
           </p>
-
         </div>
       )}
 
-
       {/* =================================================
-          INVOICE TABLE
+          MONTH INVOICE TABLE
       ================================================= */}
 
       {selectedYear &&
@@ -317,237 +554,27 @@ export default function ListInvoiceModal({
 
               <thead>
                 <tr>
-
                   <th>Invoice No.</th>
-
                   <th>Date</th>
-
                   <th>Vendor</th>
-
                   <th>Amount</th>
-
                   <th>GST</th>
-
                   <th>Grand Total</th>
-
                   <th>Status</th>
-
                   <th>Actions</th>
-
                 </tr>
               </thead>
 
-
               <tbody>
-
                 {monthInvoices.map(
-                  (invoice) => (
-
-                    <tr
-                      key={
-                        invoice._id ||
-                        invoice.id ||
-                        invoice.invoice_number
-                      }
-                    >
-
-                      {/* Invoice Number */}
-
-                      <td>
-                        <strong className="invoice-number-cell">
-                          {
-                            invoice.invoice_number ||
-                            "-"
-                          }
-                        </strong>
-                      </td>
-
-
-                      {/* Date */}
-
-                      <td>
-                        {getInvoiceDate(invoice)}
-                      </td>
-
-
-                      {/* Vendor */}
-
-                      <td>
-
-                        <div className="invoice-vendor-name">
-                          {
-                            invoice.vendor_name ||
-                            "-"
-                          }
-                        </div>
-
-                        {invoice.vendor_has_gst &&
-                          invoice.vendor_gstin && (
-                            <div className="invoice-vendor-gstin">
-                              {
-                                invoice.vendor_gstin
-                              }
-                            </div>
-                          )}
-
-                        {!invoice.vendor_has_gst && (
-                          <div className="invoice-vendor-gstin">
-                            {
-                              invoice.vendor_state ||
-                              "-"
-                            }
-                          </div>
-                        )}
-
-                      </td>
-
-
-                      {/* Amount */}
-
-                      <td>
-
-                        <span className="invoice-amount">
-                          ₹
-                          {formatAmount(
-                            invoice.total_amount
-                          )}
-                        </span>
-
-                      </td>
-
-
-                      {/* GST */}
-
-                      <td>
-
-                        {invoice.tax_type ===
-                        "CGST_SGST" ? (
-
-                          <div className="invoice-tax">
-
-                            <div>
-                              CGST (
-                              {
-                                invoice.cgst_rate ||
-                                0
-                              }
-                              %)
-                            </div>
-
-                            <div>
-                              SGST (
-                              {
-                                invoice.sgst_rate ||
-                                0
-                              }
-                              %)
-                            </div>
-
-                          </div>
-
-                        ) : (
-
-                          <div className="invoice-tax">
-
-                            IGST (
-                            {
-                              invoice.igst_rate ||
-                              0
-                            }
-                            %)
-
-                          </div>
-
-                        )}
-
-                      </td>
-
-
-                      {/* Grand Total */}
-
-                      <td>
-
-                        <strong className="invoice-grand-total">
-                          ₹
-                          {formatAmount(
-                            invoice.grand_total
-                          )}
-                        </strong>
-
-                      </td>
-
-
-                      {/* Status */}
-
-                      <td>
-
-                        <span className="invoice-status">
-                          {
-                            invoice.status ||
-                            "Pending"
-                          }
-                        </span>
-
-                      </td>
-
-
-                      {/* Actions */}
-
-                      <td>
-
-                        <div className="invoice-actions">
-
-                          <button
-                            type="button"
-                            className="invoice-action-btn invoice-view-btn"
-                            title="View Invoice"
-                            onClick={() =>
-                              onView?.(invoice)
-                            }
-                          >
-                            <Eye size={17} />
-                          </button>
-
-
-                          <button
-                            type="button"
-                            className="invoice-action-btn invoice-edit-btn"
-                            title="Edit Invoice"
-                            onClick={() =>
-                              onEdit?.(invoice)
-                            }
-                          >
-                            <Edit2 size={17} />
-                          </button>
-
-
-                          <button
-                            type="button"
-                            className="invoice-action-btn invoice-delete-btn"
-                            title="Delete Invoice"
-                            onClick={() =>
-                              onDelete?.(invoice)
-                            }
-                          >
-                            <Trash2 size={17} />
-                          </button>
-
-                        </div>
-
-                      </td>
-
-                    </tr>
-
-                  )
+                  renderInvoiceRow
                 )}
-
               </tbody>
 
             </table>
 
           </div>
         )}
-
 
       {/* =================================================
           NO INVOICE FOR MONTH
@@ -565,7 +592,9 @@ export default function ListInvoiceModal({
 
             <p>
               There are no invoices for{" "}
-              {monthNames[selectedMonth - 1]}{" "}
+              {monthNames[
+                selectedMonth - 1
+              ]}{" "}
               {selectedYear}.
             </p>
 
@@ -575,3 +604,4 @@ export default function ListInvoiceModal({
     </div>
   );
 }
+
