@@ -141,16 +141,19 @@ const MONTH_MAP = {
 };
 
 /* =====================================================
-   TODAY DATE
-   YYYY-MM-DD
+   TODAY
 ===================================================== */
 
 const getTodayISO = () => {
   const today = new Date();
 
   const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
+  const month = String(
+    today.getMonth() + 1
+  ).padStart(2, "0");
+  const day = String(
+    today.getDate()
+  ).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 };
@@ -160,7 +163,11 @@ const getTodayISO = () => {
 ===================================================== */
 
 const round2 = (value) => {
-  return Math.round((Number(value) || 0) * 100) / 100;
+  return (
+    Math.round(
+      (Number(value) || 0) * 100
+    ) / 100
+  );
 };
 
 /* =====================================================
@@ -168,7 +175,10 @@ const round2 = (value) => {
 ===================================================== */
 
 const normalizeAmount = (value) => {
-  if (value === undefined || value === null) {
+  if (
+    value === undefined ||
+    value === null
+  ) {
     return "";
   }
 
@@ -181,7 +191,9 @@ const normalizeAmount = (value) => {
 
   if (parts.length > 2) {
     cleaned =
-      parts[0] + "." + parts.slice(1).join("");
+      parts[0] +
+      "." +
+      parts.slice(1).join("");
   }
 
   return cleaned;
@@ -192,13 +204,15 @@ const normalizeAmount = (value) => {
 ===================================================== */
 
 const numberValue = (value) => {
-  const n = Number(normalizeAmount(value));
+  const n = Number(
+    normalizeAmount(value)
+  );
 
   return Number.isFinite(n) ? n : 0;
 };
 
 /* =====================================================
-   CLEAN GSTIN
+   CLEAN GST
 ===================================================== */
 
 const cleanGSTIN = (value) => {
@@ -210,10 +224,14 @@ const cleanGSTIN = (value) => {
 };
 
 /* =====================================================
-   MAKE SAFE DATE
+   SAFE DATE
 ===================================================== */
 
-const makeSafeDate = (day, month, year) => {
+const makeSafeDate = (
+  day,
+  month,
+  year
+) => {
   let d = Number(day);
   let m = Number(month);
   let y = Number(year);
@@ -241,7 +259,11 @@ const makeSafeDate = (day, month, year) => {
     return "";
   }
 
-  const date = new Date(y, m - 1, d);
+  const date = new Date(
+    y,
+    m - 1,
+    d
+  );
 
   if (
     date.getFullYear() !== y ||
@@ -254,65 +276,54 @@ const makeSafeDate = (day, month, year) => {
   return `${y}-${String(m).padStart(
     2,
     "0"
-  )}-${String(d).padStart(2, "0")}`;
+  )}-${String(d).padStart(
+    2,
+    "0"
+  )}`;
 };
 
 /* =====================================================
-   EXTRACT INVOICE DATE
+   NORMALIZE OCR LINE
 ===================================================== */
 
-const extractInvoiceDate = (text) => {
-  if (!text) {
+const normalizeOCRLine = (
+  line
+) => {
+  return String(line || "")
+    .replace(/\r/g, "")
+    .replace(/[|]/g, "/")
+    .replace(/[—–]/g, "-")
+    .replace(/[ \t]+/g, " ")
+    .trim();
+};
+
+/* =====================================================
+   DATE FROM TEXT PART
+===================================================== */
+
+const parseDateFromText = (
+  value
+) => {
+  if (!value) {
     return "";
   }
 
-  const normalized = String(text)
-    .replace(/\r/g, "\n")
+  let text = String(value)
+    .toUpperCase()
     .replace(/[|]/g, "/")
     .replace(/[—–]/g, "-")
-    .replace(/[.]/g, ".")
-    .replace(/[ \t]+/g, " ");
+    .replace(/\s+/g, " ")
+    .trim();
 
-  const upper = normalized.toUpperCase();
+  text = text
+    .replace(/\bO(\d)/g, "0$1")
+    .replace(/(\d)O\b/g, "$10");
 
-  /* -----------------------------------------------------
-     1. LABEL + DATE
+  let match = text.match(
+    /\b(20\d{2})\s*[-/.]\s*(\d{1,2})\s*[-/.]\s*(\d{1,2})\b/
+  );
 
-     Invoice Date: 02/09/2026
-     Invoice Date 02-09-2026
-     Bill Date: 02.09.2026
-  ----------------------------------------------------- */
-
-  const labelledRegex =
-    /(?:INVOICE\s+DATE|INVOICE\s+DT|BILL\s+DATE|DATE\s+OF\s+INVOICE|INVOICE\s+DATE\s+NO?)\s*[:#-]?\s*(\d{1,2})\s*[\/.-]\s*(\d{1,2})\s*[\/.-]\s*(\d{2,4})/i;
-
-  const labelledMatch =
-    upper.match(labelledRegex);
-
-  if (labelledMatch) {
-    const result = makeSafeDate(
-      labelledMatch[1],
-      labelledMatch[2],
-      labelledMatch[3]
-    );
-
-    if (result) {
-      return result;
-    }
-  }
-
-  /* -----------------------------------------------------
-     2. YYYY-MM-DD
-  ----------------------------------------------------- */
-
-  const ymdRegex =
-    /\b(\d{4})\s*[-/.]\s*(\d{1,2})\s*[-/.]\s*(\d{1,2})\b/g;
-
-  const ymdMatches = [
-    ...upper.matchAll(ymdRegex),
-  ];
-
-  for (const match of ymdMatches) {
+  if (match) {
     const result = makeSafeDate(
       match[3],
       match[2],
@@ -324,65 +335,15 @@ const extractInvoiceDate = (text) => {
     }
   }
 
-  /* -----------------------------------------------------
-     3. DD/MM/YYYY
+  match = text.match(
+    /\b(\d{1,2})\s*[/.-]\s*(\d{1,2})\s*[/.-]\s*(\d{2,4})\b/
+  );
 
-     02/09/2026
-     02-09-2026
-     02.09.2026
-  ----------------------------------------------------- */
-
-  const dateRegex =
-    /\b(\d{1,2})\s*[\/.-]\s*(\d{1,2})\s*[\/.-]\s*(\d{2,4})\b/g;
-
-  const dateMatches = [
-    ...upper.matchAll(dateRegex),
-  ];
-
-  for (const match of dateMatches) {
-    const day = Number(match[1]);
-    const month = Number(match[2]);
-    const year = Number(match[3]);
-
-    if (
-      day >= 1 &&
-      day <= 31 &&
-      month >= 1 &&
-      month <= 12
-    ) {
-      const result = makeSafeDate(
-        day,
-        month,
-        year
-      );
-
-      if (result) {
-        return result;
-      }
-    }
-  }
-
-  /* -----------------------------------------------------
-     4. TEXT DATE
-
-     02 Sep 2026
-     02 September 2026
-  ----------------------------------------------------- */
-
-  const textDateRegex =
-    /\b(\d{1,2})\s+(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JAN|FEB|MAR|APR|JUN|JUL|AUG|SEP|SEPT|OCT|NOV|DEC)\s*,?\s*(\d{2,4})\b/i;
-
-  const textDate =
-    upper.match(textDateRegex);
-
-  if (textDate) {
-    const month =
-      MONTH_MAP[textDate[2]];
-
+  if (match) {
     const result = makeSafeDate(
-      textDate[1],
-      month,
-      textDate[3]
+      match[1],
+      match[2],
+      match[3]
     );
 
     if (result) {
@@ -390,38 +351,110 @@ const extractInvoiceDate = (text) => {
     }
   }
 
-  /* -----------------------------------------------------
-     5. DATE ON NEXT LINE
+  match = text.match(
+    /\b(\d{1,2})\s+(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JAN|FEB|MAR|APR|JUN|JUL|AUG|SEP|SEPT|OCT|NOV|DEC)[, ]+\s*(\d{2,4})\b/
+  );
 
-     Invoice Date
-     02/09/2026
-  ----------------------------------------------------- */
+  if (match) {
+    const month =
+      MONTH_MAP[match[2]];
 
-  const lines = upper
-    .split("\n")
-    .map((line) => line.trim())
+    const result = makeSafeDate(
+      match[1],
+      month,
+      match[3]
+    );
+
+    if (result) {
+      return result;
+    }
+  }
+
+  match = text.match(
+    /\b(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JAN|FEB|MAR|APR|JUN|JUL|AUG|SEP|SEPT|OCT|NOV|DEC)\s+(\d{1,2})[, ]+\s*(\d{2,4})\b/
+  );
+
+  if (match) {
+    const month =
+      MONTH_MAP[match[1]];
+
+    const result = makeSafeDate(
+      match[2],
+      month,
+      match[3]
+    );
+
+    if (result) {
+      return result;
+    }
+  }
+
+  return "";
+};
+
+/* =====================================================
+   EXTRACT INVOICE DATE
+===================================================== */
+
+const extractInvoiceDate = (
+  text
+) => {
+  if (!text) {
+    return "";
+  }
+
+  const rawLines = String(text)
+    .replace(/\r/g, "\n")
+    .split("\n");
+
+  const lines = rawLines
+    .map(normalizeOCRLine)
     .filter(Boolean);
 
-  for (let i = 0; i < lines.length; i++) {
+  const dateLabelRegex =
+    /\b(INVOICE\s*DATE|INVOICE\s*DT|INV\s*DATE|BILL\s*DATE|DATE\s*OF\s*INVOICE|DATE|OATE)\b/i;
+
+  for (
+    let i = 0;
+    i < lines.length;
+    i++
+  ) {
+    const line = lines[i];
+
     if (
-      /INVOICE\s+DATE|INVOICE\s+DT|BILL\s+DATE|DATE\s+OF\s+INVOICE/.test(
+      dateLabelRegex.test(line)
+    ) {
+      const result =
+        parseDateFromText(line);
+
+      if (result) {
+        return result;
+      }
+    }
+  }
+
+  for (
+    let i = 0;
+    i < lines.length;
+    i++
+  ) {
+    if (
+      dateLabelRegex.test(
         lines[i]
       )
     ) {
-      const nextLine =
-        lines[i + 1] || "";
-
-      const nextMatch =
-        nextLine.match(
-          /(\d{1,2})\s*[\/.-]\s*(\d{1,2})\s*[\/.-]\s*(\d{2,4})/
+      for (
+        let j = i + 1;
+        j <= Math.min(
+          i + 2,
+          lines.length - 1
         );
-
-      if (nextMatch) {
-        const result = makeSafeDate(
-          nextMatch[1],
-          nextMatch[2],
-          nextMatch[3]
-        );
+        j++
+      ) {
+        const result =
+          parseDateFromText(
+            lines[j]
+          );
 
         if (result) {
           return result;
@@ -430,40 +463,57 @@ const extractInvoiceDate = (text) => {
     }
   }
 
-  return "";
+  const wholeText =
+    lines.join(" ");
+
+  const result =
+    parseDateFromText(
+      wholeText
+    );
+
+  return result || "";
 };
 
 /* =====================================================
    EXTRACT GSTIN
 ===================================================== */
 
-const extractGSTIN = (text) => {
+const extractGSTIN = (
+  text
+) => {
   if (!text) {
     return "";
   }
 
-  const upper = String(text)
-    .toUpperCase()
-    .replace(/\s+/g, " ");
+  let upper = String(text)
+    .toUpperCase();
 
-  /* GSTIN label जवळ */
-
-  const labelled =
-    upper.match(
-      /(?:GSTIN|GST\s*NO|GST\s*NUMBER|GST\s*REGISTRATION)\s*[:#-]?\s*([0-9A-Z]{15})/
+  upper = upper
+    .replace(/\s+/g, " ")
+    .replace(
+      /[^A-Z0-9:\-/#. ]/g,
+      " "
     );
 
-  if (labelled) {
+  const labelledMatches = [
+    ...upper.matchAll(
+      /\b(?:GSTIN|GST\s*NO|GST\s*NUMBER|GST\s*REGISTRATION)\s*[:#\-]?\s*([0-9A-Z]{15})/gi
+    ),
+  ];
+
+  for (
+    const match of labelledMatches
+  ) {
     const gst = cleanGSTIN(
-      labelled[1]
+      match[1]
     );
 
-    if (GST_REGEX.test(gst)) {
+    if (
+      GST_REGEX.test(gst)
+    ) {
       return gst;
     }
   }
-
-  /* कुठेही GSTIN शोधा */
 
   const candidates =
     upper.match(
@@ -471,11 +521,38 @@ const extractGSTIN = (text) => {
     );
 
   if (candidates) {
-    for (const candidate of candidates) {
+    for (
+      const candidate of candidates
+    ) {
       const gst =
         cleanGSTIN(candidate);
 
-      if (GST_REGEX.test(gst)) {
+      if (
+        GST_REGEX.test(gst)
+      ) {
+        return gst;
+      }
+    }
+  }
+
+  const compact =
+    upper.replace(/\s/g, "");
+
+  const compactCandidates =
+    compact.match(
+      /[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]/g
+    );
+
+  if (compactCandidates) {
+    for (
+      const candidate of compactCandidates
+    ) {
+      const gst =
+        cleanGSTIN(candidate);
+
+      if (
+        GST_REGEX.test(gst)
+      ) {
         return gst;
       }
     }
@@ -488,26 +565,51 @@ const extractGSTIN = (text) => {
    EXTRACT INVOICE NUMBER
 ===================================================== */
 
-const extractInvoiceNumber = (text) => {
+const extractInvoiceNumber = (
+  text
+) => {
   if (!text) {
     return "";
   }
 
-  const upper =
-    String(text).toUpperCase();
+  const lines = String(text)
+    .split("\n")
+    .map(normalizeOCRLine)
+    .filter(Boolean);
 
-  const patterns = [
-    /(?:INVOICE\s*(?:NO|NUMBER)|INV\s*(?:NO|NUMBER)|BILL\s*(?:NO|NUMBER))\s*[:#-]?\s*([A-Z0-9\/-]+)/i,
+  const labelRegex =
+    /\b(INVOICE\s*(NO|NUMBER)|INV\s*(NO|NUMBER)|BILL\s*(NO|NUMBER))\b/i;
 
-    /(?:INVOICE|INV|BILL)\s*[:#-]\s*([A-Z0-9\/-]+)/i,
-  ];
+  for (
+    let i = 0;
+    i < lines.length;
+    i++
+  ) {
+    if (
+      labelRegex.test(
+        lines[i]
+      )
+    ) {
+      const sameLine =
+        lines[i].match(
+          /(?:NO|NUMBER)\s*[:#\-]?\s*([A-Z0-9\/-]+)/i
+        );
 
-  for (const pattern of patterns) {
-    const match =
-      upper.match(pattern);
+      if (sameLine?.[1]) {
+        return sameLine[1].trim();
+      }
 
-    if (match && match[1]) {
-      return match[1].trim();
+      const nextLine =
+        lines[i + 1];
+
+      if (
+        nextLine &&
+        /^[A-Z0-9\/-]{2,30}$/i.test(
+          nextLine
+        )
+      ) {
+        return nextLine.trim();
+      }
     }
   }
 
@@ -518,7 +620,9 @@ const extractInvoiceNumber = (text) => {
    EXTRACT TAXABLE AMOUNT
 ===================================================== */
 
-const extractTaxableAmount = (text) => {
+const extractTaxableAmount = (
+  text
+) => {
   if (!text) {
     return "";
   }
@@ -538,11 +642,13 @@ const extractTaxableAmount = (text) => {
     /(?:AMOUNT\s*BEFORE\s*TAX|AMOUNT\s*BEFORE\s*GST|TOTAL\s*BEFORE\s*GST|VALUE\s*BEFORE\s*TAX)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
   ];
 
-  for (const pattern of patterns) {
+  for (
+    const pattern of patterns
+  ) {
     const match =
       upper.match(pattern);
 
-    if (match && match[1]) {
+    if (match?.[1]) {
       return normalizeAmount(
         match[1]
       );
@@ -556,7 +662,9 @@ const extractTaxableAmount = (text) => {
    EXTRACT FINAL AMOUNT
 ===================================================== */
 
-const extractFinalAmount = (text) => {
+const extractFinalAmount = (
+  text
+) => {
   if (!text) {
     return "";
   }
@@ -565,16 +673,18 @@ const extractFinalAmount = (text) => {
     String(text).toUpperCase();
 
   const patterns = [
-    /(?:GRAND\s*TOTAL|TOTAL\s*PAYABLE|AMOUNT\s*PAYABLE)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
+    /(?:GRAND\s*TOTAL|TOTAL\s*PAYABLE|AMOUNT\s*PAYABLE|TOTAL\s*AMOUNT)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
 
     /(?:NET\s*AMOUNT|FINAL\s*AMOUNT)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
   ];
 
-  for (const pattern of patterns) {
+  for (
+    const pattern of patterns
+  ) {
     const match =
       upper.match(pattern);
 
-    if (match && match[1]) {
+    if (match?.[1]) {
       return normalizeAmount(
         match[1]
       );
@@ -588,7 +698,9 @@ const extractFinalAmount = (text) => {
    EXTRACT GST RATES
 ===================================================== */
 
-const extractGSTRates = (text) => {
+const extractGSTRates = (
+  text
+) => {
   if (!text) {
     return [];
   }
@@ -598,29 +710,27 @@ const extractGSTRates = (text) => {
 
   const rates = new Set();
 
-  /* Direct GST rates */
-
   const directRates =
     upper.match(
-      /\b(0|5|12|18|28)\s*%/g
+      /\b(0|5|12|18|28)(?:\s*)%/g
     );
 
   if (directRates) {
-    directRates.forEach((item) => {
-      const rate = Number(
-        item.replace("%", "").trim()
-      );
+    directRates.forEach(
+      (item) => {
+        const match =
+          item.match(
+            /(0|5|12|18|28)/
+          );
 
-      if (
-        rate >= 0 &&
-        rate <= 100
-      ) {
-        rates.add(rate);
+        if (match) {
+          rates.add(
+            Number(match[1])
+          );
+        }
       }
-    });
+    );
   }
-
-  /* CGST 9% => GST 18% */
 
   const cgstMatches = [
     ...upper.matchAll(
@@ -634,10 +744,11 @@ const extractGSTRates = (text) => {
     ),
   ];
 
-  for (const match of cgstMatches) {
-    const cgst = Number(
-      match[1]
-    );
+  for (
+    const match of cgstMatches
+  ) {
+    const cgst =
+      Number(match[1]);
 
     if (cgst > 0) {
       rates.add(
@@ -646,10 +757,11 @@ const extractGSTRates = (text) => {
     }
   }
 
-  for (const match of sgstMatches) {
-    const sgst = Number(
-      match[1]
-    );
+  for (
+    const match of sgstMatches
+  ) {
+    const sgst =
+      Number(match[1]);
 
     if (sgst > 0) {
       rates.add(
@@ -658,7 +770,9 @@ const extractGSTRates = (text) => {
     }
   }
 
-  return [...rates].sort(
+  return [
+    ...rates,
+  ].sort(
     (a, b) => a - b
   );
 };
@@ -667,7 +781,9 @@ const extractGSTRates = (text) => {
    EXTRACT GST AMOUNTS
 ===================================================== */
 
-const extractGSTAmounts = (text) => {
+const extractGSTAmounts = (
+  text
+) => {
   if (!text) {
     return [];
   }
@@ -683,66 +799,305 @@ const extractGSTAmounts = (text) => {
     /(?:CGST|SGST)\s*(?:@?\s*\d+(?:\.\d+)?\s*%)?\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/gi,
   ];
 
-  for (const pattern of patterns) {
-    const matches =
-      [...upper.matchAll(pattern)];
+  for (
+    const pattern of patterns
+  ) {
+    const matches = [
+      ...upper.matchAll(pattern),
+    ];
 
-    matches.forEach((match) => {
-      const amount =
-        numberValue(match[1]);
+    matches.forEach(
+      (match) => {
+        const amount =
+          numberValue(
+            match[1]
+          );
 
-      if (amount > 0) {
-        result.push(amount);
+        if (amount > 0) {
+          result.push(amount);
+        }
       }
-    });
+    );
   }
 
   return result;
 };
 
 /* =====================================================
+   VENDOR NAME CLEANER
+===================================================== */
+
+const cleanVendorName = (
+  value
+) => {
+  if (!value) {
+    return "";
+  }
+
+  let name = String(value)
+    .replace(/\s+/g, " ")
+    .trim();
+
+  name = name.replace(
+    /^(?:[:#\-|]+)\s*/,
+    ""
+  );
+
+  name = name.replace(
+    /\s*(?:GSTIN|GST\s*NO|PAN|PHONE|MOBILE|EMAIL|ADDRESS)\s*:?.*$/i,
+    ""
+  );
+
+  name = name.trim();
+
+  if (
+    name.length < 2 ||
+    name.length > 100
+  ) {
+    return "";
+  }
+
+  return name;
+};
+
+/* =====================================================
+   INVALID VENDOR LINE
+===================================================== */
+
+const isInvalidVendorLine = (
+  line
+) => {
+  const value =
+    String(line || "").trim();
+
+  if (!value) {
+    return true;
+  }
+
+  if (
+    value.length < 2 ||
+    value.length > 100
+  ) {
+    return true;
+  }
+
+  if (
+    /^(invoice|tax invoice|bill|receipt|quotation|estimate|gst|gstin|pan|date|invoice date|bill date|total|subtotal|sub total|amount|taxable|description|particulars|items?|qty|quantity|rate|price|cgst|sgst|igst|hsn|sac|phone|mobile|email|address|state|place of supply|terms|conditions|thank you)/i.test(
+      value
+    )
+  ) {
+    return true;
+  }
+
+  if (
+    /^\d[\d\s\/:.-]*$/.test(
+      value
+    )
+  ) {
+    return true;
+  }
+
+  if (/@/.test(value)) {
+    return true;
+  }
+
+  if (
+    GST_REGEX.test(
+      value.replace(/\s/g, "")
+    )
+  ) {
+    return true;
+  }
+
+  if (
+    /\b(?:GSTIN|PAN|CGST|SGST|IGST|HSN|SAC)\b/i.test(
+      value
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+/* =====================================================
    EXTRACT VENDOR NAME
 ===================================================== */
 
-const extractVendorName = (text) => {
+const extractVendorName = (
+  text
+) => {
   if (!text) {
     return "";
   }
 
-  const upper =
-    String(text).toUpperCase();
-
-  const patterns = [
-    /(?:VENDOR|SUPPLIER|SELLER|FROM|BILL\s*FROM|SOLD\s*BY)\s*[:#-]?\s*([^\n]+)/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match =
-      upper.match(pattern);
-
-    if (match && match[1]) {
-      return match[1]
-        .trim()
-        .replace(/\s+/g, " ");
-    }
-  }
-
-  /* First meaningful line */
-
   const lines = String(text)
+    .replace(/\r/g, "\n")
     .split("\n")
-    .map((line) => line.trim())
+    .map(normalizeOCRLine)
     .filter(Boolean);
 
-  for (const line of lines) {
+  const vendorLabelRegex =
+    /\b(VENDOR\s*NAME|VENDOR|SUPPLIER\s*NAME|SUPPLIER|SELLER\s*NAME|SELLER|BILL\s*FROM|SOLD\s*BY|COMPANY\s*NAME|FROM)\b/i;
+
+  for (
+    let i = 0;
+    i < lines.length;
+    i++
+  ) {
+    const line = lines[i];
+
     if (
-      line.length >= 3 &&
-      line.length <= 80 &&
-      !/invoice|tax|gst|date|amount|total|bill/i.test(
+      vendorLabelRegex.test(
         line
       )
     ) {
-      return line;
+      const match =
+        line.match(
+          /(?:VENDOR\s*NAME|VENDOR|SUPPLIER\s*NAME|SUPPLIER|SELLER\s*NAME|SELLER|BILL\s*FROM|SOLD\s*BY|COMPANY\s*NAME|FROM)\s*[:#\-]?\s*(.+)$/i
+        );
+
+      if (match?.[1]) {
+        const name =
+          cleanVendorName(
+            match[1]
+          );
+
+        if (
+          name &&
+          !isInvalidVendorLine(
+            name
+          )
+        ) {
+          return name;
+        }
+      }
+    }
+  }
+
+  for (
+    let i = 0;
+    i < lines.length;
+    i++
+  ) {
+    if (
+      vendorLabelRegex.test(
+        lines[i]
+      )
+    ) {
+      for (
+        let j = i + 1;
+        j <= Math.min(
+          i + 2,
+          lines.length - 1
+        );
+        j++
+      ) {
+        const candidate =
+          cleanVendorName(
+            lines[j]
+          );
+
+        if (
+          candidate &&
+          !isInvalidVendorLine(
+            candidate
+          )
+        ) {
+          return candidate;
+        }
+      }
+    }
+  }
+
+  const gstIndex =
+    lines.findIndex(
+      (line) =>
+        /GSTIN|GST\s*NO|GST\s*NUMBER/i.test(
+          line
+        ) ||
+        GST_REGEX.test(
+          line.replace(
+            /\s/g,
+            ""
+          )
+        )
+    );
+
+  if (gstIndex >= 0) {
+    for (
+      let offset = 1;
+      offset <= 4;
+      offset++
+    ) {
+      const indexes = [
+        gstIndex - offset,
+        gstIndex + offset,
+      ];
+
+      for (
+        const index of indexes
+      ) {
+        if (
+          index < 0 ||
+          index >= lines.length
+        ) {
+          continue;
+        }
+
+        const candidate =
+          cleanVendorName(
+            lines[index]
+          );
+
+        if (
+          candidate &&
+          !isInvalidVendorLine(
+            candidate
+          )
+        ) {
+          return candidate;
+        }
+      }
+    }
+  }
+
+  const topLines =
+    lines.slice(
+      0,
+      Math.min(
+        15,
+        lines.length
+      )
+    );
+
+  for (
+    const line of topLines
+  ) {
+    const candidate =
+      cleanVendorName(line);
+
+    if (
+      !candidate ||
+      isInvalidVendorLine(
+        candidate
+      )
+    ) {
+      continue;
+    }
+
+    if (
+      /[A-Za-z]{3,}/.test(
+        candidate
+      ) &&
+      (
+        /PVT|LTD|LIMITED|TRADERS|ENTERPRISES|ENTERPRISE|STORE|SHOP|INDUSTRIES|CORPORATION|CORP|COMPANY|CO\.?|SERVICES|SOLUTIONS|AGENCY|AGENCIES/i.test(
+          candidate
+        ) ||
+        candidate.length >= 5
+      )
+    ) {
+      return candidate;
     }
   }
 
@@ -753,7 +1108,9 @@ const extractVendorName = (text) => {
    EXTRACT STATE
 ===================================================== */
 
-const extractState = (text) => {
+const extractState = (
+  text
+) => {
   if (!text) {
     return "";
   }
@@ -761,7 +1118,9 @@ const extractState = (text) => {
   const upper =
     String(text).toUpperCase();
 
-  for (const state of STATES) {
+  for (
+    const state of STATES
+  ) {
     if (
       upper.includes(
         state.toUpperCase()
@@ -778,18 +1137,40 @@ const extractState = (text) => {
    EXTRACT DESCRIPTION
 ===================================================== */
 
-const extractDescription = (text) => {
+const extractDescription = (
+  text
+) => {
   if (!text) {
     return "";
   }
 
-  const match =
-    String(text).match(
-      /(?:DESCRIPTION|PARTICULARS|ITEM|PRODUCT)\s*[:#-]?\s*([^\n]+)/i
-    );
+  const lines = String(text)
+    .split("\n")
+    .map(normalizeOCRLine)
+    .filter(Boolean);
 
-  if (match && match[1]) {
-    return match[1].trim();
+  for (
+    let i = 0;
+    i < lines.length;
+    i++
+  ) {
+    const match =
+      lines[i].match(
+        /(?:DESCRIPTION|PARTICULARS|PRODUCT|ITEM)\s*[:#-]?\s*(.+)$/i
+      );
+
+    if (match?.[1]) {
+      return match[1].trim();
+    }
+
+    if (
+      /^(DESCRIPTION|PARTICULARS|PRODUCT|ITEM)$/i.test(
+        lines[i]
+      ) &&
+      lines[i + 1]
+    ) {
+      return lines[i + 1];
+    }
   }
 
   return "";
@@ -799,7 +1180,9 @@ const extractDescription = (text) => {
    PREPROCESS IMAGE
 ===================================================== */
 
-const preprocessImage = (file) => {
+const preprocessImage = (
+  file
+) => {
   return new Promise(
     (resolve, reject) => {
       const reader =
@@ -810,11 +1193,14 @@ const preprocessImage = (file) => {
           new Image();
 
         img.onload = () => {
-          const MAX_WIDTH = 2600;
+          const MAX_WIDTH =
+            3000;
 
           const scale =
-            img.width > MAX_WIDTH
-              ? MAX_WIDTH / img.width
+            img.width >
+            MAX_WIDTH
+              ? MAX_WIDTH /
+                img.width
               : 1;
 
           const width =
@@ -832,8 +1218,11 @@ const preprocessImage = (file) => {
               "canvas"
             );
 
-          canvas.width = width;
-          canvas.height = height;
+          canvas.width =
+            width;
+
+          canvas.height =
+            height;
 
           const ctx =
             canvas.getContext(
@@ -865,13 +1254,16 @@ const preprocessImage = (file) => {
             i += 4
           ) {
             const gray =
-              0.299 * data[i] +
-              0.587 * data[i + 1] +
-              0.114 * data[i + 2];
+              0.299 *
+                data[i] +
+              0.587 *
+                data[i + 1] +
+              0.114 *
+                data[i + 2];
 
             const contrast =
-              gray * 1.35 -
-              128 * 0.35;
+              gray * 1.45 -
+              128 * 0.45;
 
             const value =
               Math.max(
@@ -882,9 +1274,12 @@ const preprocessImage = (file) => {
                 )
               );
 
-            data[i] = value;
-            data[i + 1] = value;
-            data[i + 2] = value;
+            data[i] =
+              value;
+            data[i + 1] =
+              value;
+            data[i + 2] =
+              value;
           }
 
           ctx.putImageData(
@@ -919,7 +1314,8 @@ const preprocessImage = (file) => {
           );
         };
 
-        img.src = reader.result;
+        img.src =
+          reader.result;
       };
 
       reader.onerror = () => {
@@ -930,7 +1326,9 @@ const preprocessImage = (file) => {
         );
       };
 
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(
+        file
+      );
     }
   );
 };
@@ -945,7 +1343,9 @@ const buildGSTBreakdown = (
   extractedGSTAmounts = []
 ) => {
   const amount =
-    numberValue(taxableAmount);
+    numberValue(
+      taxableAmount
+    );
 
   if (
     !amount ||
@@ -954,8 +1354,6 @@ const buildGSTBreakdown = (
     return [];
   }
 
-  /* Single rate */
-
   if (rates.length === 1) {
     const rate =
       Number(rates[0]);
@@ -963,29 +1361,29 @@ const buildGSTBreakdown = (
     return [
       {
         rate,
-        taxable_amount: amount,
-        gst_amount: round2(
-          (amount * rate) / 100
-        ),
+        taxable_amount:
+          amount,
+        gst_amount:
+          round2(
+            (amount * rate) /
+              100
+          ),
       },
     ];
   }
-
-  /*
-    Multiple rates.
-    Actual taxable split OCR ने दिला नसेल
-    तर automatically divide करणार नाही.
-  */
 
   return rates.map(
     (rate, index) => ({
       rate: Number(rate),
       taxable_amount: "",
       gst_amount:
-        extractedGSTAmounts[index] !==
-        undefined
+        extractedGSTAmounts[
+          index
+        ] !== undefined
           ? round2(
-              extractedGSTAmounts[index]
+              extractedGSTAmounts[
+                index
+              ]
             )
           : 0,
     })
@@ -1018,14 +1416,11 @@ export default function NewInvoice({
   const galleryInputRef =
     useRef(null);
 
-  /* ===================================================
-     FORM DATA
-  =================================================== */
-
   const [formData, setFormData] =
     useState({
       invoice_number: "",
-      invoice_date: getTodayISO(),
+      invoice_date:
+        getTodayISO(),
       vendor_name: "",
       vendor_has_gst: "",
       vendor_gstin: "",
@@ -1039,7 +1434,7 @@ export default function NewInvoice({
     });
 
   /* ===================================================
-     HANDLE INPUT
+     HANDLE CHANGE
   =================================================== */
 
   const handleChange = (e) => {
@@ -1048,29 +1443,35 @@ export default function NewInvoice({
       value,
     } = e.target;
 
-    /* GSTIN */
-
     if (
-      name === "vendor_gstin"
+      name ===
+      "vendor_gstin"
     ) {
       const gst =
         cleanGSTIN(value);
 
-      setFormData((prev) => ({
-        ...prev,
-        vendor_gstin: gst,
-        vendor_has_gst:
-          gst.length > 0
-            ? "yes"
-            : prev.vendor_has_gst,
-      }));
+      setFormData(
+        (prev) => ({
+          ...prev,
+          vendor_gstin: gst,
+          vendor_has_gst:
+            gst.length > 0
+              ? "yes"
+              : prev.vendor_has_gst,
+        })
+      );
 
       if (gst.length === 15) {
-        if (GST_REGEX.test(gst)) {
+        if (
+          GST_REGEX.test(gst)
+        ) {
           setGstError("");
 
           const stateCode =
-            gst.substring(0, 2);
+            gst.substring(
+              0,
+              2
+            );
 
           const state =
             GST_STATE_MAP[
@@ -1098,27 +1499,32 @@ export default function NewInvoice({
       return;
     }
 
-    /* Amount fields */
-
     if (
-      name === "total_amount" ||
+      name ===
+        "total_amount" ||
       name === "gst_rate"
     ) {
       const cleaned =
-        normalizeAmount(value);
+        normalizeAmount(
+          value
+        );
 
-      setFormData((prev) => ({
-        ...prev,
-        [name]: cleaned,
-      }));
+      setFormData(
+        (prev) => ({
+          ...prev,
+          [name]: cleaned,
+        })
+      );
 
       return;
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData(
+      (prev) => ({
+        ...prev,
+        [name]: value,
+      })
+    );
   };
 
   /* ===================================================
@@ -1129,32 +1535,37 @@ export default function NewInvoice({
     option
   ) => {
     if (option === "yes") {
-      setFormData((prev) => ({
-        ...prev,
-        vendor_has_gst: "yes",
-      }));
+      setFormData(
+        (prev) => ({
+          ...prev,
+          vendor_has_gst:
+            "yes",
+        })
+      );
 
       setGstError("");
-
       return;
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      vendor_has_gst: "no",
-      vendor_gstin: "",
-      gst_rate: "",
-      gst_breakdown: [],
-      total_gst: "0",
-      final_amount:
-        prev.total_amount || "",
-    }));
+    setFormData(
+      (prev) => ({
+        ...prev,
+        vendor_has_gst: "no",
+        vendor_gstin: "",
+        gst_rate: "",
+        gst_breakdown: [],
+        total_gst: "0",
+        final_amount:
+          prev.total_amount ||
+          "",
+      })
+    );
 
     setGstError("");
   };
 
   /* ===================================================
-     VALIDATE GSTIN
+     VALIDATE GST
   =================================================== */
 
   const validateGSTIN = () => {
@@ -1262,8 +1673,7 @@ export default function NewInvoice({
     let totalGST = 0;
 
     if (
-      gstBreakdown.length ===
-      1
+      gstBreakdown.length === 1
     ) {
       totalGST =
         numberValue(
@@ -1281,6 +1691,7 @@ export default function NewInvoice({
       taxableAmount,
       finalAmount,
       rates,
+      gstAmounts,
       gstBreakdown,
       totalGST,
       description,
@@ -1305,6 +1716,33 @@ export default function NewInvoice({
     );
 
     try {
+      console.log(
+        "======================================"
+      );
+
+      console.log(
+        "📄 INVOICE SCAN STARTED"
+      );
+
+      console.log(
+        "File Name:",
+        file.name
+      );
+
+      console.log(
+        "File Type:",
+        file.type
+      );
+
+      console.log(
+        "File Size:",
+        file.size
+      );
+
+      console.log(
+        "======================================"
+      );
+
       const processedImage =
         await preprocessImage(
           file
@@ -1323,29 +1761,82 @@ export default function NewInvoice({
         {
           tessedit_pageseg_mode:
             "6",
+
           preserve_interword_spaces:
             "1",
         }
       );
+
+      /* =================================================
+         OCR
+      ================================================= */
 
       const result =
         await worker.recognize(
           processedImage
         );
 
+      /*
+        IMPORTANT:
+        Tesseract result मधील data object
+        directly घेतला आहे.
+      */
+
+      const ocrData =
+        result?.data || {};
+
       const ocrText =
-        result?.data?.text ||
-        "";
+        ocrData?.text || "";
+
+      /* =================================================
+         RAW OCR JSON
+      ================================================= */
+
+      console.log(
+        "======================================"
+      );
+
+      console.log(
+        "🔵 RAW OCR JSON"
+      );
+
+      console.log(
+        JSON.stringify(
+          ocrData,
+          null,
+          2
+        )
+      );
+
+      console.log(
+        "======================================"
+      );
+
+      /* =================================================
+         RAW OCR TEXT
+      ================================================= */
+
+      console.log(
+        "======================================"
+      );
+
+      console.log(
+        "🔵 RAW OCR TEXT"
+      );
+
+      console.log(
+        ocrText
+      );
+
+      console.log(
+        "======================================"
+      );
 
       await worker.terminate();
 
-      console.log(
-        "========== OCR TEXT =========="
-      );
-
-      console.log(ocrText);
-
-      if (!ocrText.trim()) {
+      if (
+        !ocrText.trim()
+      ) {
         toast.error(
           "Invoice मधून text मिळाला नाही."
         );
@@ -1356,20 +1847,106 @@ export default function NewInvoice({
         return;
       }
 
+      /* =================================================
+         EXTRACT DATA
+      ================================================= */
+
       const extracted =
         extractInvoiceData(
           ocrText
         );
 
+      /* =================================================
+         EXTRACTED JSON
+      ================================================= */
+
       console.log(
-        "========== EXTRACTED DATA =========="
+        "======================================"
       );
 
       console.log(
-        extracted
+        "🟢 EXTRACTED INVOICE JSON"
       );
 
-      /* GST */
+      console.log(
+        JSON.stringify(
+          extracted,
+          null,
+          2
+        )
+      );
+
+      console.log(
+        "======================================"
+      );
+
+      /* =================================================
+         INDIVIDUAL FIELDS DEBUG
+      ================================================= */
+
+      console.log(
+        "Invoice Number:",
+        extracted.invoiceNumber
+      );
+
+      console.log(
+        "Invoice Date:",
+        extracted.invoiceDate
+      );
+
+      console.log(
+        "Vendor Name:",
+        extracted.vendorName
+      );
+
+      console.log(
+        "GSTIN:",
+        extracted.gstin
+      );
+
+      console.log(
+        "State:",
+        extracted.state
+      );
+
+      console.log(
+        "Taxable Amount:",
+        extracted.taxableAmount
+      );
+
+      console.log(
+        "Final Amount:",
+        extracted.finalAmount
+      );
+
+      console.log(
+        "GST Rates:",
+        extracted.rates
+      );
+
+      console.log(
+        "GST Amounts:",
+        extracted.gstAmounts
+      );
+
+      console.log(
+        "GST Breakdown:",
+        extracted.gstBreakdown
+      );
+
+      console.log(
+        "Total GST:",
+        extracted.totalGST
+      );
+
+      console.log(
+        "Description:",
+        extracted.description
+      );
+
+      /* =================================================
+         GST
+      ================================================= */
 
       const detectedGST =
         extracted.gstin;
@@ -1392,9 +1969,13 @@ export default function NewInvoice({
       }
 
       const hasGST =
-        Boolean(detectedGST);
+        Boolean(
+          detectedGST
+        );
 
-      /* GST calculation */
+      /* =================================================
+         GST CALCULATION
+      ================================================= */
 
       let totalGST =
         extracted.totalGST;
@@ -1427,48 +2008,38 @@ export default function NewInvoice({
 
         finalAmount =
           round2(
-            taxable + totalGST
+            taxable +
+              totalGST
           );
       }
 
-      /*
-        जर OCR मधून date मिळाली
-        तर ती form मध्ये येईल.
-        नाही मिळाली तर existing date
-        (आजची date) कायम राहील.
-      */
+      /* =================================================
+         FINAL FORM DATA JSON
+      ================================================= */
 
-      setFormData((prev) => ({
-        ...prev,
-
+      const updatedFormPreview = {
         invoice_number:
-          extracted.invoiceNumber ||
-          prev.invoice_number,
+          extracted.invoiceNumber,
 
         invoice_date:
-          extracted.invoiceDate ||
-          prev.invoice_date,
+          extracted.invoiceDate,
 
         vendor_name:
-          extracted.vendorName ||
-          prev.vendor_name,
+          extracted.vendorName,
 
         vendor_has_gst:
           hasGST
             ? "yes"
-            : prev.vendor_has_gst,
+            : "",
 
         vendor_gstin:
-          detectedGST ||
-          prev.vendor_gstin,
+          detectedGST,
 
         vendor_state:
-          detectedState ||
-          prev.vendor_state,
+          detectedState,
 
         total_amount:
-          extracted.taxableAmount ||
-          prev.total_amount,
+          extracted.taxableAmount,
 
         gst_rate:
           extracted.rates.length ===
@@ -1476,13 +2047,10 @@ export default function NewInvoice({
             ? String(
                 extracted.rates[0]
               )
-            : prev.gst_rate,
+            : "",
 
         gst_breakdown:
-          extracted.gstBreakdown
-            .length
-            ? extracted.gstBreakdown
-            : prev.gst_breakdown,
+          extracted.gstBreakdown,
 
         total_gst:
           String(totalGST),
@@ -1492,16 +2060,102 @@ export default function NewInvoice({
             ? String(
                 finalAmount
               )
-            : prev.final_amount,
+            : "",
 
         description:
-          extracted.description ||
-          prev.description,
-      }));
+          extracted.description,
+      };
+
+      console.log(
+        "======================================"
+      );
+
+      console.log(
+        "🟣 FORM DATA AFTER OCR"
+      );
+
+      console.log(
+        JSON.stringify(
+          updatedFormPreview,
+          null,
+          2
+        )
+      );
+
+      console.log(
+        "======================================"
+      );
+
+      /* =================================================
+         UPDATE FORM
+      ================================================= */
+
+      setFormData(
+        (prev) => ({
+          ...prev,
+
+          invoice_number:
+            extracted.invoiceNumber ||
+            prev.invoice_number,
+
+          invoice_date:
+            extracted.invoiceDate ||
+            prev.invoice_date,
+
+          vendor_name:
+            extracted.vendorName ||
+            prev.vendor_name,
+
+          vendor_has_gst:
+            hasGST
+              ? "yes"
+              : prev.vendor_has_gst,
+
+          vendor_gstin:
+            detectedGST ||
+            prev.vendor_gstin,
+
+          vendor_state:
+            detectedState ||
+            prev.vendor_state,
+
+          total_amount:
+            extracted.taxableAmount ||
+            prev.total_amount,
+
+          gst_rate:
+            extracted.rates.length ===
+            1
+              ? String(
+                  extracted.rates[0]
+                )
+              : prev.gst_rate,
+
+          gst_breakdown:
+            extracted
+              .gstBreakdown.length
+              ? extracted.gstBreakdown
+              : prev.gst_breakdown,
+
+          total_gst:
+            String(totalGST),
+
+          final_amount:
+            finalAmount > 0
+              ? String(
+                  finalAmount
+                )
+              : prev.final_amount,
+
+          description:
+            extracted.description ||
+            prev.description,
+        })
+      );
 
       if (hasGST) {
         toast.success(
-          "GST number आणि invoice details मिळाले."
+          "GST number, Date आणि invoice details मिळाले."
         );
       } else {
         toast.success(
@@ -1514,8 +2168,19 @@ export default function NewInvoice({
       );
     } catch (error) {
       console.error(
-        "Invoice OCR Error:",
+        "======================================"
+      );
+
+      console.error(
+        "🔴 Invoice OCR Error"
+      );
+
+      console.error(
         error
+      );
+
+      console.error(
+        "======================================"
       );
 
       toast.error(
@@ -1567,19 +2232,21 @@ export default function NewInvoice({
   =================================================== */
 
   const addGSTRow = () => {
-    setFormData((prev) => ({
-      ...prev,
+    setFormData(
+      (prev) => ({
+        ...prev,
 
-      gst_breakdown: [
-        ...prev.gst_breakdown,
+        gst_breakdown: [
+          ...prev.gst_breakdown,
 
-        {
-          rate: "",
-          taxable_amount: "",
-          gst_amount: 0,
-        },
-      ],
-    }));
+          {
+            rate: "",
+            taxable_amount: "",
+            gst_amount: 0,
+          },
+        ],
+      })
+    );
   };
 
   /* ===================================================
@@ -1589,132 +2256,30 @@ export default function NewInvoice({
   const removeGSTRow = (
     index
   ) => {
-    setFormData((prev) => {
-      const rows =
-        prev.gst_breakdown.filter(
-          (_, i) => i !== index
-        );
-
-      const totalGST =
-        rows.reduce(
-          (sum, row) =>
-            sum +
-            numberValue(
-              row.gst_amount
-            ),
-          0
-        );
-
-      const totalTaxable =
-        rows.reduce(
-          (sum, row) =>
-            sum +
-            numberValue(
-              row.taxable_amount
-            ),
-          0
-        );
-
-      return {
-        ...prev,
-
-        gst_breakdown:
-          rows,
-
-        total_gst:
-          String(
-            round2(totalGST)
-          ),
-
-        total_amount:
-          totalTaxable > 0
-            ? String(
-                round2(
-                  totalTaxable
-                )
-              )
-            : prev.total_amount,
-
-        final_amount:
-          String(
-            round2(
-              totalTaxable +
-                totalGST
-            )
-          ),
-      };
-    });
-  };
-
-  /* ===================================================
-     CHANGE GST ROW
-  =================================================== */
-
-  const handleGSTBreakdownChange =
-    (
-      index,
-      field,
-      value
-    ) => {
-      setFormData((prev) => {
-        const rows = [
-          ...prev.gst_breakdown,
-        ];
-
-        const row = {
-          ...rows[index],
-        };
-
-        if (
-          field === "rate" ||
-          field ===
-            "taxable_amount"
-        ) {
-          value =
-            normalizeAmount(
-              value
-            );
-        }
-
-        row[field] = value;
-
-        const rate =
-          numberValue(
-            row.rate
-          );
-
-        const taxable =
-          numberValue(
-            row.taxable_amount
-          );
-
-        row.gst_amount =
-          rate > 0 &&
-          taxable > 0
-            ? round2(
-                (taxable * rate) /
-                  100
-              )
-            : 0;
-
-        rows[index] = row;
-
-        const totalTaxable =
-          rows.reduce(
-            (sum, item) =>
-              sum +
-              numberValue(
-                item.taxable_amount
-              ),
-            0
+    setFormData(
+      (prev) => {
+        const rows =
+          prev.gst_breakdown.filter(
+            (_, i) =>
+              i !== index
           );
 
         const totalGST =
           rows.reduce(
-            (sum, item) =>
+            (sum, row) =>
               sum +
               numberValue(
-                item.gst_amount
+                row.gst_amount
+              ),
+            0
+          );
+
+        const totalTaxable =
+          rows.reduce(
+            (sum, row) =>
+              sum +
+              numberValue(
+                row.taxable_amount
               ),
             0
           );
@@ -1725,6 +2290,13 @@ export default function NewInvoice({
           gst_breakdown:
             rows,
 
+          total_gst:
+            String(
+              round2(
+                totalGST
+              )
+            ),
+
           total_amount:
             totalTaxable > 0
               ? String(
@@ -1734,11 +2306,6 @@ export default function NewInvoice({
                 )
               : prev.total_amount,
 
-          total_gst:
-            String(
-              round2(totalGST)
-            ),
-
           final_amount:
             String(
               round2(
@@ -1747,11 +2314,123 @@ export default function NewInvoice({
               )
             ),
         };
-      });
+      }
+    );
+  };
+
+  /* ===================================================
+     GST ROW CHANGE
+  =================================================== */
+
+  const handleGSTBreakdownChange =
+    (
+      index,
+      field,
+      value
+    ) => {
+      setFormData(
+        (prev) => {
+          const rows = [
+            ...prev.gst_breakdown,
+          ];
+
+          const row = {
+            ...rows[index],
+          };
+
+          if (
+            field === "rate" ||
+            field ===
+              "taxable_amount"
+          ) {
+            value =
+              normalizeAmount(
+                value
+              );
+          }
+
+          row[field] =
+            value;
+
+          const rate =
+            numberValue(
+              row.rate
+            );
+
+          const taxable =
+            numberValue(
+              row.taxable_amount
+            );
+
+          row.gst_amount =
+            rate > 0 &&
+            taxable > 0
+              ? round2(
+                  (taxable *
+                    rate) /
+                    100
+                )
+              : 0;
+
+          rows[index] =
+            row;
+
+          const totalTaxable =
+            rows.reduce(
+              (sum, item) =>
+                sum +
+                numberValue(
+                  item.taxable_amount
+                ),
+              0
+            );
+
+          const totalGST =
+            rows.reduce(
+              (sum, item) =>
+                sum +
+                numberValue(
+                  item.gst_amount
+                ),
+              0
+            );
+
+          return {
+            ...prev,
+
+            gst_breakdown:
+              rows,
+
+            total_amount:
+              totalTaxable > 0
+                ? String(
+                    round2(
+                      totalTaxable
+                    )
+                  )
+                : prev.total_amount,
+
+            total_gst:
+              String(
+                round2(
+                  totalGST
+                )
+              ),
+
+            final_amount:
+              String(
+                round2(
+                  totalTaxable +
+                    totalGST
+                )
+              ),
+          };
+        }
+      );
     };
 
   /* ===================================================
-     CALCULATE CURRENT GST
+     CURRENT GST
   =================================================== */
 
   const calculateCurrentGST =
@@ -1808,19 +2487,14 @@ export default function NewInvoice({
       return;
     }
 
-    /* Invoice Number */
-
     if (
       !formData.invoice_number.trim()
     ) {
       toast.error(
         "Invoice number टाका."
       );
-
       return;
     }
-
-    /* Invoice Date */
 
     if (
       !formData.invoice_date
@@ -1828,11 +2502,8 @@ export default function NewInvoice({
       toast.error(
         "Invoice date टाका."
       );
-
       return;
     }
-
-    /* Vendor */
 
     if (
       !formData.vendor_name.trim()
@@ -1840,11 +2511,8 @@ export default function NewInvoice({
       toast.error(
         "Vendor name टाका."
       );
-
       return;
     }
-
-    /* Taxable Amount */
 
     const taxableAmount =
       numberValue(
@@ -1857,11 +2525,8 @@ export default function NewInvoice({
       toast.error(
         "GST आधीचा Total Amount / Taxable Amount टाका."
       );
-
       return;
     }
-
-    /* GST validation */
 
     if (
       formData.vendor_has_gst ===
@@ -1872,8 +2537,6 @@ export default function NewInvoice({
       }
     }
 
-    /* State validation */
-
     if (
       formData.vendor_has_gst ===
         "no" &&
@@ -1882,19 +2545,12 @@ export default function NewInvoice({
       toast.error(
         "Vendor state निवडा."
       );
-
       return;
     }
-
-    /* =================================================
-       GST BREAKDOWN
-    ================================================= */
 
     let breakdown = [
       ...formData.gst_breakdown,
     ];
-
-    /* Single GST */
 
     if (
       formData.vendor_has_gst ===
@@ -1912,10 +2568,8 @@ export default function NewInvoice({
       breakdown = [
         {
           rate,
-
           taxable_amount:
             taxableAmount,
-
           gst_amount:
             round2(
               (taxableAmount *
@@ -1926,18 +2580,12 @@ export default function NewInvoice({
       ];
     }
 
-    /* No GST */
-
     if (
       formData.vendor_has_gst !==
       "yes"
     ) {
       breakdown = [];
     }
-
-    /* =================================================
-       VALIDATE GST ROWS
-    ================================================= */
 
     if (
       breakdown.length > 0
@@ -1969,7 +2617,6 @@ export default function NewInvoice({
               i + 1
             }: valid GST rate टाका.`
           );
-
           return;
         }
 
@@ -1981,7 +2628,6 @@ export default function NewInvoice({
               i + 1
             }: taxable amount टाका.`
           );
-
           return;
         }
       }
@@ -2016,10 +2662,6 @@ export default function NewInvoice({
       }
     }
 
-    /* =================================================
-       FINAL GST CALCULATION
-    ================================================= */
-
     let totalGST = 0;
 
     if (
@@ -2047,10 +2689,8 @@ export default function NewInvoice({
 
             return {
               rate,
-
               taxable_amount:
                 rowTaxable,
-
               gst_amount:
                 gstAmount,
             };
@@ -2088,10 +2728,6 @@ export default function NewInvoice({
           totalGST
       );
 
-    /* =================================================
-       GST RATES
-    ================================================= */
-
     const gstRates =
       breakdown.length > 0
         ? [
@@ -2116,10 +2752,6 @@ export default function NewInvoice({
       gstRates.length > 0
         ? gstRates[0]
         : 0;
-
-    /* =================================================
-       PAYLOAD
-    ================================================= */
 
     const payload = {
       invoice_number:
@@ -2147,12 +2779,6 @@ export default function NewInvoice({
         formData.vendor_state ||
         "",
 
-      /*
-        IMPORTANT:
-        total_amount म्हणजे
-        GST आधीचा taxable amount
-      */
-
       total_amount:
         taxableAmount,
 
@@ -2176,14 +2802,24 @@ export default function NewInvoice({
     };
 
     console.log(
-      "========== CREATE INVOICE PAYLOAD =========="
+      "======================================"
     );
 
-    console.log(payload);
+    console.log(
+      "🟠 CREATE INVOICE PAYLOAD"
+    );
 
-    /* =================================================
-       API
-    ================================================= */
+    console.log(
+      JSON.stringify(
+        payload,
+        null,
+        2
+      )
+    );
+
+    console.log(
+      "======================================"
+    );
 
     try {
       setCreating(true);
@@ -2212,10 +2848,6 @@ export default function NewInvoice({
       toast.success(
         "Invoice successfully created."
       );
-
-      /*
-        Page reload नाही.
-      */
 
       if (
         typeof onCreated ===
@@ -2246,7 +2878,7 @@ export default function NewInvoice({
   };
 
   /* ===================================================
-     DISPLAY CALCULATIONS
+     DISPLAY
   =================================================== */
 
   const taxableAmount =
@@ -2271,11 +2903,11 @@ export default function NewInvoice({
     <div className="invoice-modal-overlay">
       <div className="invoice-modal">
 
-        {/* HEADER */}
-
         <div className="invoice-modal-header">
           <div>
-            <h2>Create Invoice</h2>
+            <h2>
+              Create Invoice
+            </h2>
 
             <p>
               Create invoice manually or scan an invoice
@@ -2292,7 +2924,9 @@ export default function NewInvoice({
           </button>
         </div>
 
-        {/* SCANNER */}
+        {/* =================================================
+            SCANNER
+        ================================================= */}
 
         <div className="invoice-scanner-box">
           <div className="scanner-title">
@@ -2310,7 +2944,6 @@ export default function NewInvoice({
           </div>
 
           <div className="scanner-buttons">
-
             <button
               type="button"
               className="scanner-btn"
@@ -2323,7 +2956,6 @@ export default function NewInvoice({
               }
             >
               <Camera size={17} />
-
               Scan with Camera
             </button>
 
@@ -2339,12 +2971,13 @@ export default function NewInvoice({
               }
             >
               <ImageIcon size={17} />
-
               Choose Invoice Image
             </button>
 
             <input
-              ref={cameraInputRef}
+              ref={
+                cameraInputRef
+              }
               type="file"
               accept="image/*"
               capture="environment"
@@ -2357,7 +2990,9 @@ export default function NewInvoice({
             />
 
             <input
-              ref={galleryInputRef}
+              ref={
+                galleryInputRef
+              }
               type="file"
               accept="image/*"
               style={{
@@ -2380,7 +3015,9 @@ export default function NewInvoice({
           )}
         </div>
 
-        {/* FORM */}
+        {/* =================================================
+            FORM
+        ================================================= */}
 
         <form
           className="invoice-form"
@@ -2388,8 +3025,6 @@ export default function NewInvoice({
             handleSubmit
           }
         >
-
-          {/* INVOICE NUMBER */}
 
           <div className="form-group">
             <label>
@@ -2410,8 +3045,6 @@ export default function NewInvoice({
               disabled={creating}
             />
           </div>
-
-          {/* INVOICE DATE */}
 
           <div className="form-group">
             <label>
@@ -2437,8 +3070,6 @@ export default function NewInvoice({
             </small>
           </div>
 
-          {/* VENDOR */}
-
           <div className="form-group">
             <label>
               Vendor Name
@@ -2459,8 +3090,6 @@ export default function NewInvoice({
             />
           </div>
 
-          {/* GST OPTION */}
-
           <div className="form-group">
             <label>
               Vendor has GST?
@@ -2468,7 +3097,6 @@ export default function NewInvoice({
             </label>
 
             <div className="gst-radio-group">
-
               <label>
                 <input
                   type="radio"
@@ -2486,7 +3114,6 @@ export default function NewInvoice({
                     creating
                   }
                 />
-
                 Yes
               </label>
 
@@ -2507,13 +3134,10 @@ export default function NewInvoice({
                     creating
                   }
                 />
-
                 No
               </label>
             </div>
           </div>
-
-          {/* GSTIN */}
 
           {formData.vendor_has_gst ===
             "yes" && (
@@ -2544,7 +3168,9 @@ export default function NewInvoice({
               )}
 
               {!gstError &&
-                formData.vendor_gstin.length ===
+                formData
+                  .vendor_gstin
+                  .length ===
                   15 &&
                 GST_REGEX.test(
                   formData.vendor_gstin
@@ -2555,8 +3181,6 @@ export default function NewInvoice({
                 )}
             </div>
           )}
-
-          {/* STATE */}
 
           <div className="form-group">
             <label>
@@ -2602,11 +3226,6 @@ export default function NewInvoice({
             )}
           </div>
 
-          {/* =================================================
-              TAXABLE AMOUNT
-              IMPORTANT: हा section GST condition च्या बाहेर आहे.
-          ================================================= */}
-
           <div
             className="form-group taxable-amount-section"
             style={{
@@ -2638,8 +3257,6 @@ export default function NewInvoice({
             </small>
           </div>
 
-          {/* SINGLE GST RATE */}
-
           {formData.vendor_has_gst ===
             "yes" && (
             <div className="form-group">
@@ -2659,7 +3276,8 @@ export default function NewInvoice({
                 placeholder="Example: 5, 12, 18"
                 disabled={
                   creating ||
-                  formData.gst_breakdown
+                  formData
+                    .gst_breakdown
                     .length > 1
                 }
               />
@@ -2670,12 +3288,9 @@ export default function NewInvoice({
             </div>
           )}
 
-          {/* MULTIPLE GST BREAKDOWN */}
-
           {formData.vendor_has_gst ===
             "yes" && (
             <div className="gst-breakdown-section">
-
               <div className="gst-breakdown-header">
                 <div>
                   <strong>
@@ -2698,7 +3313,6 @@ export default function NewInvoice({
                   }
                 >
                   <Plus size={15} />
-
                   Add GST Rate
                 </button>
               </div>
@@ -2706,11 +3320,10 @@ export default function NewInvoice({
               {formData.gst_breakdown
                 .length === 0 && (
                 <div className="gst-empty-message">
-                  Multiple GST rates असतील तर
+                  Multiple GST rates असतील तर{" "}
                   <strong>
-                    {" "}
-                    Add GST Rate{" "}
-                  </strong>
+                    Add GST Rate
+                  </strong>{" "}
                   वर click करा.
                 </div>
               )}
@@ -2724,9 +3337,6 @@ export default function NewInvoice({
                     className="gst-breakdown-row"
                     key={index}
                   >
-
-                    {/* RATE */}
-
                     <div>
                       <label>
                         GST Rate %
@@ -2738,11 +3348,14 @@ export default function NewInvoice({
                           row.rate
                         }
                         placeholder="18"
-                        onChange={(e) =>
+                        onChange={(
+                          e
+                        ) =>
                           handleGSTBreakdownChange(
                             index,
                             "rate",
-                            e.target.value
+                            e.target
+                              .value
                           )
                         }
                         disabled={
@@ -2750,8 +3363,6 @@ export default function NewInvoice({
                         }
                       />
                     </div>
-
-                    {/* TAXABLE */}
 
                     <div>
                       <label>
@@ -2764,11 +3375,14 @@ export default function NewInvoice({
                           row.taxable_amount
                         }
                         placeholder="10000"
-                        onChange={(e) =>
+                        onChange={(
+                          e
+                        ) =>
                           handleGSTBreakdownChange(
                             index,
                             "taxable_amount",
-                            e.target.value
+                            e.target
+                              .value
                           )
                         }
                         disabled={
@@ -2777,8 +3391,6 @@ export default function NewInvoice({
                       />
                     </div>
 
-                    {/* GST AMOUNT */}
-
                     <div>
                       <label>
                         GST Amount
@@ -2786,16 +3398,14 @@ export default function NewInvoice({
 
                       <input
                         type="text"
-                        value={
-                          Number(
-                            row.gst_amount
-                          ).toFixed(2)
-                        }
+                        value={Number(
+                          row.gst_amount
+                        ).toFixed(
+                          2
+                        )}
                         readOnly
                       />
                     </div>
-
-                    {/* REMOVE */}
 
                     <button
                       type="button"
@@ -2820,10 +3430,7 @@ export default function NewInvoice({
             </div>
           )}
 
-          {/* CALCULATION */}
-
           <div className="invoice-calculation-box">
-
             <div className="calculation-row">
               <span>
                 Taxable Amount
@@ -2919,8 +3526,6 @@ export default function NewInvoice({
             </div>
           </div>
 
-          {/* DESCRIPTION */}
-
           <div className="form-group">
             <label>
               Description
@@ -2940,10 +3545,7 @@ export default function NewInvoice({
             />
           </div>
 
-          {/* ACTIONS */}
-
           <div className="invoice-form-actions">
-
             <button
               type="button"
               className="invoice-cancel-btn"
@@ -2968,7 +3570,6 @@ export default function NewInvoice({
                 : "Create Invoice"}
             </button>
           </div>
-
         </form>
       </div>
     </div>

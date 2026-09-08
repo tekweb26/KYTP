@@ -1568,3 +1568,138 @@ export const deleteInvoice = async (
     });
   }
 };
+/* =====================================================
+   GST VERIFY
+===================================================== */
+
+export const verifyGST = async (req, res) => {
+  try {
+    const gstin = String(req.params.gstin || "")
+      .toUpperCase()
+      .replace(/\s+/g, "")
+      .trim();
+
+    /* =================================================
+       GST FORMAT VALIDATION
+    ================================================= */
+
+    if (!GST_REGEX.test(gstin)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid GST number",
+      });
+    }
+
+    /* =================================================
+       GST API CALL
+
+       IMPORTANT:
+       इथे तुमच्या GST API provider चा
+       actual API call ठेवायचा आहे.
+
+       API key frontend मध्ये ठेवू नका.
+       .env मध्ये ठेवा.
+    ================================================= */
+
+    /*
+    Example:
+
+    const response = await axios.get(
+      `${process.env.GST_API_URL}/${gstin}`,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${process.env.GST_API_KEY}`,
+        },
+      }
+    );
+
+    const data = response.data;
+    */
+
+    /*
+       TEMPORARY STRUCTURE
+
+       Actual GST provider response
+       नुसार हे fields map करा.
+    */
+
+    const data = null;
+
+    if (!data) {
+      return res.status(503).json({
+        success: false,
+        message:
+          "GST verification service is not configured yet",
+      });
+    }
+
+    /* =================================================
+       NORMALIZE GST API RESPONSE
+    ================================================= */
+
+    const gstDetails = {
+      gstin,
+
+      company_name:
+        data.company_name ||
+        data.legal_name ||
+        data.lgnm ||
+        "",
+
+      registration_date:
+        data.registration_date ||
+        data.rgdt ||
+        "",
+
+      central_jurisdiction:
+        data.central_jurisdiction ||
+        data.ctj ||
+        "",
+
+      constitution_of_business:
+        data.constitution_of_business ||
+        data.ctb ||
+        "",
+
+      taxpayer_type:
+        data.taxpayer_type ||
+        data.dty ||
+        "",
+
+      nature_of_business_activity:
+        data.nature_of_business_activity ||
+        data.nba ||
+        [],
+
+      gstn_status:
+        data.gstn_status ||
+        data.status ||
+        data.sts ||
+        "Unknown",
+
+      vendor_state:
+        data.state ||
+        data.pradr?.addr?.stcd ||
+        stateCodeMap[gstin.substring(0, 2)] ||
+        "",
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "GST verified successfully",
+      data: gstDetails,
+    });
+
+  } catch (error) {
+    console.error(
+      "GST Verification Error:",
+      error?.response?.data || error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "GST verification failed",
+    });
+  }
+};
