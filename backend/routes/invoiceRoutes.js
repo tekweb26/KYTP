@@ -5,7 +5,7 @@ import { processInvoiceOCR } from "../services/ocrService.js";
 import { parseInvoiceWithAI } from "../services/aiInvoiceParser.js";
 import { compareGSTCalculation } from "../services/gstComparisonService.js";
 import { getTaxType } from "../services/gstTaxTypeService.js";
-import { getGSTDetails } from "../services/gstStatusService.js";
+
 import { getGSTStatus } from "../services/gstStatusService.js";
 
 import {
@@ -93,10 +93,7 @@ router.post(
           amountBeforeGST: item.amount_before_gst,
           gstRate: item.gst_rate,
           aiAmountAfterGST: item.amount_after_gst,
-
-          // Temporary: IGST
-          // Later user/vendor state comparison नुसार बदलू
-
+          taxType: taxTypeResult.taxType,
         });
       });
 
