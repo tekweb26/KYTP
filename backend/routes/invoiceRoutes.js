@@ -5,6 +5,8 @@ import { processInvoiceOCR } from "../services/ocrService.js";
 import { parseInvoiceWithAI } from "../services/aiInvoiceParser.js";
 import { compareGSTCalculation } from "../services/gstComparisonService.js";
 import { getTaxType } from "../services/gstTaxTypeService.js";
+import { getGSTDetails } from "../services/gstStatusService.js";
+import { getGSTStatus } from "../services/gstStatusService.js";
 
 import {
   createInvoice,
@@ -22,6 +24,38 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024,
   },
 });
+router.post(
+  "/gst-status",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { gstin } = req.body;
+
+      if (!gstin) {
+        return res.status(400).json({
+          success: false,
+          message: "GSTIN is required",
+        });
+      }
+
+      const gstStatus = await getGSTStatus(gstin);
+
+      return res.json({
+        success: true,
+        message: "GST status fetched successfully",
+        data: gstStatus,
+      });
+    } catch (error) {
+      console.error("GST Status Error:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch GST status",
+        error: error.message,
+      });
+    }
+  }
+);
 
 
 
@@ -40,11 +74,11 @@ router.post(
 
       // 1. OCR
       const ocrResult = await processInvoiceOCR(req.file.buffer);
-     
+
 
       // 2. AI Parser
       const aiResult = await parseInvoiceWithAI(ocrResult.text);
-       // 2.5. User/Vendor GST State
+      // 2.5. User/Vendor GST State
       const userGSTState = req.body.userGSTState;
       const vendorGSTState = req.body.vendorGSTState;
 
@@ -62,7 +96,7 @@ router.post(
 
           // Temporary: IGST
           // Later user/vendor state comparison नुसार बदलू
-          
+
         });
       });
 
@@ -73,7 +107,7 @@ router.post(
         ocr: ocrResult,
 
         ai: aiResult,
-        
+
         taxType: taxTypeResult.taxType,
 
         gst_comparison: gstComparison,
