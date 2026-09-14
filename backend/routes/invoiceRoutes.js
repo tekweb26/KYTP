@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { processInvoiceOCR } from "../services/ocrService.js";
-
+import { parseInvoiceWithAI } from "../services/aiInvoiceParser.js";
 import {
   createInvoice,
   getInvoices,
@@ -36,6 +36,14 @@ router.post(
       }
 
       const ocrResult = await processInvoiceOCR(req.file.buffer);
+      const aiResult = await parseInvoiceWithAI(ocrResult.text);
+      return res.json({
+        success: true,
+        message: "Invoice OCR completed",
+        ocr: ocrResult,
+        ai: aiResult,
+      });
+
 
       return res.json({
         success: true,
@@ -53,6 +61,7 @@ router.post(
     }
   }
 );
+
 
 router.get("/", authMiddleware, getInvoices);
 

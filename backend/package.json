@@ -17,6 +17,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.3",
     "multer": "^2.3.0",
+    "openai": "^7.15.0",
     "pg": "8.10.0",
     "tesseract.js": "^7.0.0"
   },
