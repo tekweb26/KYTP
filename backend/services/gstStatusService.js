@@ -11,8 +11,8 @@ export const getGSTStatus = async (gstin) => {
     {
       method: "POST",
       headers: {
-        "x-api-key": process.env.SANDBOX_API_KEY,
-        "x-api-secret": process.env.SANDBOX_API_SECRET,
+        "x-api-key": process.env.GST_API_KEY,
+        "x-api-secret": process.env.GST_API_SECRET,
         "x-api-version": "1.0.0",
         "Content-Type": "application/json",
       },
