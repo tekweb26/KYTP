@@ -1,30 +1,23 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 
 import {
   X,
-  Camera,
-  Image as ImageIcon,
-  ScanLine,
   Plus,
   Trash2,
+  Search,
+  ScanLine,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import toast from "react-hot-toast";
-import { createWorker } from "tesseract.js";
 import { invoiceAPI } from "../api/api";
-
 import "./NewInvoice.css";
-
-/* =====================================================
-   GST REGEX
-===================================================== */
 
 const GST_REGEX =
   /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
-/* =====================================================
-   INDIAN STATES
-===================================================== */
+const GST_RATE_VALUES = [0, 5, 12, 18, 28];
 
 const STATES = [
   "Andhra Pradesh",
@@ -64,10 +57,6 @@ const STATES = [
   "Lakshadweep",
   "Puducherry",
 ];
-
-/* =====================================================
-   GST STATE CODE MAP
-===================================================== */
 
 const GST_STATE_MAP = {
   "01": "Jammu and Kashmir",
@@ -109,1333 +98,444 @@ const GST_STATE_MAP = {
   "38": "Ladakh",
 };
 
-/* =====================================================
-   MONTH MAP
-===================================================== */
-
-const MONTH_MAP = {
-  JAN: 1,
-  JANUARY: 1,
-  FEB: 2,
-  FEBRUARY: 2,
-  MAR: 3,
-  MARCH: 3,
-  APR: 4,
-  APRIL: 4,
-  MAY: 5,
-  JUN: 6,
-  JUNE: 6,
-  JUL: 7,
-  JULY: 7,
-  AUG: 8,
-  AUGUST: 8,
-  SEP: 9,
-  SEPT: 9,
-  SEPTEMBER: 9,
-  OCT: 10,
-  OCTOBER: 10,
-  NOV: 11,
-  NOVEMBER: 11,
-  DEC: 12,
-  DECEMBER: 12,
-};
-
-/* =====================================================
-   TODAY
-===================================================== */
-
 const getTodayISO = () => {
-  const today = new Date();
+  const d = new Date();
 
-  const year = today.getFullYear();
-  const month = String(
-    today.getMonth() + 1
-  ).padStart(2, "0");
-  const day = String(
-    today.getDate()
-  ).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+  return `${d.getFullYear()}-${String(
+    d.getMonth() + 1
+  ).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-/* =====================================================
-   ROUND
-===================================================== */
-
-const round2 = (value) => {
-  return (
-    Math.round(
-      (Number(value) || 0) * 100
-    ) / 100
-  );
-};
-
-/* =====================================================
-   NORMALIZE AMOUNT
-===================================================== */
-
-const normalizeAmount = (value) => {
-  if (
-    value === undefined ||
-    value === null
-  ) {
-    return "";
-  }
-
-  let cleaned = String(value)
-    .replace(/,/g, "")
-    .replace(/[₹$€£]/g, "")
-    .replace(/[^\d.]/g, "");
-
-  const parts = cleaned.split(".");
-
-  if (parts.length > 2) {
-    cleaned =
-      parts[0] +
-      "." +
-      parts.slice(1).join("");
-  }
-
-  return cleaned;
-};
-
-/* =====================================================
-   NUMBER VALUE
-===================================================== */
+const round2 = (value) =>
+  Math.round((Number(value) || 0) * 100) / 100;
 
 const numberValue = (value) => {
-  const n = Number(
-    normalizeAmount(value)
-  );
+  if (value === "" || value === null || value === undefined) {
+    return 0;
+  }
+
+  const cleaned = String(value)
+    .replace(/,/g, "")
+    .replace(/[₹$€£]/g, "")
+    .replace(/[^\d.-]/g, "");
+
+  const n = Number(cleaned);
 
   return Number.isFinite(n) ? n : 0;
 };
 
-/* =====================================================
-   CLEAN GST
-===================================================== */
-
-const cleanGSTIN = (value) => {
-  return String(value || "")
+const cleanGSTIN = (value) =>
+  String(value || "")
     .toUpperCase()
-    .replace(/\s/g, "")
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 15);
-};
-
-/* =====================================================
-   SAFE DATE
-===================================================== */
-
-const makeSafeDate = (
-  day,
-  month,
-  year
-) => {
-  let d = Number(day);
-  let m = Number(month);
-  let y = Number(year);
-
-  if (y < 100) {
-    y += y >= 50 ? 1900 : 2000;
-  }
-
-  if (
-    !Number.isInteger(d) ||
-    !Number.isInteger(m) ||
-    !Number.isInteger(y)
-  ) {
-    return "";
-  }
-
-  if (
-    d < 1 ||
-    d > 31 ||
-    m < 1 ||
-    m > 12 ||
-    y < 2000 ||
-    y > 2100
-  ) {
-    return "";
-  }
-
-  const date = new Date(
-    y,
-    m - 1,
-    d
-  );
-
-  if (
-    date.getFullYear() !== y ||
-    date.getMonth() !== m - 1 ||
-    date.getDate() !== d
-  ) {
-    return "";
-  }
-
-  return `${y}-${String(m).padStart(
-    2,
-    "0"
-  )}-${String(d).padStart(
-    2,
-    "0"
-  )}`;
-};
-
-/* =====================================================
-   NORMALIZE OCR LINE
-===================================================== */
-
-const normalizeOCRLine = (
-  line
-) => {
-  return String(line || "")
-    .replace(/\r/g, "")
-    .replace(/[|]/g, "/")
-    .replace(/[—–]/g, "-")
-    .replace(/[ \t]+/g, " ")
-    .trim();
-};
-
-/* =====================================================
-   DATE FROM TEXT PART
-===================================================== */
-
-const parseDateFromText = (
-  value
-) => {
-  if (!value) {
-    return "";
-  }
-
-  let text = String(value)
-    .toUpperCase()
-    .replace(/[|]/g, "/")
-    .replace(/[—–]/g, "-")
-    .replace(/\s+/g, " ")
+    .replace(/[^0-9A-Z]/g, "")
     .trim();
 
-  text = text
-    .replace(/\bO(\d)/g, "0$1")
-    .replace(/(\d)O\b/g, "$10");
+const getStateFromGSTIN = (gstin) => {
+  const value = cleanGSTIN(gstin);
 
-  let match = text.match(
-    /\b(20\d{2})\s*[-/.]\s*(\d{1,2})\s*[-/.]\s*(\d{1,2})\b/
-  );
-
-  if (match) {
-    const result = makeSafeDate(
-      match[3],
-      match[2],
-      match[1]
-    );
-
-    if (result) {
-      return result;
-    }
-  }
-
-  match = text.match(
-    /\b(\d{1,2})\s*[/.-]\s*(\d{1,2})\s*[/.-]\s*(\d{2,4})\b/
-  );
-
-  if (match) {
-    const result = makeSafeDate(
-      match[1],
-      match[2],
-      match[3]
-    );
-
-    if (result) {
-      return result;
-    }
-  }
-
-  match = text.match(
-    /\b(\d{1,2})\s+(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JAN|FEB|MAR|APR|JUN|JUL|AUG|SEP|SEPT|OCT|NOV|DEC)[, ]+\s*(\d{2,4})\b/
-  );
-
-  if (match) {
-    const month =
-      MONTH_MAP[match[2]];
-
-    const result = makeSafeDate(
-      match[1],
-      month,
-      match[3]
-    );
-
-    if (result) {
-      return result;
-    }
-  }
-
-  match = text.match(
-    /\b(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JAN|FEB|MAR|APR|JUN|JUL|AUG|SEP|SEPT|OCT|NOV|DEC)\s+(\d{1,2})[, ]+\s*(\d{2,4})\b/
-  );
-
-  if (match) {
-    const month =
-      MONTH_MAP[match[1]];
-
-    const result = makeSafeDate(
-      match[2],
-      month,
-      match[3]
-    );
-
-    if (result) {
-      return result;
-    }
-  }
-
-  return "";
-};
-
-/* =====================================================
-   EXTRACT INVOICE DATE
-===================================================== */
-
-const extractInvoiceDate = (
-  text
-) => {
-  if (!text) {
+  if (value.length !== 15 || !GST_REGEX.test(value)) {
     return "";
   }
 
-  const rawLines = String(text)
-    .replace(/\r/g, "\n")
-    .split("\n");
-
-  const lines = rawLines
-    .map(normalizeOCRLine)
-    .filter(Boolean);
-
-  const dateLabelRegex =
-    /\b(INVOICE\s*DATE|INVOICE\s*DT|INV\s*DATE|BILL\s*DATE|DATE\s*OF\s*INVOICE|DATE|OATE)\b/i;
-
-  for (
-    let i = 0;
-    i < lines.length;
-    i++
-  ) {
-    const line = lines[i];
-
-    if (
-      dateLabelRegex.test(line)
-    ) {
-      const result =
-        parseDateFromText(line);
-
-      if (result) {
-        return result;
-      }
-    }
-  }
-
-  for (
-    let i = 0;
-    i < lines.length;
-    i++
-  ) {
-    if (
-      dateLabelRegex.test(
-        lines[i]
-      )
-    ) {
-      for (
-        let j = i + 1;
-        j <= Math.min(
-          i + 2,
-          lines.length - 1
-        );
-        j++
-      ) {
-        const result =
-          parseDateFromText(
-            lines[j]
-          );
-
-        if (result) {
-          return result;
-        }
-      }
-    }
-  }
-
-  const wholeText =
-    lines.join(" ");
-
-  const result =
-    parseDateFromText(
-      wholeText
-    );
-
-  return result || "";
+  return GST_STATE_MAP[value.substring(0, 2)] || "";
 };
 
-/* =====================================================
-   EXTRACT GSTIN
-===================================================== */
+const getLoggedInUser = () => {
+  try {
+    const raw =
+      localStorage.getItem("user") ||
+      localStorage.getItem("currentUser");
 
-const extractGSTIN = (
-  text
-) => {
-  if (!text) {
-    return "";
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
   }
-
-  let upper = String(text)
-    .toUpperCase();
-
-  upper = upper
-    .replace(/\s+/g, " ")
-    .replace(
-      /[^A-Z0-9:\-/#. ]/g,
-      " "
-    );
-
-  const labelledMatches = [
-    ...upper.matchAll(
-      /\b(?:GSTIN|GST\s*NO|GST\s*NUMBER|GST\s*REGISTRATION)\s*[:#\-]?\s*([0-9A-Z]{15})/gi
-    ),
-  ];
-
-  for (
-    const match of labelledMatches
-  ) {
-    const gst = cleanGSTIN(
-      match[1]
-    );
-
-    if (
-      GST_REGEX.test(gst)
-    ) {
-      return gst;
-    }
-  }
-
-  const candidates =
-    upper.match(
-      /[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]/g
-    );
-
-  if (candidates) {
-    for (
-      const candidate of candidates
-    ) {
-      const gst =
-        cleanGSTIN(candidate);
-
-      if (
-        GST_REGEX.test(gst)
-      ) {
-        return gst;
-      }
-    }
-  }
-
-  const compact =
-    upper.replace(/\s/g, "");
-
-  const compactCandidates =
-    compact.match(
-      /[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]/g
-    );
-
-  if (compactCandidates) {
-    for (
-      const candidate of compactCandidates
-    ) {
-      const gst =
-        cleanGSTIN(candidate);
-
-      if (
-        GST_REGEX.test(gst)
-      ) {
-        return gst;
-      }
-    }
-  }
-
-  return "";
 };
 
-/* =====================================================
-   EXTRACT INVOICE NUMBER
-===================================================== */
+/* =========================================================
+   GST CALCULATION
+========================================================= */
 
-const extractInvoiceNumber = (
-  text
-) => {
-  if (!text) {
-    return "";
-  }
+const buildGSTBreakdown = (taxableAmount, rate) => {
+  const taxable = numberValue(taxableAmount);
+  const gstRate = numberValue(rate);
 
-  const lines = String(text)
-    .split("\n")
-    .map(normalizeOCRLine)
-    .filter(Boolean);
-
-  const labelRegex =
-    /\b(INVOICE\s*(NO|NUMBER)|INV\s*(NO|NUMBER)|BILL\s*(NO|NUMBER))\b/i;
-
-  for (
-    let i = 0;
-    i < lines.length;
-    i++
-  ) {
-    if (
-      labelRegex.test(
-        lines[i]
-      )
-    ) {
-      const sameLine =
-        lines[i].match(
-          /(?:NO|NUMBER)\s*[:#\-]?\s*([A-Z0-9\/-]+)/i
-        );
-
-      if (sameLine?.[1]) {
-        return sameLine[1].trim();
-      }
-
-      const nextLine =
-        lines[i + 1];
-
-      if (
-        nextLine &&
-        /^[A-Z0-9\/-]{2,30}$/i.test(
-          nextLine
-        )
-      ) {
-        return nextLine.trim();
-      }
-    }
-  }
-
-  return "";
-};
-
-/* =====================================================
-   EXTRACT TAXABLE AMOUNT
-===================================================== */
-
-const extractTaxableAmount = (
-  text
-) => {
-  if (!text) {
-    return "";
-  }
-
-  const upper =
-    String(text).toUpperCase();
-
-  const patterns = [
-    /(?:TOTAL\s*TAXABLE\s*VALUE|TOTAL\s*TAXABLE\s*AMOUNT)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
-
-    /(?:TAXABLE\s*VALUE|TAXABLE\s*AMOUNT|TAXABLE\s*AMT)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
-
-    /(?:NET\s*TAXABLE\s*VALUE|NET\s*TAXABLE\s*AMOUNT)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
-
-    /(?:SUB\s*TOTAL|SUBTOTAL)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
-
-    /(?:AMOUNT\s*BEFORE\s*TAX|AMOUNT\s*BEFORE\s*GST|TOTAL\s*BEFORE\s*GST|VALUE\s*BEFORE\s*TAX)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
-  ];
-
-  for (
-    const pattern of patterns
-  ) {
-    const match =
-      upper.match(pattern);
-
-    if (match?.[1]) {
-      return normalizeAmount(
-        match[1]
-      );
-    }
-  }
-
-  return "";
-};
-
-/* =====================================================
-   EXTRACT FINAL AMOUNT
-===================================================== */
-
-const extractFinalAmount = (
-  text
-) => {
-  if (!text) {
-    return "";
-  }
-
-  const upper =
-    String(text).toUpperCase();
-
-  const patterns = [
-    /(?:GRAND\s*TOTAL|TOTAL\s*PAYABLE|AMOUNT\s*PAYABLE|TOTAL\s*AMOUNT)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
-
-    /(?:NET\s*AMOUNT|FINAL\s*AMOUNT)\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/i,
-  ];
-
-  for (
-    const pattern of patterns
-  ) {
-    const match =
-      upper.match(pattern);
-
-    if (match?.[1]) {
-      return normalizeAmount(
-        match[1]
-      );
-    }
-  }
-
-  return "";
-};
-
-/* =====================================================
-   EXTRACT GST RATES
-===================================================== */
-
-const extractGSTRates = (
-  text
-) => {
-  if (!text) {
+  if (taxable <= 0 || gstRate <= 0) {
     return [];
-  }
-
-  const upper =
-    String(text).toUpperCase();
-
-  const rates = new Set();
-
-  const directRates =
-    upper.match(
-      /\b(0|5|12|18|28)(?:\s*)%/g
-    );
-
-  if (directRates) {
-    directRates.forEach(
-      (item) => {
-        const match =
-          item.match(
-            /(0|5|12|18|28)/
-          );
-
-        if (match) {
-          rates.add(
-            Number(match[1])
-          );
-        }
-      }
-    );
-  }
-
-  const cgstMatches = [
-    ...upper.matchAll(
-      /CGST\s*(?:@|RATE)?\s*[:#-]?\s*(\d+(?:\.\d+)?)\s*%/gi
-    ),
-  ];
-
-  const sgstMatches = [
-    ...upper.matchAll(
-      /SGST\s*(?:@|RATE)?\s*[:#-]?\s*(\d+(?:\.\d+)?)\s*%/gi
-    ),
-  ];
-
-  for (
-    const match of cgstMatches
-  ) {
-    const cgst =
-      Number(match[1]);
-
-    if (cgst > 0) {
-      rates.add(
-        round2(cgst * 2)
-      );
-    }
-  }
-
-  for (
-    const match of sgstMatches
-  ) {
-    const sgst =
-      Number(match[1]);
-
-    if (sgst > 0) {
-      rates.add(
-        round2(sgst * 2)
-      );
-    }
   }
 
   return [
-    ...rates,
-  ].sort(
-    (a, b) => a - b
-  );
-};
-
-/* =====================================================
-   EXTRACT GST AMOUNTS
-===================================================== */
-
-const extractGSTAmounts = (
-  text
-) => {
-  if (!text) {
-    return [];
-  }
-
-  const upper =
-    String(text).toUpperCase();
-
-  const result = [];
-
-  const patterns = [
-    /(?:IGST|GST)\s*(?:@?\s*\d+(?:\.\d+)?\s*%)?\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/gi,
-
-    /(?:CGST|SGST)\s*(?:@?\s*\d+(?:\.\d+)?\s*%)?\s*[:#-]?\s*₹?\s*([\d,]+(?:\.\d{1,2})?)/gi,
+    {
+      rate: gstRate,
+      taxable_amount: round2(taxable),
+      gst_amount: round2((taxable * gstRate) / 100),
+      tax_type: "GST",
+    },
   ];
-
-  for (
-    const pattern of patterns
-  ) {
-    const matches = [
-      ...upper.matchAll(pattern),
-    ];
-
-    matches.forEach(
-      (match) => {
-        const amount =
-          numberValue(
-            match[1]
-          );
-
-        if (amount > 0) {
-          result.push(amount);
-        }
-      }
-    );
-  }
-
-  return result;
 };
 
-/* =====================================================
-   VENDOR NAME CLEANER
-===================================================== */
-
-const cleanVendorName = (
-  value
-) => {
-  if (!value) {
-    return "";
-  }
-
-  let name = String(value)
-    .replace(/\s+/g, " ")
-    .trim();
-
-  name = name.replace(
-    /^(?:[:#\-|]+)\s*/,
-    ""
-  );
-
-  name = name.replace(
-    /\s*(?:GSTIN|GST\s*NO|PAN|PHONE|MOBILE|EMAIL|ADDRESS)\s*:?.*$/i,
-    ""
-  );
-
-  name = name.trim();
-
-  if (
-    name.length < 2 ||
-    name.length > 100
-  ) {
-    return "";
-  }
-
-  return name;
-};
-
-/* =====================================================
-   INVALID VENDOR LINE
-===================================================== */
-
-const isInvalidVendorLine = (
-  line
-) => {
-  const value =
-    String(line || "").trim();
-
-  if (!value) {
-    return true;
-  }
-
-  if (
-    value.length < 2 ||
-    value.length > 100
-  ) {
-    return true;
-  }
-
-  if (
-    /^(invoice|tax invoice|bill|receipt|quotation|estimate|gst|gstin|pan|date|invoice date|bill date|total|subtotal|sub total|amount|taxable|description|particulars|items?|qty|quantity|rate|price|cgst|sgst|igst|hsn|sac|phone|mobile|email|address|state|place of supply|terms|conditions|thank you)/i.test(
-      value
-    )
-  ) {
-    return true;
-  }
-
-  if (
-    /^\d[\d\s\/:.-]*$/.test(
-      value
-    )
-  ) {
-    return true;
-  }
-
-  if (/@/.test(value)) {
-    return true;
-  }
-
-  if (
-    GST_REGEX.test(
-      value.replace(/\s/g, "")
-    )
-  ) {
-    return true;
-  }
-
-  if (
-    /\b(?:GSTIN|PAN|CGST|SGST|IGST|HSN|SAC)\b/i.test(
-      value
-    )
-  ) {
-    return true;
-  }
-
-  return false;
-};
-
-/* =====================================================
-   EXTRACT VENDOR NAME
-===================================================== */
-
-const extractVendorName = (
-  text
-) => {
-  if (!text) {
-    return "";
-  }
-
-  const lines = String(text)
-    .replace(/\r/g, "\n")
-    .split("\n")
-    .map(normalizeOCRLine)
-    .filter(Boolean);
-
-  const vendorLabelRegex =
-    /\b(VENDOR\s*NAME|VENDOR|SUPPLIER\s*NAME|SUPPLIER|SELLER\s*NAME|SELLER|BILL\s*FROM|SOLD\s*BY|COMPANY\s*NAME|FROM)\b/i;
-
-  for (
-    let i = 0;
-    i < lines.length;
-    i++
-  ) {
-    const line = lines[i];
-
-    if (
-      vendorLabelRegex.test(
-        line
-      )
-    ) {
-      const match =
-        line.match(
-          /(?:VENDOR\s*NAME|VENDOR|SUPPLIER\s*NAME|SUPPLIER|SELLER\s*NAME|SELLER|BILL\s*FROM|SOLD\s*BY|COMPANY\s*NAME|FROM)\s*[:#\-]?\s*(.+)$/i
-        );
-
-      if (match?.[1]) {
-        const name =
-          cleanVendorName(
-            match[1]
-          );
-
-        if (
-          name &&
-          !isInvalidVendorLine(
-            name
-          )
-        ) {
-          return name;
-        }
-      }
-    }
-  }
-
-  for (
-    let i = 0;
-    i < lines.length;
-    i++
-  ) {
-    if (
-      vendorLabelRegex.test(
-        lines[i]
-      )
-    ) {
-      for (
-        let j = i + 1;
-        j <= Math.min(
-          i + 2,
-          lines.length - 1
-        );
-        j++
-      ) {
-        const candidate =
-          cleanVendorName(
-            lines[j]
-          );
-
-        if (
-          candidate &&
-          !isInvalidVendorLine(
-            candidate
-          )
-        ) {
-          return candidate;
-        }
-      }
-    }
-  }
-
-  const gstIndex =
-    lines.findIndex(
-      (line) =>
-        /GSTIN|GST\s*NO|GST\s*NUMBER/i.test(
-          line
-        ) ||
-        GST_REGEX.test(
-          line.replace(
-            /\s/g,
-            ""
-          )
-        )
-    );
-
-  if (gstIndex >= 0) {
-    for (
-      let offset = 1;
-      offset <= 4;
-      offset++
-    ) {
-      const indexes = [
-        gstIndex - offset,
-        gstIndex + offset,
-      ];
-
-      for (
-        const index of indexes
-      ) {
-        if (
-          index < 0 ||
-          index >= lines.length
-        ) {
-          continue;
-        }
-
-        const candidate =
-          cleanVendorName(
-            lines[index]
-          );
-
-        if (
-          candidate &&
-          !isInvalidVendorLine(
-            candidate
-          )
-        ) {
-          return candidate;
-        }
-      }
-    }
-  }
-
-  const topLines =
-    lines.slice(
-      0,
-      Math.min(
-        15,
-        lines.length
-      )
-    );
-
-  for (
-    const line of topLines
-  ) {
-    const candidate =
-      cleanVendorName(line);
-
-    if (
-      !candidate ||
-      isInvalidVendorLine(
-        candidate
-      )
-    ) {
-      continue;
-    }
-
-    if (
-      /[A-Za-z]{3,}/.test(
-        candidate
-      ) &&
-      (
-        /PVT|LTD|LIMITED|TRADERS|ENTERPRISES|ENTERPRISE|STORE|SHOP|INDUSTRIES|CORPORATION|CORP|COMPANY|CO\.?|SERVICES|SOLUTIONS|AGENCY|AGENCIES/i.test(
-          candidate
-        ) ||
-        candidate.length >= 5
-      )
-    ) {
-      return candidate;
-    }
-  }
-
-  return "";
-};
-
-/* =====================================================
-   EXTRACT STATE
-===================================================== */
-
-const extractState = (
-  text
-) => {
-  if (!text) {
-    return "";
-  }
-
-  const upper =
-    String(text).toUpperCase();
-
-  for (
-    const state of STATES
-  ) {
-    if (
-      upper.includes(
-        state.toUpperCase()
-      )
-    ) {
-      return state;
-    }
-  }
-
-  return "";
-};
-
-/* =====================================================
-   EXTRACT DESCRIPTION
-===================================================== */
-
-const extractDescription = (
-  text
-) => {
-  if (!text) {
-    return "";
-  }
-
-  const lines = String(text)
-    .split("\n")
-    .map(normalizeOCRLine)
-    .filter(Boolean);
-
-  for (
-    let i = 0;
-    i < lines.length;
-    i++
-  ) {
-    const match =
-      lines[i].match(
-        /(?:DESCRIPTION|PARTICULARS|PRODUCT|ITEM)\s*[:#-]?\s*(.+)$/i
-      );
-
-    if (match?.[1]) {
-      return match[1].trim();
-    }
-
-    if (
-      /^(DESCRIPTION|PARTICULARS|PRODUCT|ITEM)$/i.test(
-        lines[i]
-      ) &&
-      lines[i + 1]
-    ) {
-      return lines[i + 1];
-    }
-  }
-
-  return "";
-};
-
-/* =====================================================
-   PREPROCESS IMAGE
-===================================================== */
-
-const preprocessImage = (
-  file
-) => {
-  return new Promise(
-    (resolve, reject) => {
-      const reader =
-        new FileReader();
-
-      reader.onload = () => {
-        const img =
-          new Image();
-
-        img.onload = () => {
-          const MAX_WIDTH =
-            3000;
-
-          const scale =
-            img.width >
-            MAX_WIDTH
-              ? MAX_WIDTH /
-                img.width
-              : 1;
-
-          const width =
-            Math.round(
-              img.width * scale
-            );
-
-          const height =
-            Math.round(
-              img.height * scale
-            );
-
-          const canvas =
-            document.createElement(
-              "canvas"
-            );
-
-          canvas.width =
-            width;
-
-          canvas.height =
-            height;
-
-          const ctx =
-            canvas.getContext(
-              "2d"
-            );
-
-          ctx.drawImage(
-            img,
-            0,
-            0,
-            width,
-            height
-          );
-
-          const imageData =
-            ctx.getImageData(
-              0,
-              0,
-              width,
-              height
-            );
-
-          const data =
-            imageData.data;
-
-          for (
-            let i = 0;
-            i < data.length;
-            i += 4
-          ) {
-            const gray =
-              0.299 *
-                data[i] +
-              0.587 *
-                data[i + 1] +
-              0.114 *
-                data[i + 2];
-
-            const contrast =
-              gray * 1.45 -
-              128 * 0.45;
-
-            const value =
-              Math.max(
-                0,
-                Math.min(
-                  255,
-                  contrast
-                )
-              );
-
-            data[i] =
-              value;
-            data[i + 1] =
-              value;
-            data[i + 2] =
-              value;
-          }
-
-          ctx.putImageData(
-            imageData,
-            0,
-            0
-          );
-
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(
-                  new Error(
-                    "Image processing failed"
-                  )
-                );
-                return;
-              }
-
-              resolve(blob);
-            },
-            "image/png",
-            1
-          );
-        };
-
-        img.onerror = () => {
-          reject(
-            new Error(
-              "Image could not be loaded"
-            )
-          );
-        };
-
-        img.src =
-          reader.result;
-      };
-
-      reader.onerror = () => {
-        reject(
-          new Error(
-            "Could not read image"
-          )
-        );
-      };
-
-      reader.readAsDataURL(
-        file
-      );
-    }
-  );
-};
-
-/* =====================================================
-   BUILD GST BREAKDOWN
-===================================================== */
-
-const buildGSTBreakdown = (
+const buildAutomaticGSTBreakdown = (
   taxableAmount,
-  rates,
-  extractedGSTAmounts = []
+  rate,
+  vendorGSTIN,
+  vendorState
 ) => {
-  const amount =
-    numberValue(
-      taxableAmount
-    );
+  const taxable = numberValue(taxableAmount);
+  const gstRate = numberValue(rate);
 
-  if (
-    !amount ||
-    !rates.length
-  ) {
+  if (taxable <= 0 || gstRate <= 0) {
     return [];
   }
 
-  if (rates.length === 1) {
-    const rate =
-      Number(rates[0]);
+  const user = getLoggedInUser();
+
+  /*
+   * User does not have GST at signup.
+   * Therefore automatic CGST/SGST/IGST comparison
+   * should not be forced.
+   */
+  if (!user || user.hasGST !== true) {
+    return [];
+  }
+
+  const userGSTIN = cleanGSTIN(
+    user.gstNumber || user.gstin || ""
+  );
+
+  const userState =
+    user.companyState || getStateFromGSTIN(userGSTIN);
+
+  const vendorGST = cleanGSTIN(vendorGSTIN);
+
+  const detectedVendorState =
+    vendorState || getStateFromGSTIN(vendorGST);
+
+  if (!userState || !detectedVendorState) {
+    return [];
+  }
+
+  const totalGST = round2(
+    (taxable * gstRate) / 100
+  );
+
+  /* SAME STATE -> CGST + SGST */
+
+  if (
+    userState.toLowerCase() ===
+    detectedVendorState.toLowerCase()
+  ) {
+    const halfRate = round2(gstRate / 2);
+    const halfAmount = round2(totalGST / 2);
 
     return [
       {
-        rate,
-        taxable_amount:
-          amount,
-        gst_amount:
-          round2(
-            (amount * rate) /
-              100
-          ),
+        rate: halfRate,
+        taxable_amount: round2(taxable),
+        gst_amount: halfAmount,
+        tax_type: "CGST",
+      },
+      {
+        rate: halfRate,
+        taxable_amount: round2(taxable),
+        gst_amount: halfAmount,
+        tax_type: "SGST",
       },
     ];
   }
 
-  return rates.map(
-    (rate, index) => ({
-      rate: Number(rate),
-      taxable_amount: "",
-      gst_amount:
-        extractedGSTAmounts[
-          index
-        ] !== undefined
-          ? round2(
-              extractedGSTAmounts[
-                index
-              ]
-            )
-          : 0,
-    })
-  );
+  /* DIFFERENT STATE -> IGST */
+
+  return [
+    {
+      rate: gstRate,
+      taxable_amount: round2(taxable),
+      gst_amount: totalGST,
+      tax_type: "IGST",
+    },
+  ];
 };
 
-/* =====================================================
-   MAIN COMPONENT
-===================================================== */
+/* =========================================================
+   MULTI-RATE GST CALCULATION
+========================================================= */
 
-export default function NewInvoice({
+const buildMultiRateGSTBreakdown = (
+  groupedAmounts,
+  vendorGSTIN,
+  vendorState
+) => {
+  const groups = Object.entries(groupedAmounts || {})
+    .map(([rate, taxable]) => ({
+      rate: numberValue(rate),
+      taxable: round2(taxable),
+    }))
+    .filter(
+      (group) =>
+        GST_RATE_VALUES.includes(group.rate) &&
+        group.rate > 0 &&
+        group.taxable > 0
+    )
+    .sort((a, b) => a.rate - b.rate);
+
+  if (!groups.length) {
+    return [];
+  }
+
+  const user = getLoggedInUser();
+
+  /*
+   * If user has no GST, keep generic GST rows.
+   */
+  if (!user || user.hasGST !== true) {
+    return groups.map((group) => ({
+      rate: group.rate,
+      taxable_amount: group.taxable,
+      gst_amount: round2(
+        (group.taxable * group.rate) / 100
+      ),
+      tax_type: "GST",
+    }));
+  }
+
+  const userGSTIN = cleanGSTIN(
+    user.gstNumber || user.gstin || ""
+  );
+
+  const userState =
+    user.companyState || getStateFromGSTIN(userGSTIN);
+
+  const vendorGST = cleanGSTIN(vendorGSTIN);
+
+  const detectedVendorState =
+    vendorState || getStateFromGSTIN(vendorGST);
+
+  if (!userState || !detectedVendorState) {
+    return groups.map((group) => ({
+      rate: group.rate,
+      taxable_amount: group.taxable,
+      gst_amount: round2(
+        (group.taxable * group.rate) / 100
+      ),
+      tax_type: "GST",
+    }));
+  }
+
+  const sameState =
+    userState.toLowerCase() ===
+    detectedVendorState.toLowerCase();
+
+  const breakdown = [];
+
+  groups.forEach((group) => {
+    const totalGST = round2(
+      (group.taxable * group.rate) / 100
+    );
+
+    if (sameState) {
+      const halfRate = round2(group.rate / 2);
+      const halfAmount = round2(totalGST / 2);
+
+      breakdown.push({
+        rate: halfRate,
+        taxable_amount: group.taxable,
+        gst_amount: halfAmount,
+        tax_type: "CGST",
+      });
+
+      breakdown.push({
+        rate: halfRate,
+        taxable_amount: group.taxable,
+        gst_amount: halfAmount,
+        tax_type: "SGST",
+      });
+    } else {
+      breakdown.push({
+        rate: group.rate,
+        taxable_amount: group.taxable,
+        gst_amount: totalGST,
+        tax_type: "IGST",
+      });
+    }
+  });
+
+  return breakdown;
+};
+
+/* =========================================================
+   GROUP ITEMS BY GST RATE
+========================================================= */
+
+const groupItemsByGSTRate = (items) => {
+  const groups = {};
+
+  (Array.isArray(items) ? items : []).forEach((item) => {
+    const rate = numberValue(item?.gst_rate);
+    const amount = numberValue(
+      item?.amount_before_gst ?? item?.amount ?? item?.taxable_amount
+    );
+
+    if (rate <= 0 || amount <= 0) return;
+
+    const key = rate.toString();
+    groups[key] = round2((groups[key] || 0) + amount);
+  });
+
+  return groups;
+};
+
+/* =========================================================
+   TAXABLE TOTAL FROM GST BREAKDOWN
+========================================================= */
+
+const getTaxableTotalFromBreakdown = (breakdown) => {
+  const rows = Array.isArray(breakdown) ? breakdown : [];
+  if (!rows.length) return 0;
+
+  let total = 0;
+  const countedCGST = new Set();
+
+  rows.forEach((row) => {
+    const taxable = numberValue(row?.taxable_amount);
+    if (taxable <= 0) return;
+
+    const type = String(row?.tax_type || '').toUpperCase();
+    const rate = numberValue(row?.rate);
+
+    if (type === 'CGST' || type === 'SGST') {
+      if (type === 'CGST') {
+        const key = `${rate}-${taxable}`;
+        if (!countedCGST.has(key)) {
+          total += taxable;
+          countedCGST.add(key);
+        }
+      }
+      return;
+    }
+
+    total += taxable;
+  });
+
+  return round2(total);
+};
+
+/* =========================================================
+   MOCK GST API
+   Later replace only this function with real API.
+========================================================= */
+
+const checkGSTStatus = async (gstin) => {
+  const value = cleanGSTIN(gstin);
+
+  if (!GST_REGEX.test(value)) {
+    throw new Error("Invalid GSTIN");
+  }
+
+  await new Promise((resolve) =>
+    setTimeout(resolve, 700)
+  );
+
+  return {
+    gstin: value,
+    legalName: "ABC Private Limited",
+    tradeName: "ABC Traders",
+    centreJurisdiction: "PIMPRI RANGE",
+    stateJurisdiction: "MAHARASHTRA STATE",
+    registrationDate: "01/04/2022",
+    taxpayerType: "Regular",
+    status: "Active",
+    businessActivity: [
+      "Wholesale Business",
+      "Retail Business",
+      "Office / Sale Office",
+    ],
+    state: getStateFromGSTIN(value),
+  };
+};
+
+/* =========================================================
+   COMPONENT
+========================================================= */
+
+const NewInvoice = ({
   onClose,
   onCreated,
-}) {
-  const [creating, setCreating] =
-    useState(false);
-
-  const [scanning, setScanning] =
-    useState(false);
-
-  const [gstError, setGstError] =
-    useState("");
-
-  const [scanMessage, setScanMessage] =
-    useState("");
-
-  const cameraInputRef =
-    useRef(null);
-
-  const galleryInputRef =
-    useRef(null);
-
+}) => {
   const [formData, setFormData] =
     useState({
       invoice_number: "",
-      invoice_date:
-        getTodayISO(),
+      invoice_date: getTodayISO(),
       vendor_name: "",
       vendor_has_gst: "",
       vendor_gstin: "",
       vendor_state: "",
       total_amount: "",
       final_amount: "",
-      total_gst: "0",
+      total_gst: "0.00",
+
+      /*
+       * Kept for backend compatibility.
+       * For multi-rate invoices, actual rates are stored
+       * in items + gst_breakdown.
+       */
       gst_rate: "",
-      description: "",
+
+      /*
+       * No description field.
+       */
       gst_breakdown: [],
+
+      items: [],
     });
 
-  /* ===================================================
-     HANDLE CHANGE
-  =================================================== */
+  const [loading, setLoading] =
+    useState(false);
+
+  const [gstChecking, setGSTChecking] =
+    useState(false);
+
+  const [gstStatus, setGSTStatus] =
+    useState(null);
+
+  const [showGSTPopup, setShowGSTPopup] =
+    useState(false);
+
+  /* =========================================================
+     INVOICE SCANNER UI
+     OCR will be connected later.
+     ========================================================= */
+  const [invoiceImage, setInvoiceImage] = useState(null);
+  const [invoiceImagePreview, setInvoiceImagePreview] = useState("");
+
+  const handleInvoiceImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an invoice image.");
+      return;
+    }
+
+    if (invoiceImagePreview) {
+      URL.revokeObjectURL(invoiceImagePreview);
+    }
+
+    setInvoiceImage(file);
+    setInvoiceImagePreview(URL.createObjectURL(file));
+    toast.success("Invoice image selected.");
+  };
+
+  const removeInvoiceImage = () => {
+    if (invoiceImagePreview) {
+      URL.revokeObjectURL(invoiceImagePreview);
+    }
+
+    setInvoiceImage(null);
+    setInvoiceImagePreview("");
+  };
+
+  /* =========================================================
+     BASIC INPUT
+  ========================================================= */
 
   const handleChange = (e) => {
     const {
@@ -1443,1863 +543,1445 @@ export default function NewInvoice({
       value,
     } = e.target;
 
-    if (
-      name ===
-      "vendor_gstin"
-    ) {
-      const gst =
-        cleanGSTIN(value);
-
-      setFormData(
-        (prev) => ({
-          ...prev,
-          vendor_gstin: gst,
-          vendor_has_gst:
-            gst.length > 0
-              ? "yes"
-              : prev.vendor_has_gst,
-        })
-      );
-
-      if (gst.length === 15) {
-        if (
-          GST_REGEX.test(gst)
-        ) {
-          setGstError("");
-
-          const stateCode =
-            gst.substring(
-              0,
-              2
-            );
-
-          const state =
-            GST_STATE_MAP[
-              stateCode
-            ] || "";
-
-          if (state) {
-            setFormData(
-              (prev) => ({
-                ...prev,
-                vendor_state:
-                  state,
-              })
-            );
-          }
-        } else {
-          setGstError(
-            "Invalid GST number."
-          );
-        }
-      } else {
-        setGstError("");
-      }
-
-      return;
-    }
-
-    if (
-      name ===
-        "total_amount" ||
-      name === "gst_rate"
-    ) {
-      const cleaned =
-        normalizeAmount(
-          value
-        );
-
-      setFormData(
-        (prev) => ({
-          ...prev,
-          [name]: cleaned,
-        })
-      );
-
-      return;
-    }
-
-    setFormData(
-      (prev) => ({
-        ...prev,
-        [name]: value,
-      })
-    );
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  /* ===================================================
-     GST YES / NO
-  =================================================== */
-
-  const handleGSTOption = (
-    option
+  const handleGSTOptionChange = (
+    value
   ) => {
-    if (option === "yes") {
-      setFormData(
-        (prev) => ({
-          ...prev,
-          vendor_has_gst:
-            "yes",
-        })
-      );
+    setFormData((prev) => ({
+      ...prev,
+      vendor_has_gst: value,
 
-      setGstError("");
-      return;
-    }
+      vendor_gstin:
+        value === "yes"
+          ? prev.vendor_gstin
+          : "",
 
-    setFormData(
-      (prev) => ({
-        ...prev,
-        vendor_has_gst: "no",
-        vendor_gstin: "",
-        gst_rate: "",
-        gst_breakdown: [],
-        total_gst: "0",
-        final_amount:
-          prev.total_amount ||
-          "",
-      })
+      gst_breakdown:
+        value === "no"
+          ? []
+          : prev.gst_breakdown,
+    }));
+  };
+
+  const handleGSTINChange = (e) => {
+    const gstin = cleanGSTIN(
+      e.target.value
     );
-
-    setGstError("");
-  };
-
-  /* ===================================================
-     VALIDATE GST
-  =================================================== */
-
-  const validateGSTIN = () => {
-    if (
-      formData.vendor_has_gst ===
-      "no"
-    ) {
-      return true;
-    }
-
-    if (
-      formData.vendor_has_gst ===
-        "yes" &&
-      !formData.vendor_gstin
-    ) {
-      setGstError(
-        "GST Yes असल्यास GST number आवश्यक आहे."
-      );
-
-      return false;
-    }
-
-    if (
-      formData.vendor_gstin &&
-      !GST_REGEX.test(
-        formData.vendor_gstin
-      )
-    ) {
-      setGstError(
-        "Invalid GST number."
-      );
-
-      return false;
-    }
-
-    setGstError("");
-
-    return true;
-  };
-
-  /* ===================================================
-     EXTRACT INVOICE DATA
-  =================================================== */
-
-  const extractInvoiceData = (
-    ocrText
-  ) => {
-    const invoiceNumber =
-      extractInvoiceNumber(
-        ocrText
-      );
-
-    const invoiceDate =
-      extractInvoiceDate(
-        ocrText
-      );
-
-    const gstin =
-      extractGSTIN(
-        ocrText
-      );
-
-    const vendorName =
-      extractVendorName(
-        ocrText
-      );
 
     const state =
-      extractState(
-        ocrText
-      );
+      getStateFromGSTIN(gstin);
 
-    const taxableAmount =
-      extractTaxableAmount(
-        ocrText
-      );
+    setFormData((prev) => ({
+      ...prev,
+      vendor_gstin: gstin,
 
-    const finalAmount =
-      extractFinalAmount(
-        ocrText
-      );
+      vendor_state:
+        state ||
+        prev.vendor_state,
 
-    const rates =
-      extractGSTRates(
-        ocrText
-      );
-
-    const gstAmounts =
-      extractGSTAmounts(
-        ocrText
-      );
-
-    const description =
-      extractDescription(
-        ocrText
-      );
-
-    const gstBreakdown =
-      buildGSTBreakdown(
-        taxableAmount,
-        rates,
-        gstAmounts
-      );
-
-    let totalGST = 0;
-
-    if (
-      gstBreakdown.length === 1
-    ) {
-      totalGST =
-        numberValue(
-          gstBreakdown[0]
-            .gst_amount
-        );
-    }
-
-    return {
-      invoiceNumber,
-      invoiceDate,
-      gstin,
-      vendorName,
-      state,
-      taxableAmount,
-      finalAmount,
-      rates,
-      gstAmounts,
-      gstBreakdown,
-      totalGST,
-      description,
-    };
+      vendor_has_gst:
+        gstin.length > 0
+          ? "yes"
+          : prev.vendor_has_gst,
+    }));
   };
 
-  /* ===================================================
-     SCAN INVOICE
-  =================================================== */
+  /* =========================================================
+     GST STATUS CHECK
+  ========================================================= */
 
-  const scanInvoice = async (
-    file
-  ) => {
-    if (!file) {
-      return;
-    }
-
-    setScanning(true);
-
-    setScanMessage(
-      "Invoice image process करत आहे..."
-    );
-
-    try {
-      console.log(
-        "======================================"
+  const handleCheckGSTStatus =
+    async () => {
+      const gstin = cleanGSTIN(
+        formData.vendor_gstin
       );
 
-      console.log(
-        "📄 INVOICE SCAN STARTED"
-      );
-
-      console.log(
-        "File Name:",
-        file.name
-      );
-
-      console.log(
-        "File Type:",
-        file.type
-      );
-
-      console.log(
-        "File Size:",
-        file.size
-      );
-
-      console.log(
-        "======================================"
-      );
-
-      const processedImage =
-        await preprocessImage(
-          file
-        );
-
-      setScanMessage(
-        "Invoice OCR scan करत आहे..."
-      );
-
-      const worker =
-        await createWorker(
-          "eng"
-        );
-
-      await worker.setParameters(
-        {
-          tessedit_pageseg_mode:
-            "6",
-
-          preserve_interword_spaces:
-            "1",
-        }
-      );
-
-      /* =================================================
-         OCR
-      ================================================= */
-
-      const result =
-        await worker.recognize(
-          processedImage
-        );
-
-      /*
-        IMPORTANT:
-        Tesseract result मधील data object
-        directly घेतला आहे.
-      */
-
-      const ocrData =
-        result?.data || {};
-
-      const ocrText =
-        ocrData?.text || "";
-
-      /* =================================================
-         RAW OCR JSON
-      ================================================= */
-
-      console.log(
-        "======================================"
-      );
-
-      console.log(
-        "🔵 RAW OCR JSON"
-      );
-
-      console.log(
-        JSON.stringify(
-          ocrData,
-          null,
-          2
-        )
-      );
-
-      console.log(
-        "======================================"
-      );
-
-      /* =================================================
-         RAW OCR TEXT
-      ================================================= */
-
-      console.log(
-        "======================================"
-      );
-
-      console.log(
-        "🔵 RAW OCR TEXT"
-      );
-
-      console.log(
-        ocrText
-      );
-
-      console.log(
-        "======================================"
-      );
-
-      await worker.terminate();
-
-      if (
-        !ocrText.trim()
-      ) {
+      if (!GST_REGEX.test(gstin)) {
         toast.error(
-          "Invoice मधून text मिळाला नाही."
+          "Please enter a valid GSTIN."
         );
-
-        setScanning(false);
-        setScanMessage("");
-
         return;
       }
 
-      /* =================================================
-         EXTRACT DATA
-      ================================================= */
+      try {
+        setGSTChecking(true);
 
-      const extracted =
-        extractInvoiceData(
-          ocrText
-        );
-
-      /* =================================================
-         EXTRACTED JSON
-      ================================================= */
-
-      console.log(
-        "======================================"
-      );
-
-      console.log(
-        "🟢 EXTRACTED INVOICE JSON"
-      );
-
-      console.log(
-        JSON.stringify(
-          extracted,
-          null,
-          2
-        )
-      );
-
-      console.log(
-        "======================================"
-      );
-
-      /* =================================================
-         INDIVIDUAL FIELDS DEBUG
-      ================================================= */
-
-      console.log(
-        "Invoice Number:",
-        extracted.invoiceNumber
-      );
-
-      console.log(
-        "Invoice Date:",
-        extracted.invoiceDate
-      );
-
-      console.log(
-        "Vendor Name:",
-        extracted.vendorName
-      );
-
-      console.log(
-        "GSTIN:",
-        extracted.gstin
-      );
-
-      console.log(
-        "State:",
-        extracted.state
-      );
-
-      console.log(
-        "Taxable Amount:",
-        extracted.taxableAmount
-      );
-
-      console.log(
-        "Final Amount:",
-        extracted.finalAmount
-      );
-
-      console.log(
-        "GST Rates:",
-        extracted.rates
-      );
-
-      console.log(
-        "GST Amounts:",
-        extracted.gstAmounts
-      );
-
-      console.log(
-        "GST Breakdown:",
-        extracted.gstBreakdown
-      );
-
-      console.log(
-        "Total GST:",
-        extracted.totalGST
-      );
-
-      console.log(
-        "Description:",
-        extracted.description
-      );
-
-      /* =================================================
-         GST
-      ================================================= */
-
-      const detectedGST =
-        extracted.gstin;
-
-      let detectedState =
-        extracted.state;
-
-      if (detectedGST) {
-        const stateCode =
-          detectedGST.substring(
-            0,
-            2
+        const result =
+          await checkGSTStatus(
+            gstin
           );
 
-        detectedState =
-          GST_STATE_MAP[
-            stateCode
-          ] ||
-          detectedState;
-      }
+        setGSTStatus(result);
+        setShowGSTPopup(true);
 
-      const hasGST =
-        Boolean(
-          detectedGST
-        );
+        /*
+         * GST API becomes source of truth for vendor name.
+         */
+        const apiName =
+          result.legalName ||
+          result.tradeName ||
+          "";
 
-      /* =================================================
-         GST CALCULATION
-      ================================================= */
 
-      let totalGST =
-        extracted.totalGST;
-
-      let finalAmount =
-        numberValue(
-          extracted.finalAmount
-        );
-
-      if (
-        extracted.taxableAmount &&
-        extracted.rates.length ===
-          1
-      ) {
-        const taxable =
-          numberValue(
-            extracted.taxableAmount
-          );
-
-        const rate =
-          Number(
-            extracted.rates[0]
-          );
-
-        totalGST =
-          round2(
-            (taxable * rate) /
-              100
-          );
-
-        finalAmount =
-          round2(
-            taxable +
-              totalGST
-          );
-      }
-
-      /* =================================================
-         FINAL FORM DATA JSON
-      ================================================= */
-
-      const updatedFormPreview = {
-        invoice_number:
-          extracted.invoiceNumber,
-
-        invoice_date:
-          extracted.invoiceDate,
-
-        vendor_name:
-          extracted.vendorName,
-
-        vendor_has_gst:
-          hasGST
-            ? "yes"
-            : "",
-
-        vendor_gstin:
-          detectedGST,
-
-        vendor_state:
-          detectedState,
-
-        total_amount:
-          extracted.taxableAmount,
-
-        gst_rate:
-          extracted.rates.length ===
-          1
-            ? String(
-                extracted.rates[0]
-              )
-            : "",
-
-        gst_breakdown:
-          extracted.gstBreakdown,
-
-        total_gst:
-          String(totalGST),
-
-        final_amount:
-          finalAmount > 0
-            ? String(
-                finalAmount
-              )
-            : "",
-
-        description:
-          extracted.description,
-      };
-
-      console.log(
-        "======================================"
-      );
-
-      console.log(
-        "🟣 FORM DATA AFTER OCR"
-      );
-
-      console.log(
-        JSON.stringify(
-          updatedFormPreview,
-          null,
-          2
-        )
-      );
-
-      console.log(
-        "======================================"
-      );
-
-      /* =================================================
-         UPDATE FORM
-      ================================================= */
-
-      setFormData(
-        (prev) => ({
+        setFormData((prev) => ({
           ...prev,
 
-          invoice_number:
-            extracted.invoiceNumber ||
-            prev.invoice_number,
-
-          invoice_date:
-            extracted.invoiceDate ||
-            prev.invoice_date,
-
           vendor_name:
-            extracted.vendorName ||
+            apiName ||
             prev.vendor_name,
 
-          vendor_has_gst:
-            hasGST
-              ? "yes"
-              : prev.vendor_has_gst,
-
-          vendor_gstin:
-            detectedGST ||
-            prev.vendor_gstin,
-
           vendor_state:
-            detectedState ||
+            result.state ||
             prev.vendor_state,
 
+          vendor_has_gst: "yes",
+
+          vendor_gstin:
+            result.gstin ||
+            prev.vendor_gstin,
+        }));
+      } catch (error) {
+        console.error(
+          "GST status error:",
+          error
+        );
+
+        toast.error(
+          error.message ||
+          "GST verification failed."
+        );
+      } finally {
+        setGSTChecking(false);
+      }
+    };
+
+  /* =========================================================
+     GST CALCULATION
+  ========================================================= */
+
+  const calculateCurrentGST = () => {
+    const taxable = numberValue(
+      formData.total_amount
+    );
+
+    if (taxable <= 0) {
+      toast.error(
+        "Please enter taxable amount."
+      );
+      return;
+    }
+
+    /*
+     * If OCR has multiple items/rates,
+     * always calculate from those actual invoice rates.
+     */
+    if (
+      formData.items?.length
+    ) {
+      const grouped =
+        groupItemsByGSTRate(
+          formData.items
+        );
+
+      const breakdown =
+        buildMultiRateGSTBreakdown(
+          grouped,
+          formData.vendor_gstin,
+          formData.vendor_state
+        );
+
+      if (breakdown.length) {
+        const totalGST =
+          round2(
+            breakdown.reduce(
+              (sum, row) =>
+                sum +
+                numberValue(
+                  row.gst_amount
+                ),
+              0
+            )
+          );
+
+        const taxableTotal =
+          getTaxableTotalFromBreakdown(
+            breakdown
+          );
+
+        const finalAmount =
+          round2(
+            taxableTotal +
+            totalGST
+          );
+
+        const rates =
+          Object.keys(grouped)
+            .map(Number)
+            .sort(
+              (a, b) => a - b
+            );
+
+        setFormData((prev) => ({
+          ...prev,
+
           total_amount:
-            extracted.taxableAmount ||
-            prev.total_amount,
-
-          gst_rate:
-            extracted.rates.length ===
-            1
-              ? String(
-                  extracted.rates[0]
-                )
-              : prev.gst_rate,
-
-          gst_breakdown:
-            extracted
-              .gstBreakdown.length
-              ? extracted.gstBreakdown
-              : prev.gst_breakdown,
+            taxableTotal.toFixed(
+              2
+            ),
 
           total_gst:
-            String(totalGST),
+            totalGST.toFixed(
+              2
+            ),
 
           final_amount:
-            finalAmount > 0
-              ? String(
-                  finalAmount
-                )
-              : prev.final_amount,
+            finalAmount.toFixed(
+              2
+            ),
 
-          description:
-            extracted.description ||
-            prev.description,
-        })
-      );
+          gst_rate:
+            rates.length === 1
+              ? rates[0]
+              : "",
 
-      if (hasGST) {
+          gst_breakdown:
+            breakdown,
+        }));
+
         toast.success(
-          "GST number, Date आणि invoice details मिळाले."
+          "GST calculated from invoice rates."
         );
-      } else {
-        toast.success(
-          "Invoice details form मध्ये भरले आहेत."
-        );
+
+        return;
       }
-
-      setScanMessage(
-        "Scan complete. Details form मध्ये भरले आहेत."
-      );
-    } catch (error) {
-      console.error(
-        "======================================"
-      );
-
-      console.error(
-        "🔴 Invoice OCR Error"
-      );
-
-      console.error(
-        error
-      );
-
-      console.error(
-        "======================================"
-      );
-
-      toast.error(
-        "Invoice scan करताना error आला."
-      );
-
-      setScanMessage("");
-    } finally {
-      setScanning(false);
-    }
-  };
-
-  /* ===================================================
-     CAMERA
-  =================================================== */
-
-  const handleCameraChange = (
-    e
-  ) => {
-    const file =
-      e.target.files?.[0];
-
-    if (file) {
-      scanInvoice(file);
     }
 
-    e.target.value = "";
-  };
+    /*
+     * Manual single-rate calculation fallback.
+     */
+    const rate = numberValue(
+      formData.gst_rate
+    );
 
-  /* ===================================================
-     GALLERY
-  =================================================== */
-
-  const handleGalleryChange = (
-    e
-  ) => {
-    const file =
-      e.target.files?.[0];
-
-    if (file) {
-      scanInvoice(file);
-    }
-
-    e.target.value = "";
-  };
-
-  /* ===================================================
-     ADD GST ROW
-  =================================================== */
-
-  const addGSTRow = () => {
-    setFormData(
-      (prev) => ({
+    if (rate <= 0) {
+      setFormData((prev) => ({
         ...prev,
 
-        gst_breakdown: [
-          ...prev.gst_breakdown,
+        total_amount:
+          taxable.toFixed(2),
 
-          {
-            rate: "",
-            taxable_amount: "",
-            gst_amount: 0,
-          },
-        ],
-      })
+        total_gst: "0.00",
+
+        final_amount:
+          taxable.toFixed(2),
+
+        gst_breakdown: [],
+      }));
+
+      return;
+    }
+
+    const vendorGSTIN =
+      cleanGSTIN(
+        formData.vendor_gstin
+      );
+
+    let breakdown = [];
+
+    if (
+      formData.vendor_has_gst ===
+      "yes" &&
+      vendorGSTIN
+    ) {
+      breakdown =
+        buildAutomaticGSTBreakdown(
+          taxable,
+          rate,
+          vendorGSTIN,
+          formData.vendor_state
+        );
+    }
+
+    if (!breakdown.length) {
+      breakdown =
+        buildGSTBreakdown(
+          taxable,
+          rate
+        );
+    }
+
+    const totalGST =
+      round2(
+        breakdown.reduce(
+          (sum, row) =>
+            sum +
+            numberValue(
+              row.gst_amount
+            ),
+          0
+        )
+      );
+
+    const finalAmount =
+      round2(
+        taxable + totalGST
+      );
+
+    setFormData((prev) => ({
+      ...prev,
+
+      total_amount:
+        taxable.toFixed(2),
+
+      total_gst:
+        totalGST.toFixed(2),
+
+      final_amount:
+        finalAmount.toFixed(2),
+
+      gst_breakdown:
+        breakdown,
+    }));
+
+    toast.success(
+      "GST calculated."
     );
   };
 
-  /* ===================================================
-     REMOVE GST ROW
-  =================================================== */
+  /* =========================================================
+     GST BREAKDOWN
+  ========================================================= */
+
+  const addGSTRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+
+      gst_breakdown: [
+        ...(prev.gst_breakdown ||
+          []),
+
+        {
+          rate: "",
+          taxable_amount: "",
+          gst_amount: "",
+          tax_type: "GST",
+        },
+      ],
+    }));
+  };
 
   const removeGSTRow = (
     index
   ) => {
-    setFormData(
-      (prev) => {
-        const rows =
-          prev.gst_breakdown.filter(
-            (_, i) =>
-              i !== index
-          );
+    setFormData((prev) => ({
+      ...prev,
 
-        const totalGST =
-          rows.reduce(
-            (sum, row) =>
-              sum +
-              numberValue(
-                row.gst_amount
-              ),
-            0
-          );
-
-        const totalTaxable =
-          rows.reduce(
-            (sum, row) =>
-              sum +
-              numberValue(
-                row.taxable_amount
-              ),
-            0
-          );
-
-        return {
-          ...prev,
-
-          gst_breakdown:
-            rows,
-
-          total_gst:
-            String(
-              round2(
-                totalGST
-              )
-            ),
-
-          total_amount:
-            totalTaxable > 0
-              ? String(
-                  round2(
-                    totalTaxable
-                  )
-                )
-              : prev.total_amount,
-
-          final_amount:
-            String(
-              round2(
-                totalTaxable +
-                  totalGST
-              )
-            ),
-        };
-      }
-    );
+      gst_breakdown:
+        prev.gst_breakdown.filter(
+          (_, i) =>
+            i !== index
+        ),
+    }));
   };
 
-  /* ===================================================
-     GST ROW CHANGE
-  =================================================== */
+  const updateGSTRow = (
+    index,
+    field,
+    value
+  ) => {
+    setFormData((prev) => {
+      const rows = [
+        ...(prev.gst_breakdown ||
+          []),
+      ];
 
-  const handleGSTBreakdownChange =
-    (
-      index,
-      field,
-      value
-    ) => {
-      setFormData(
-        (prev) => {
-          const rows = [
-            ...prev.gst_breakdown,
-          ];
-
-          const row = {
-            ...rows[index],
-          };
-
-          if (
-            field === "rate" ||
-            field ===
-              "taxable_amount"
-          ) {
-            value =
-              normalizeAmount(
-                value
-              );
-          }
-
-          row[field] =
-            value;
-
-          const rate =
-            numberValue(
-              row.rate
-            );
-
-          const taxable =
-            numberValue(
-              row.taxable_amount
-            );
-
-          row.gst_amount =
-            rate > 0 &&
-            taxable > 0
-              ? round2(
-                  (taxable *
-                    rate) /
-                    100
-                )
-              : 0;
-
-          rows[index] =
-            row;
-
-          const totalTaxable =
-            rows.reduce(
-              (sum, item) =>
-                sum +
-                numberValue(
-                  item.taxable_amount
-                ),
-              0
-            );
-
-          const totalGST =
-            rows.reduce(
-              (sum, item) =>
-                sum +
-                numberValue(
-                  item.gst_amount
-                ),
-              0
-            );
-
-          return {
-            ...prev,
-
-            gst_breakdown:
-              rows,
-
-            total_amount:
-              totalTaxable > 0
-                ? String(
-                    round2(
-                      totalTaxable
-                    )
-                  )
-                : prev.total_amount,
-
-            total_gst:
-              String(
-                round2(
-                  totalGST
-                )
-              ),
-
-            final_amount:
-              String(
-                round2(
-                  totalTaxable +
-                    totalGST
-                )
-              ),
-          };
-        }
-      );
-    };
-
-  /* ===================================================
-     CURRENT GST
-  =================================================== */
-
-  const calculateCurrentGST =
-    () => {
-      const taxable =
-        numberValue(
-          formData.total_amount
-        );
+      const row = {
+        ...rows[index],
+        [field]: value,
+      };
 
       if (
-        formData.gst_breakdown
-          .length > 0
+        field === "rate" ||
+        field ===
+        "taxable_amount"
       ) {
-        return round2(
-          formData.gst_breakdown.reduce(
-            (sum, row) =>
+        const rate =
+          numberValue(
+            row.rate
+          );
+
+        const taxable =
+          numberValue(
+            row.taxable_amount
+          );
+
+        row.gst_amount =
+          rate > 0 &&
+            taxable > 0
+            ? round2(
+              (taxable * rate) /
+              100
+            )
+            : "";
+      }
+
+      rows[index] = row;
+
+      const totalGST =
+        round2(
+          rows.reduce(
+            (sum, item) =>
               sum +
               numberValue(
-                row.gst_amount
+                item.gst_amount
               ),
             0
           )
         );
-      }
 
-      const rate =
-        numberValue(
-          formData.gst_rate
+      const taxableAmount =
+        getTaxableTotalFromBreakdown(
+          rows
         );
 
-      if (
-        taxable > 0 &&
-        rate > 0
-      ) {
-        return round2(
-          (taxable * rate) /
-            100
-        );
-      }
+      return {
+        ...prev,
 
-      return 0;
+        gst_breakdown:
+          rows,
+
+        total_gst:
+          totalGST.toFixed(2),
+
+        total_amount:
+          taxableAmount > 0
+            ? taxableAmount.toFixed(
+              2
+            )
+            : prev.total_amount,
+
+        final_amount:
+          taxableAmount > 0
+            ? round2(
+              taxableAmount +
+              totalGST
+            ).toFixed(2)
+            : prev.final_amount,
+      };
+    });
+  };
+
+  const getBreakdownGSTTotal =
+    () => {
+      return round2(
+        (
+          formData.gst_breakdown ||
+          []
+        ).reduce(
+          (sum, row) =>
+            sum +
+            numberValue(
+              row.gst_amount
+            ),
+          0
+        )
+      );
     };
 
-  /* ===================================================
-     SUBMIT
-  =================================================== */
+  /* =========================================================
+     RESET
+  ========================================================= */
 
-  const handleSubmit = async (
-    e
-  ) => {
-    e.preventDefault();
+  const resetForm = () => {
+    setFormData({
+      invoice_number: "",
+      invoice_date: getTodayISO(),
+      vendor_name: "",
+      vendor_has_gst: "",
+      vendor_gstin: "",
+      vendor_state: "",
+      total_amount: "",
+      final_amount: "",
+      total_gst: "0.00",
+      gst_rate: "",
+      gst_breakdown: [],
+      items: [],
+    });
 
-    if (creating) {
-      return;
+    setGSTStatus(null);
+    setShowGSTPopup(false);
+
+    if (invoiceImagePreview) {
+      URL.revokeObjectURL(invoiceImagePreview);
     }
+    setInvoiceImage(null);
+    setInvoiceImagePreview("");
+  };
 
+  /* =========================================================
+     VALIDATION
+  ========================================================= */
+
+  const validateForm = () => {
     if (
       !formData.invoice_number.trim()
     ) {
       toast.error(
-        "Invoice number टाका."
+        "Please enter invoice number."
       );
-      return;
+
+      return false;
     }
 
-    if (
-      !formData.invoice_date
-    ) {
+    if (!formData.invoice_date) {
       toast.error(
-        "Invoice date टाका."
+        "Please select invoice date."
       );
-      return;
+
+      return false;
     }
 
     if (
       !formData.vendor_name.trim()
     ) {
       toast.error(
-        "Vendor name टाका."
+        "Please enter vendor name."
       );
-      return;
+
+      return false;
     }
 
-    const taxableAmount =
-      numberValue(
-        formData.total_amount
-      );
-
     if (
-      taxableAmount <= 0
+      !formData.vendor_has_gst
     ) {
       toast.error(
-        "GST आधीचा Total Amount / Taxable Amount टाका."
+        "Please select vendor GST option."
       );
-      return;
+
+      return false;
     }
 
     if (
       formData.vendor_has_gst ===
       "yes"
     ) {
-      if (!validateGSTIN()) {
-        return;
+      if (
+        !GST_REGEX.test(
+          cleanGSTIN(
+            formData.vendor_gstin
+          )
+        )
+      ) {
+        toast.error(
+          "Please enter a valid GSTIN."
+        );
+
+        return false;
       }
     }
 
     if (
       formData.vendor_has_gst ===
-        "no" &&
+      "no" &&
       !formData.vendor_state
     ) {
       toast.error(
-        "Vendor state निवडा."
+        "Please select vendor state."
       );
+
+      return false;
+    }
+
+    if (
+      numberValue(
+        formData.total_amount
+      ) <= 0
+    ) {
+      toast.error(
+        "Please enter a valid taxable amount."
+      );
+
+      return false;
+    }
+
+    return true;
+  };
+
+  /* =========================================================
+     SUBMIT
+  ========================================================= */
+
+  const handleSubmit = async (
+    e
+  ) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
       return;
     }
 
-    let breakdown = [
-      ...formData.gst_breakdown,
-    ];
+    try {
+      setLoading(true);
 
-    if (
-      formData.vendor_has_gst ===
-        "yes" &&
-      breakdown.length === 0 &&
-      numberValue(
-        formData.gst_rate
-      ) > 0
-    ) {
-      const rate =
-        numberValue(
-          formData.gst_rate
-        );
-
-      breakdown = [
-        {
-          rate,
-          taxable_amount:
-            taxableAmount,
-          gst_amount:
-            round2(
-              (taxableAmount *
-                rate) /
-                100
-            ),
-        },
+      let breakdown = [
+        ...(formData.gst_breakdown ||
+          []),
       ];
-    }
 
-    if (
-      formData.vendor_has_gst !==
-      "yes"
-    ) {
-      breakdown = [];
-    }
-
-    if (
-      breakdown.length > 0
-    ) {
-      for (
-        let i = 0;
-        i < breakdown.length;
-        i++
+      if (
+        formData.items?.length
       ) {
-        const row =
-          breakdown[i];
-
-        const rate =
-          numberValue(
-            row.rate
-          );
-
-        const rowTaxable =
-          numberValue(
-            row.taxable_amount
+        const grouped =
+          groupItemsByGSTRate(
+            formData.items
           );
 
         if (
-          rate <= 0 ||
-          rate > 100
+          Object.keys(grouped)
+            .length
         ) {
-          toast.error(
-            `GST row ${
-              i + 1
-            }: valid GST rate टाका.`
-          );
-          return;
-        }
+          breakdown =
+            buildMultiRateGSTBreakdown(
+              grouped,
+              formData.vendor_gstin,
+              formData.vendor_state
+            );
 
-        if (
-          rowTaxable <= 0
-        ) {
-          toast.error(
-            `GST row ${
-              i + 1
-            }: taxable amount टाका.`
+          console.log(
+            "GST BREAKDOWN RESULT:",
+            JSON.stringify(breakdown, null, 2)
           );
-          return;
+          console.log(
+            "GST BREAKDOWN RESULT:",
+            JSON.stringify(breakdown, null, 2)
+          );
         }
       }
 
-      const breakdownTaxable =
+      /*
+       * If breakdown is still empty, use manually entered
+       * single rate as fallback.
+       */
+      if (!breakdown.length) {
+        const taxableAmount =
+          numberValue(
+            formData.total_amount
+          );
+
+        const gstRate =
+          numberValue(
+            formData.gst_rate
+          );
+
+        if (
+          gstRate > 0 &&
+          taxableAmount > 0
+        ) {
+          breakdown =
+            buildAutomaticGSTBreakdown(
+              taxableAmount,
+              gstRate,
+              formData.vendor_gstin,
+              formData.vendor_state
+            );
+
+          if (
+            !breakdown.length
+          ) {
+            breakdown =
+              buildGSTBreakdown(
+                taxableAmount,
+                gstRate
+              );
+          }
+        }
+      }
+
+      const totalGST =
         round2(
           breakdown.reduce(
             (sum, row) =>
               sum +
               numberValue(
-                row.taxable_amount
+                row.gst_amount
               ),
             0
           )
         );
 
-      if (
-        Math.abs(
-          breakdownTaxable -
-            taxableAmount
-        ) > 0.01
-      ) {
-        toast.error(
-          `GST breakdown taxable amount ₹${breakdownTaxable.toFixed(
-            2
-          )} आहे, पण Total Amount ₹${taxableAmount.toFixed(
-            2
-          )} आहे.`
+      /*
+       * Never calculate taxable amount by summing CGST + SGST
+       * taxable values twice.
+       */
+      let taxableAmount =
+        getTaxableTotalFromBreakdown(
+          breakdown
         );
 
-        return;
+      if (
+        taxableAmount <= 0
+      ) {
+        taxableAmount =
+          numberValue(
+            formData.total_amount
+          );
       }
-    }
 
-    let totalGST = 0;
+      const finalAmount =
+        round2(
+          taxableAmount +
+          totalGST
+        );
 
-    if (
-      breakdown.length > 0
-    ) {
-      breakdown =
+      const finalBreakdown =
         breakdown.map(
-          (row) => {
-            const rate =
-              numberValue(
-                row.rate
-              );
+          (row) => ({
+            rate: numberValue(
+              row.rate
+            ),
 
-            const rowTaxable =
+            taxable_amount:
               numberValue(
                 row.taxable_amount
-              );
+              ),
 
-            const gstAmount =
-              round2(
-                (rowTaxable *
-                  rate) /
-                  100
-              );
+            gst_amount:
+              numberValue(
+                row.gst_amount
+              ),
 
-            return {
-              rate,
-              taxable_amount:
-                rowTaxable,
-              gst_amount:
-                gstAmount,
-            };
-          }
+            tax_type:
+              row.tax_type ||
+              "GST",
+          })
         );
 
-      totalGST =
-        round2(
-          breakdown.reduce(
-            (sum, row) =>
-              sum +
-              row.gst_amount,
-            0
+      /*
+       * If only one invoice GST rate exists, keep it.
+       * Multiple rates => gst_rate = null.
+       */
+      const uniqueRates = [
+        ...new Set(
+          (
+            formData.items ||
+            []
           )
-        );
-    } else {
-      const rate =
-        numberValue(
-          formData.gst_rate
-        );
-
-      totalGST =
-        rate > 0
-          ? round2(
-              (taxableAmount *
-                rate) /
-                100
+            .map((item) =>
+              numberValue(
+                item.gst_rate
+              )
             )
-          : 0;
-    }
-
-    const finalAmount =
-      round2(
-        taxableAmount +
-          totalGST
+            .filter(
+              (rate) =>
+                rate > 0
+            )
+        ),
+      ].sort(
+        (a, b) => a - b
       );
 
-    const gstRates =
-      breakdown.length > 0
-        ? [
-            ...new Set(
-              breakdown.map(
-                (row) =>
-                  numberValue(
-                    row.rate
-                  )
-              )
-            ),
-          ]
-        : formData.gst_rate
-        ? [
-            numberValue(
+      const gstRate =
+        uniqueRates.length ===
+          1
+          ? uniqueRates[0]
+          : uniqueRates.length >
+            1
+            ? null
+            : numberValue(
               formData.gst_rate
-            ),
-          ]
-        : [];
+            );
 
-    const mainGSTRate =
-      gstRates.length > 0
-        ? gstRates[0]
-        : 0;
+      const payload = {
+        ...formData,
 
-    const payload = {
-      invoice_number:
-        formData.invoice_number.trim(),
-
-      invoice_date:
-        formData.invoice_date,
-
-      vendor_name:
-        formData.vendor_name.trim(),
-
-      vendor_has_gst:
-        formData.vendor_has_gst ===
-        "yes",
-
-      vendor_gstin:
-        formData.vendor_has_gst ===
-        "yes"
-          ? cleanGSTIN(
+        vendor_gstin:
+          formData.vendor_has_gst ===
+            "yes"
+            ? cleanGSTIN(
               formData.vendor_gstin
             )
-          : "",
+            : "",
 
-      vendor_state:
-        formData.vendor_state ||
-        "",
+        total_amount:
+          taxableAmount,
 
-      total_amount:
-        taxableAmount,
+        total_gst:
+          totalGST,
 
-      gst_rate:
-        mainGSTRate,
+        final_amount:
+          finalAmount,
 
-      gst_rates:
-        gstRates,
+        gst_rate:
+          gstRate,
 
-      gst_breakdown:
-        breakdown,
+        gst_breakdown:
+          finalBreakdown,
 
-      total_gst:
-        totalGST,
+        /*
+         * Invoice item details.
+         * No description field.
+         */
+        items: (
+          formData.items || []
+        ).map((item) => ({
+          hsn_sac:
+            item.hsn_sac || "",
 
-      final_amount:
-        finalAmount,
+          quantity:
+            numberValue(
+              item.quantity
+            ) || null,
 
-      description:
-        formData.description.trim(),
-    };
+          rate:
+            numberValue(
+              item.rate
+            ) || null,
 
-    console.log(
-      "======================================"
-    );
+          amount:
+            numberValue(
+              item.amount
+            ),
 
-    console.log(
-      "🟠 CREATE INVOICE PAYLOAD"
-    );
+          gst_rate:
+            numberValue(
+              item.gst_rate
+            ),
+        })),
+      };
 
-    console.log(
-      JSON.stringify(
-        payload,
-        null,
-        2
-      )
-    );
+      /*
+       * Explicitly remove description in case an older
+       * form state/backend spread somehow contains it.
+       */
+      delete payload.description;
 
-    console.log(
-      "======================================"
-    );
-
-    try {
-      setCreating(true);
-
-      const response =
-        await invoiceAPI.create(
-          payload
-        );
-
-      console.log(
-        "Invoice Create Response:",
-        response
+      await invoiceAPI.createInvoice(
+        payload
       );
-
-      const createdInvoice =
-        response?.data?.invoice ||
-        response?.invoice ||
-        response?.data;
-
-      if (!createdInvoice) {
-        throw new Error(
-          "Invoice response missing"
-        );
-      }
 
       toast.success(
-        "Invoice successfully created."
+        "Invoice created successfully."
       );
 
-      if (
-        typeof onCreated ===
-        "function"
-      ) {
-        onCreated(
-          createdInvoice
-        );
+      if (onCreated) {
+        await onCreated();
+      } else {
+        resetForm();
       }
-
-      onClose();
     } catch (error) {
       console.error(
-        "Create Invoice Error:",
+        "Create invoice error:",
         error
       );
 
-      const message =
+      toast.error(
         error?.response?.data
           ?.message ||
         error?.message ||
-        "Invoice create करताना error आला.";
-
-      toast.error(message);
+        "Unable to create invoice."
+      );
     } finally {
-      setCreating(false);
+      setLoading(false);
     }
   };
 
-  /* ===================================================
-     DISPLAY
-  =================================================== */
+  const breakdownTotal =
+    getBreakdownGSTTotal();
 
-  const taxableAmount =
-    numberValue(
-      formData.total_amount
-    );
-
-  const currentGST =
-    calculateCurrentGST();
-
-  const currentFinal =
-    round2(
-      taxableAmount +
-        currentGST
-    );
-
-  /* ===================================================
-     RENDER
-  =================================================== */
+  /* =========================================================
+     RETURN
+  ========================================================= */
 
   return (
     <div className="invoice-modal-overlay">
       <div className="invoice-modal">
 
-        <div className="invoice-modal-header">
+        {/* HEADER */}
+
+        <div className="invoice-header">
           <div>
-            <h2>
-              Create Invoice
-            </h2>
+            <h1>New Invoice</h1>
 
             <p>
-              Create invoice manually or scan an invoice
+              Create a new invoice or
+              scan an invoice.
             </p>
           </div>
 
           <button
             type="button"
-            className="invoice-close-btn"
-            onClick={onClose}
-            disabled={creating}
+            className="close-btn"
+            onClick={
+              onClose || resetForm
+            }
+            title="Close"
           >
-            <X size={20} />
+            <X size={22} />
           </button>
         </div>
 
-        {/* =================================================
-            SCANNER
-        ================================================= */}
+        {/* =====================================================
+            INVOICE SCANNER - UI ONLY
+            ===================================================== */}
 
-        <div className="invoice-scanner-box">
-          <div className="scanner-title">
-            <ScanLine size={24} />
-
+        <div
+          className="form-section"
+          style={{
+            marginBottom: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "15px",
+              flexWrap: "wrap",
+            }}
+          >
             <div>
-              <strong>
+              <h2
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "5px",
+                }}
+              >
+                <ScanLine size={21} />
                 Scan Invoice
-              </strong>
-
-              <span>
-                Invoice image scan करा आणि details automatic भरू द्या
-              </span>
+              </h2>
+              <p
+                style={{
+                  margin: 0,
+                  color: "#6b7280",
+                }}
+              >
+                Upload an invoice image. OCR will be connected next.
+              </p>
             </div>
+
+            <label
+              className="scan-btn"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                cursor: "pointer",
+              }}
+            >
+              <Upload size={18} />
+              {invoiceImage ? "Change Invoice" : "Upload Invoice"}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleInvoiceImageSelect}
+                style={{ display: "none" }}
+              />
+            </label>
           </div>
 
-          <div className="scanner-buttons">
-            <button
-              type="button"
-              className="scanner-btn"
-              onClick={() =>
-                cameraInputRef.current?.click()
-              }
-              disabled={
-                scanning ||
-                creating
-              }
-            >
-              <Camera size={17} />
-              Scan with Camera
-            </button>
-
-            <button
-              type="button"
-              className="scanner-btn"
-              onClick={() =>
-                galleryInputRef.current?.click()
-              }
-              disabled={
-                scanning ||
-                creating
-              }
-            >
-              <ImageIcon size={17} />
-              Choose Invoice Image
-            </button>
-
-            <input
-              ref={
-                cameraInputRef
-              }
-              type="file"
-              accept="image/*"
-              capture="environment"
+          {invoiceImagePreview && (
+            <div
               style={{
-                display: "none",
+                marginTop: "18px",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "12px",
+                background: "#f9fafb",
               }}
-              onChange={
-                handleCameraChange
-              }
-            />
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "10px",
+                  marginBottom: "10px",
+                }}
+              >
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "7px",
+                    fontWeight: 600,
+                  }}
+                >
+                  <ImageIcon size={17} />
+                  {invoiceImage?.name || "Invoice image"}
+                </span>
 
-            <input
-              ref={
-                galleryInputRef
-              }
-              type="file"
-              accept="image/*"
-              style={{
-                display: "none",
-              }}
-              onChange={
-                handleGalleryChange
-              }
-            />
-          </div>
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={removeInvoiceImage}
+                >
+                  Remove
+                </button>
+              </div>
 
-          {(scanning ||
-            scanMessage) && (
-            <div className="scanner-progress">
-              {scanning
-                ? scanMessage ||
-                  "Scanning invoice..."
-                : scanMessage}
+              <img
+                src={invoiceImagePreview}
+                alt="Invoice preview"
+                style={{
+                  display: "block",
+                  width: "100%",
+                  maxHeight: "420px",
+                  objectFit: "contain",
+                  borderRadius: "8px",
+                  background: "#ffffff",
+                }}
+              />
             </div>
           )}
         </div>
 
-        {/* =================================================
-            FORM
-        ================================================= */}
-
         <form
-          className="invoice-form"
           onSubmit={
             handleSubmit
           }
+          className="invoice-form"
         >
 
-          <div className="form-group">
-            <label>
-              Invoice Number
-              <span>*</span>
-            </label>
+          {/* INVOICE DETAILS */}
 
-            <input
-              type="text"
-              name="invoice_number"
-              value={
-                formData.invoice_number
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="Enter invoice number"
-              disabled={creating}
-            />
-          </div>
+          <div className="form-section">
+            <h2>
+              Invoice Details
+            </h2>
 
-          <div className="form-group">
-            <label>
-              Invoice Date
-              <span>*</span>
-            </label>
+            <div className="form-grid">
 
-            <input
-              type="date"
-              name="invoice_date"
-              value={
-                formData.invoice_date
-              }
-              onChange={
-                handleChange
-              }
-              disabled={creating}
-              required
-            />
+              <div className="form-group">
+                <label>
+                  Invoice Number{" "}
+                  <span>*</span>
+                </label>
 
-            <small className="field-help">
-              OCR scan केल्यास invoice वरील date automatic भरली जाईल.
-            </small>
-          </div>
-
-          <div className="form-group">
-            <label>
-              Vendor Name
-              <span>*</span>
-            </label>
-
-            <input
-              type="text"
-              name="vendor_name"
-              value={
-                formData.vendor_name
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="Enter vendor name"
-              disabled={creating}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>
-              Vendor has GST?
-              <span>*</span>
-            </label>
-
-            <div className="gst-radio-group">
-              <label>
                 <input
-                  type="radio"
-                  name="vendor_has_gst"
-                  checked={
-                    formData.vendor_has_gst ===
-                    "yes"
+                  type="text"
+                  name="invoice_number"
+                  value={
+                    formData.invoice_number
                   }
-                  onChange={() =>
-                    handleGSTOption(
-                      "yes"
-                    )
+                  onChange={
+                    handleChange
                   }
-                  disabled={
-                    creating
+                  placeholder="Enter invoice number"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  Invoice Date{" "}
+                  <span>*</span>
+                </label>
+
+                <input
+                  type="date"
+                  name="invoice_date"
+                  value={
+                    formData.invoice_date
+                  }
+                  onChange={
+                    handleChange
                   }
                 />
-                Yes
-              </label>
+              </div>
 
-              <label>
+              <div className="form-group">
+                <label>
+                  Vendor Name{" "}
+                  <span>*</span>
+                </label>
+
                 <input
-                  type="radio"
-                  name="vendor_has_gst"
-                  checked={
-                    formData.vendor_has_gst ===
-                    "no"
+                  type="text"
+                  name="vendor_name"
+                  value={
+                    formData.vendor_name
                   }
-                  onChange={() =>
-                    handleGSTOption(
-                      "no"
-                    )
+                  onChange={
+                    handleChange
                   }
-                  disabled={
-                    creating
-                  }
+                  placeholder="Enter vendor name"
                 />
-                No
-              </label>
+              </div>
+
             </div>
           </div>
 
-          {formData.vendor_has_gst ===
-            "yes" && (
+          {/* VENDOR GST */}
+
+          <div className="form-section">
+            <h2>
+              Vendor GST Details
+            </h2>
+
             <div className="form-group">
               <label>
-                GST Number
+                Does vendor have GST?{" "}
                 <span>*</span>
               </label>
 
-              <input
-                type="text"
-                name="vendor_gstin"
-                value={
-                  formData.vendor_gstin
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="22AAAAA0000A1Z5"
-                maxLength={15}
-                disabled={creating}
-              />
+              <div className="radio-group">
 
-              {gstError && (
-                <div className="gst-error">
-                  {gstError}
-                </div>
-              )}
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    name="vendor_has_gst"
+                    value="yes"
+                    checked={
+                      formData.vendor_has_gst ===
+                      "yes"
+                    }
+                    onChange={(e) =>
+                      handleGSTOptionChange(
+                        e.target.value
+                      )
+                    }
+                  />
 
-              {!gstError &&
-                formData
-                  .vendor_gstin
-                  .length ===
-                  15 &&
-                GST_REGEX.test(
-                  formData.vendor_gstin
-                ) && (
-                  <div className="gst-valid">
-                    ✓ Valid GST number
-                  </div>
-                )}
+                  <span>
+                    Yes
+                  </span>
+                </label>
+
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    name="vendor_has_gst"
+                    value="no"
+                    checked={
+                      formData.vendor_has_gst ===
+                      "no"
+                    }
+                    onChange={(e) =>
+                      handleGSTOptionChange(
+                        e.target.value
+                      )
+                    }
+                  />
+
+                  <span>
+                    No
+                  </span>
+                </label>
+
+              </div>
             </div>
-          )}
-
-          <div className="form-group">
-            <label>
-              Vendor State
-              <span>*</span>
-            </label>
-
-            <select
-              name="vendor_state"
-              value={
-                formData.vendor_state
-              }
-              onChange={
-                handleChange
-              }
-              disabled={
-                creating ||
-                formData.vendor_has_gst ===
-                  "yes"
-              }
-            >
-              <option value="">
-                Select State
-              </option>
-
-              {STATES.map(
-                (state) => (
-                  <option
-                    key={state}
-                    value={state}
-                  >
-                    {state}
-                  </option>
-                )
-              )}
-            </select>
 
             {formData.vendor_has_gst ===
               "yes" && (
-              <small className="field-help">
-                GST number मधील state code वरून state automatic घेतला जातो.
-              </small>
-            )}
+                <div className="form-grid">
+
+                  <div className="form-group">
+                    <label>
+                      Vendor GSTIN{" "}
+                      <span>*</span>
+                    </label>
+
+                    <input
+                      type="text"
+                      name="vendor_gstin"
+                      value={
+                        formData.vendor_gstin
+                      }
+                      onChange={
+                        handleGSTINChange
+                      }
+                      maxLength={15}
+                      placeholder="Enter GSTIN"
+                    />
+
+                    <button
+                      type="button"
+                      className="scan-btn"
+                      onClick={
+                        handleCheckGSTStatus
+                      }
+                      disabled={
+                        gstChecking
+                      }
+                      style={{
+                        marginTop:
+                          "10px",
+                      }}
+                    >
+                      <Search
+                        size={18}
+                      />
+
+                      {gstChecking
+                        ? "Checking..."
+                        : "Check GST Status"}
+                    </button>
+                  </div>
+
+                  <div className="form-group">
+                    <label>
+                      Vendor State
+                    </label>
+
+                    <input
+                      type="text"
+                      value={
+                        formData.vendor_state
+                      }
+                      readOnly
+                      placeholder="State from GSTIN"
+                    />
+                  </div>
+
+                </div>
+              )}
+
+            {formData.vendor_has_gst ===
+              "no" && (
+                <div className="form-group">
+                  <label>
+                    Vendor State{" "}
+                    <span>*</span>
+                  </label>
+
+                  <select
+                    name="vendor_state"
+                    value={
+                      formData.vendor_state
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  >
+                    <option value="">
+                      Select state
+                    </option>
+
+                    {STATES.map(
+                      (state) => (
+                        <option
+                          key={state}
+                          value={state}
+                        >
+                          {state}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+              )}
           </div>
 
-          <div
-            className="form-group taxable-amount-section"
-            style={{
-              display: "block",
-              width: "100%",
-            }}
-          >
-            <label>
-              Total Amount Before GST
-              <span>*</span>
-            </label>
+          {/* GST CALCULATION */}
 
-            <input
-              type="text"
-              name="total_amount"
-              value={
-                formData.total_amount
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="Enter taxable amount"
-              disabled={creating}
-              required
-            />
+          <div className="form-section">
+            <h2>
+              GST Calculation
+            </h2>
 
-            <small className="field-help">
-              हा GST आधीचा product / taxable total आहे.
-            </small>
-          </div>
+            <div className="form-grid">
 
-          {formData.vendor_has_gst ===
-            "yes" && (
-            <div className="form-group">
-              <label>
-                GST Rate
-              </label>
+              <div className="form-group">
+                <label>
+                  Taxable Amount{" "}
+                  <span>*</span>
+                </label>
 
-              <input
-                type="text"
-                name="gst_rate"
-                value={
-                  formData.gst_rate
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Example: 5, 12, 18"
-                disabled={
-                  creating ||
-                  formData
-                    .gst_breakdown
-                    .length > 1
-                }
-              />
+                <input
+                  type="number"
+                  name="total_amount"
+                  value={
+                    formData.total_amount
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter taxable amount"
+                />
+              </div>
 
-              <small className="field-help">
-                Single GST rate असल्यास येथे rate टाका. Multiple rates असल्यास खाली breakdown वापरा.
-              </small>
+              <div className="form-group">
+                <label>
+                  GST Rate (%)
+                </label>
+
+                <input
+                  type="number"
+                  name="gst_rate"
+                  value={
+                    formData.gst_rate
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  placeholder="Multiple rates are shown below"
+                  disabled={
+                    formData.items?.length >
+                    0 &&
+                    new Set(
+                      formData.items.map(
+                        (item) =>
+                          numberValue(
+                            item.gst_rate
+                          )
+                      )
+                    ).size > 1
+                  }
+                />
+              </div>
+
             </div>
-          )}
 
-          {formData.vendor_has_gst ===
-            "yes" && (
+            <button
+              type="button"
+              className="scan-btn"
+              onClick={
+                calculateCurrentGST
+              }
+            >
+              Calculate GST
+            </button>
+
+            {/* INVOICE ITEM INFORMATION */}
+
+            {formData.items?.length >
+              0 && (
+                <div
+                  className="gst-breakdown-section"
+                  style={{
+                    marginTop:
+                      "20px",
+                  }}
+                >
+                  <div className="gst-breakdown-header">
+                    <div>
+                      <h3>
+                        Invoice Items
+                      </h3>
+
+                      <p>
+                        Details extracted
+                        from invoice details
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="gst-breakdown-list">
+
+                    {formData.items.map(
+                      (
+                        item,
+                        index
+                      ) => (
+                        <div
+                          className="gst-breakdown-row"
+                          key={`item-${index}`}
+                        >
+
+                          <div className="form-group">
+                            <label>
+                              HSN/SAC
+                            </label>
+
+                            <input
+                              value={
+                                item.hsn_sac ||
+                                ""
+                              }
+                              readOnly
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label>
+                              Quantity
+                            </label>
+
+                            <input
+                              value={
+                                item.quantity ??
+                                ""
+                              }
+                              readOnly
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label>
+                              Rate
+                            </label>
+
+                            <input
+                              value={
+                                item.rate ??
+                                ""
+                              }
+                              readOnly
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label>
+                              Amount
+                            </label>
+
+                            <input
+                              value={
+                                item.amount ??
+                                ""
+                              }
+                              readOnly
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label>
+                              GST Rate
+                            </label>
+
+                            <input
+                              value={
+                                item.gst_rate ??
+                                ""
+                              }
+                              readOnly
+                            />
+                          </div>
+
+                        </div>
+                      )
+                    )}
+
+                  </div>
+                </div>
+              )}
+
+            {/* BREAKDOWN */}
+
             <div className="gst-breakdown-section">
-              <div className="gst-breakdown-header">
-                <div>
-                  <strong>
-                    GST Breakdown
-                  </strong>
 
-                  <span>
-                    Multiple GST rates असल्यास प्रत्येक rate चा taxable amount वेगळा द्या.
-                  </span>
+              <div className="gst-breakdown-header">
+
+                <div>
+                  <h3>
+                    GST Breakdown
+                  </h3>
+
+                  <p>
+                    GST calculation
+                    details
+                  </p>
                 </div>
 
                 <button
@@ -3308,157 +1990,193 @@ export default function NewInvoice({
                   onClick={
                     addGSTRow
                   }
-                  disabled={
-                    creating
-                  }
                 >
-                  <Plus size={15} />
-                  Add GST Rate
+                  <Plus size={18} />
+                  Add GST
                 </button>
+
               </div>
 
-              {formData.gst_breakdown
-                .length === 0 && (
-                <div className="gst-empty-message">
-                  Multiple GST rates असतील तर{" "}
-                  <strong>
-                    Add GST Rate
-                  </strong>{" "}
-                  वर click करा.
+              {!formData.gst_breakdown
+                ?.length ? (
+                <div className="empty-breakdown">
+                  No GST breakdown
+                  added.
+                </div>
+              ) : (
+                <div className="gst-breakdown-list">
+
+                  {formData.gst_breakdown.map(
+                    (
+                      row,
+                      index
+                    ) => (
+                      <div
+                        className="gst-breakdown-row"
+                        key={index}
+                      >
+
+                        <div className="form-group">
+                          <label>
+                            Tax Type
+                          </label>
+
+                          <select
+                            value={
+                              row.tax_type ||
+                              "GST"
+                            }
+                            onChange={(e) =>
+                              updateGSTRow(
+                                index,
+                                "tax_type",
+                                e.target.value
+                              )
+                            }
+                          >
+                            <option value="GST">
+                              GST
+                            </option>
+
+                            <option value="CGST">
+                              CGST
+                            </option>
+
+                            <option value="SGST">
+                              SGST
+                            </option>
+
+                            <option value="IGST">
+                              IGST
+                            </option>
+                          </select>
+                        </div>
+
+                        <div className="form-group">
+                          <label>
+                            Rate (%)
+                          </label>
+
+                          <input
+                            type="number"
+                            value={
+                              row.rate ??
+                              ""
+                            }
+                            onChange={(e) =>
+                              updateGSTRow(
+                                index,
+                                "rate",
+                                e.target.value
+                              )
+                            }
+                            min="0"
+                            max="100"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label>
+                            Taxable Amount
+                          </label>
+
+                          <input
+                            type="number"
+                            value={
+                              row.taxable_amount ??
+                              ""
+                            }
+                            onChange={(e) =>
+                              updateGSTRow(
+                                index,
+                                "taxable_amount",
+                                e.target.value
+                              )
+                            }
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label>
+                            GST Amount
+                          </label>
+
+                          <input
+                            type="number"
+                            value={
+                              row.gst_amount ??
+                              ""
+                            }
+                            onChange={(e) =>
+                              updateGSTRow(
+                                index,
+                                "gst_amount",
+                                e.target.value
+                              )
+                            }
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          className="delete-gst-btn"
+                          onClick={() =>
+                            removeGSTRow(
+                              index
+                            )
+                          }
+                          title="Remove GST row"
+                        >
+                          <Trash2
+                            size={18}
+                          />
+                        </button>
+
+                      </div>
+                    )
+                  )}
+
                 </div>
               )}
+            </div>
 
-              {formData.gst_breakdown.map(
+            {/* SUMMARY */}
+
+            <div className="calculation-summary">
+
+              <div className="summary-row">
+                <span>
+                  Taxable Amount
+                </span>
+
+                <strong>
+                  ₹{" "}
+                  {numberValue(
+                    formData.total_amount
+                  ).toFixed(2)}
+                </strong>
+              </div>
+
+              {formData.gst_breakdown?.map(
                 (
                   row,
                   index
                 ) => (
                   <div
-                    className="gst-breakdown-row"
-                    key={index}
-                  >
-                    <div>
-                      <label>
-                        GST Rate %
-                      </label>
-
-                      <input
-                        type="text"
-                        value={
-                          row.rate
-                        }
-                        placeholder="18"
-                        onChange={(
-                          e
-                        ) =>
-                          handleGSTBreakdownChange(
-                            index,
-                            "rate",
-                            e.target
-                              .value
-                          )
-                        }
-                        disabled={
-                          creating
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <label>
-                        Taxable Amount
-                      </label>
-
-                      <input
-                        type="text"
-                        value={
-                          row.taxable_amount
-                        }
-                        placeholder="10000"
-                        onChange={(
-                          e
-                        ) =>
-                          handleGSTBreakdownChange(
-                            index,
-                            "taxable_amount",
-                            e.target
-                              .value
-                          )
-                        }
-                        disabled={
-                          creating
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <label>
-                        GST Amount
-                      </label>
-
-                      <input
-                        type="text"
-                        value={Number(
-                          row.gst_amount
-                        ).toFixed(
-                          2
-                        )}
-                        readOnly
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      className="remove-gst-btn"
-                      onClick={() =>
-                        removeGSTRow(
-                          index
-                        )
-                      }
-                      disabled={
-                        creating
-                      }
-                      title="Remove GST"
-                    >
-                      <Trash2
-                        size={16}
-                      />
-                    </button>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-
-          <div className="invoice-calculation-box">
-            <div className="calculation-row">
-              <span>
-                Taxable Amount
-              </span>
-
-              <strong>
-                ₹{" "}
-                {taxableAmount.toFixed(
-                  2
-                )}
-              </strong>
-            </div>
-
-            {formData.gst_breakdown
-              .length > 0 &&
-              formData.gst_breakdown.map(
-                (
-                  row,
-                  index
-                ) => (
-                  <div
-                    className="calculation-row"
-                    key={index}
+                    className="summary-row"
+                    key={`summary-${index}`}
                   >
                     <span>
-                      GST{" "}
-                      {row.rate ||
-                        0}
+                      {row.tax_type ||
+                        "GST"}{" "}
+                      {numberValue(
+                        row.rate
+                      )}
                       %
                     </span>
 
@@ -3466,112 +2184,298 @@ export default function NewInvoice({
                       ₹{" "}
                       {numberValue(
                         row.gst_amount
-                      ).toFixed(
-                        2
-                      )}
+                      ).toFixed(2)}
                     </strong>
                   </div>
                 )
               )}
 
-            {formData.vendor_has_gst ===
-              "yes" &&
-              formData.gst_breakdown
-                .length === 0 &&
-              numberValue(
-                formData.gst_rate
-              ) > 0 && (
-                <div className="calculation-row">
-                  <span>
-                    GST{" "}
-                    {
-                      formData.gst_rate
-                    }
-                    %
-                  </span>
+              <div className="summary-row">
+                <span>
+                  Total GST
+                </span>
 
-                  <strong>
-                    ₹{" "}
-                    {currentGST.toFixed(
-                      2
-                    )}
-                  </strong>
-                </div>
-              )}
+                <strong>
+                  ₹{" "}
+                  {breakdownTotal.toFixed(
+                    2
+                  )}
+                </strong>
+              </div>
 
-            <div className="calculation-row">
-              <span>
-                Total GST
-              </span>
+              <div className="summary-row total-row">
+                <span>
+                  Final Amount
+                </span>
 
-              <strong>
-                ₹{" "}
-                {currentGST.toFixed(
-                  2
-                )}
-              </strong>
-            </div>
+                <strong>
+                  ₹{" "}
+                  {round2(
+                    numberValue(
+                      formData.total_amount
+                    ) +
+                    breakdownTotal
+                  ).toFixed(2)}
+                </strong>
+              </div>
 
-            <div className="calculation-final">
-              <span>
-                Final Amount
-              </span>
-
-              <strong>
-                ₹{" "}
-                {currentFinal.toFixed(
-                  2
-                )}
-              </strong>
             </div>
           </div>
 
-          <div className="form-group">
-            <label>
-              Description
-            </label>
+          {/* ACTIONS */}
 
-            <textarea
-              name="description"
-              rows="3"
-              value={
-                formData.description
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="Enter invoice description"
-              disabled={creating}
-            />
-          </div>
+          <div className="form-actions">
 
-          <div className="invoice-form-actions">
             <button
               type="button"
-              className="invoice-cancel-btn"
-              onClick={onClose}
-              disabled={
-                creating
+              className="cancel-btn"
+              onClick={
+                onClose ||
+                resetForm
               }
+              disabled={loading}
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="invoice-create-btn"
-              disabled={
-                creating ||
-                scanning
+              className="submit-btn"
+              disabled={loading}
+            >
+              {loading
+                ? "Saving..."
+                : "Save Invoice"}
+            </button>
+
+          </div>
+
+        </form>
+
+        {/* GST STATUS POPUP */}
+
+        {showGSTPopup &&
+          gstStatus && (
+            <div
+              className="camera-modal"
+              onClick={() =>
+                setShowGSTPopup(
+                  false
+                )
               }
             >
-              {creating
-                ? "Creating..."
-                : "Create Invoice"}
-            </button>
-          </div>
-        </form>
+              <div
+                className="camera-modal-content"
+                style={{
+                  maxWidth:
+                    "650px",
+                  width: "95%",
+                }}
+                onClick={(e) =>
+                  e.stopPropagation()
+                }
+              >
+
+                <div className="camera-modal-header">
+                  <h2>
+                    GST Registration
+                    Details
+                  </h2>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowGSTPopup(
+                        false
+                      )
+                    }
+                  >
+                    <X size={22} />
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    padding:
+                      "20px",
+                  }}
+                >
+
+                  <div
+                    style={{
+                      display:
+                        "grid",
+                      gridTemplateColumns:
+                        "1fr 1fr",
+                      gap: "15px",
+                    }}
+                  >
+
+                    <div className="form-group">
+                      <label>
+                        GSTIN
+                      </label>
+
+                      <input
+                        value={
+                          gstStatus.gstin ||
+                          ""
+                        }
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>
+                        GSTIN Status
+                      </label>
+
+                      <input
+                        value={
+                          gstStatus.status ||
+                          ""
+                        }
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>
+                        Legal Name
+                      </label>
+
+                      <input
+                        value={
+                          gstStatus.legalName ||
+                          ""
+                        }
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>
+                        Trade Name
+                      </label>
+
+                      <input
+                        value={
+                          gstStatus.tradeName ||
+                          ""
+                        }
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>
+                        Centre Jurisdiction
+                      </label>
+
+                      <input
+                        value={
+                          gstStatus.centreJurisdiction ||
+                          ""
+                        }
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>
+                        State Jurisdiction
+                      </label>
+
+                      <input
+                        value={
+                          gstStatus.stateJurisdiction ||
+                          ""
+                        }
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>
+                        Registration Date
+                      </label>
+
+                      <input
+                        value={
+                          gstStatus.registrationDate ||
+                          ""
+                        }
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>
+                        Taxpayer Type
+                      </label>
+
+                      <input
+                        value={
+                          gstStatus.taxpayerType ||
+                          ""
+                        }
+                        readOnly
+                      />
+                    </div>
+
+                  </div>
+
+                  <div
+                    className="form-group"
+                    style={{
+                      marginTop:
+                        "15px",
+                    }}
+                  >
+                    <label>
+                      Business Activity
+                    </label>
+
+                    <input
+                      value={(
+                        gstStatus.businessActivity ||
+                        []
+                      ).join(
+                        ", "
+                      )}
+                      readOnly
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop:
+                        "20px",
+                      textAlign:
+                        "right",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="cancel-btn"
+                      onClick={() =>
+                        setShowGSTPopup(
+                          false
+                        )
+                      }
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          )}
+
       </div>
     </div>
   );
-}
+};
+
+export default NewInvoice;

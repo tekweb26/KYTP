@@ -77,6 +77,7 @@ export default function InvoicesPage() {
   ===================================================== */
 
   const handleNewInvoice = () => {
+     console.log("NEW INVOICE BUTTON CLICKED");
     setShowNewInvoice(true);
   };
 
