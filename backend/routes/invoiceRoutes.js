@@ -3,6 +3,9 @@ import multer from "multer";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { processInvoiceOCR } from "../services/ocrService.js";
 import { parseInvoiceWithAI } from "../services/aiInvoiceParser.js";
+import { compareGSTCalculation } from "../services/gstComparisonService.js";
+import { getTaxType } from "../services/gstTaxTypeService.js";
+
 import {
   createInvoice,
   getInvoices,
@@ -16,11 +19,11 @@ const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10 MB
+    fileSize: 10 * 1024 * 1024,
   },
 });
 
-router.post("/", authMiddleware, createInvoice);
+
 
 router.post(
   "/scan",
@@ -35,20 +38,45 @@ router.post(
         });
       }
 
+      // 1. OCR
       const ocrResult = await processInvoiceOCR(req.file.buffer);
+     
+
+      // 2. AI Parser
       const aiResult = await parseInvoiceWithAI(ocrResult.text);
-      return res.json({
-        success: true,
-        message: "Invoice OCR completed",
-        ocr: ocrResult,
-        ai: aiResult,
+       // 2.5. User/Vendor GST State
+      const userGSTState = req.body.userGSTState;
+      const vendorGSTState = req.body.vendorGSTState;
+
+      const taxTypeResult = getTaxType({
+        userGSTState,
+        vendorGSTState,
       });
 
+      // 3. GST Calculation + AI comparison
+      const gstComparison = (aiResult.items || []).map((item) => {
+        return compareGSTCalculation({
+          amountBeforeGST: item.amount_before_gst,
+          gstRate: item.gst_rate,
+          aiAmountAfterGST: item.amount_after_gst,
+
+          // Temporary: IGST
+          // Later user/vendor state comparison नुसार बदलू
+          
+        });
+      });
 
       return res.json({
         success: true,
-        message: "Invoice OCR completed",
+        message: "Invoice OCR + AI + GST calculation completed",
+
         ocr: ocrResult,
+
+        ai: aiResult,
+        
+        taxType: taxTypeResult.taxType,
+
+        gst_comparison: gstComparison,
       });
     } catch (error) {
       console.error("Invoice OCR Error:", error);
@@ -61,7 +89,7 @@ router.post(
     }
   }
 );
-
+router.post("/", authMiddleware, createInvoice);
 
 router.get("/", authMiddleware, getInvoices);
 
