@@ -5,7 +5,7 @@ export const getGSTStatus = async (gstin) => {
     throw new Error("GSTIN is required");
   }
 
-  // 1. Get access token
+  // 1. Authenticate with Sandbox
   const authResponse = await fetch(
     `${SANDBOX_BASE_URL}/authenticate`,
     {
@@ -35,8 +35,8 @@ export const getGSTStatus = async (gstin) => {
     {
       method: "POST",
       headers: {
-        "authorization": accessToken,
-        "x-api-key": process.env.SANDBOX_API_KEY,
+        authorization: accessToken,
+        "x-api-key": process.env.GST_API_KEY,
         "x-api-version": "1.0.0",
         "Content-Type": "application/json",
       },
@@ -60,7 +60,7 @@ export const getGSTStatus = async (gstin) => {
     throw new Error("GSTIN data not found");
   }
 
-  // 3. Return only required fields
+  // 3. Return required GST fields
   return {
     gstn: data.gstin,
     legal_name_of_business: data.lgnm,
@@ -72,7 +72,7 @@ export const getGSTStatus = async (gstin) => {
     gstn_status: data.sts,
     nature_of_business_activity: data.nba,
 
-    // Needed later for GST tax type
+    // Vendor state - will be used later for GST tax type
     vendor_state: data.pradr?.addr?.stcd || null,
   };
 };
