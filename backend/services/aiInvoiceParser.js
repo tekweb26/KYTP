@@ -1,7 +1,7 @@
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 export const parseInvoiceWithAI = async (ocrText) => {
@@ -9,15 +9,17 @@ export const parseInvoiceWithAI = async (ocrText) => {
     throw new Error("OCR text is required");
   }
 
-  const response = await openai.responses.create({
-    model: "gpt-5-mini",
-    input: [
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-lite",
+    contents: [
       {
-        role: "system",
-        content: `
+        role: "user",
+        parts: [
+          {
+            text: `
 You are an invoice data extraction assistant.
 
-Extract ONLY these fields:
+Extract ONLY these fields from the invoice OCR text:
 
 - invoice_number
 - invoice_date
@@ -35,22 +37,31 @@ Do NOT extract:
 - rate
 
 Rules:
-1. Return valid JSON only.
-2. amount_before_gst must be the taxable amount before GST.
+1. Return JSON only.
+2. amount_before_gst means taxable amount before GST.
 3. gst_rate must be the GST percentage.
-4. amount_after_gst must be the amount including GST.
+4. amount_after_gst means amount including GST.
 5. If a value cannot be identified, use null.
-6. Do not calculate or invent missing values.
+6. Do not invent missing values.
+
+OCR TEXT:
+
+${ocrText}
 `,
-      },
-      {
-        role: "user",
-        content: ocrText,
+          },
+        ],
       },
     ],
+    config: {
+      responseMimeType: "application/json",
+    },
   });
 
-  const result = response.output_text;
+  const result = response.text;
+
+  if (!result) {
+    throw new Error("Gemini returned empty response");
+  }
 
   return JSON.parse(result);
 };
