@@ -7,6 +7,7 @@ import { parseInvoiceWithAI } from "../services/aiInvoiceParser.js";
 import { compareGSTCalculation } from "../services/gstComparisonService.js";
 import { getTaxType } from "../services/gstTaxTypeService.js";
 import { getGSTStatus } from "../services/gstStatusService.js";
+import { validateGSTIN } from "../services/gstinValidationService.js";
 
 import {
   createInvoice,
@@ -124,19 +125,17 @@ router.post(
       // 5. Get Vendor GSTIN from AI
       // --------------------------------------------------
 
-      const vendorGSTIN = aiResult.vendor_gstin;
-
+      const vendorGSTINResult = validateGSTIN(
+        aiResult.vendor_gstin
+      );
 
       let gstStatus = null;
       let vendorGSTState = null;
 
-
-      // --------------------------------------------------
-      // 6. GST Status API
-      // --------------------------------------------------
-
-      if (vendorGSTIN) {
-        gstStatus = await getGSTStatus(vendorGSTIN);
+      if (vendorGSTINResult.isValid) {
+        gstStatus = await getGSTStatus(
+          vendorGSTINResult.gstin
+        );
 
         vendorGSTState = gstStatus.vendor_state;
       }
@@ -185,6 +184,8 @@ router.post(
         ai: aiResult,
 
         gst_status: gstStatus,
+        
+        vendor_gstin_validation: vendorGSTINResult,
 
         user_gst_state: userGSTState,
 
