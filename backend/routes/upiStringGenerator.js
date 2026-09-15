@@ -149,7 +149,7 @@ function recordPaymentInitiation(data) {
   //   createdAt: data.timestamp
   // });
 
-  console.log('Payment initiated:', data);
+  
 }
 
 function updatePaymentStatus(data) {
@@ -161,7 +161,7 @@ function updatePaymentStatus(data) {
   //   updatedAt: data.timestamp
   // });
 
-  console.log('Payment status updated:', data);
+  
 }
 
 module.exports = router;

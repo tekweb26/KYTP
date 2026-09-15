@@ -1,22 +1,24 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
-
 export const parseInvoiceWithAI = async (ocrText) => {
   if (!ocrText) {
     throw new Error("OCR text is required");
   }
 
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY is missing");
+  }
+
+  const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+  });
+
   const response = await ai.models.generateContent({
-   model: "gemini-3.5-flash-lite",
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: `
+    model: "gemini-3.5-flash-lite",
+    contents: [{
+      role: "user",
+      parts: [{
+        text: `
 You are an invoice data extraction assistant.
 
 Extract ONLY these fields from the invoice OCR text:
@@ -48,10 +50,8 @@ OCR TEXT:
 
 ${ocrText}
 `,
-          },
-        ],
-      },
-    ],
+      }],
+    }],
     config: {
       responseMimeType: "application/json",
     },

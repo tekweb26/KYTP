@@ -18,7 +18,7 @@ import authMiddleware from "./middleware/authMiddleware.js";
 dotenv.config();
 console.log(
   "GEMINI_API_KEY loaded:",
-  process.env.OPENAI_API_KEY ? "YES" : "NO"
+  process.env.GEMINI_API_KEY ? "YES" : "NO"
 );
 
 
