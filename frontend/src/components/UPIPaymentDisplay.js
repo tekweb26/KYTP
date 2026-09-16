@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { QrCode, CheckCircle, AlertCircle, Loader, Copy } from 'lucide-react';
+import { QrCode, CheckCircle,  Loader, Copy } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api';
 

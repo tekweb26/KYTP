@@ -9,6 +9,8 @@ import {
 
 import { Toaster } from "react-hot-toast";
 
+
+
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -101,8 +103,18 @@ function App() {
 
         <Toaster
           position="top-right"
+          containerStyle={{
+            position: "fixed",
+            top: "20px",
+            left: "0",
+            right: "0",
+            zIndex: 999999,
+            pointerEvents: "none",
+          }}
+          toastOptions={{
+            duration: 3000,
+          }}
         />
-
 
         {/* =================================================
             ROUTES

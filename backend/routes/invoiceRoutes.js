@@ -7,7 +7,10 @@ import { parseInvoiceWithAI } from "../services/aiInvoiceParser.js";
 import { compareGSTCalculation } from "../services/gstComparisonService.js";
 import { getTaxType } from "../services/gstTaxTypeService.js";
 import { getGSTStatus } from "../services/gstStatusService.js";
-import { validateGSTIN } from "../services/gstinValidationService.js";
+import {
+  validateGSTIN,
+  getStateFromGSTIN,
+} from "../services/gstinValidationService.js";
 
 import {
   createInvoice,
@@ -45,15 +48,32 @@ router.post(
         });
       }
 
-      const gstStatus = await getGSTStatus(gstin);
+      // Validate GSTIN first
+      const validation = validateGSTIN(gstin);
+
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid GSTIN",
+        });
+      }
+
+      // Call GST Status API with cleaned GSTIN
+      const gstStatus = await getGSTStatus(
+        validation.gstin
+      );
 
       return res.json({
         success: true,
         message: "GST status fetched successfully",
         data: gstStatus,
       });
+
     } catch (error) {
-      console.error("GST Status Error:", error);
+      console.error(
+        "GST Status Error:",
+        error.message
+      );
 
       return res.status(500).json({
         success: false,
@@ -92,17 +112,16 @@ router.post(
       // 2. OCR
       // --------------------------------------------------
 
-      const ocrResult = await processInvoiceOCR(
-        req.file.buffer
-      );
-
+      const ocrResult = await processInvoiceOCR(req.file.buffer);
 
       // --------------------------------------------------
-      // 3. AI Parser
+      // 3. AI Parsing
       // --------------------------------------------------
 
       const aiResult = await parseInvoiceWithAI(
-        ocrResult.text
+        ocrResult.text,
+        req.file.buffer,
+        req.file.mimetype
       );
 
 
@@ -110,8 +129,9 @@ router.post(
       // 4. User GST State
       // --------------------------------------------------
 
-      const userGSTState = req.body.userGSTState;
-
+      const userGSTState = String(
+        req.body.userGSTState || ""
+      ).trim();
 
       if (!userGSTState) {
         return res.status(400).json({
@@ -120,24 +140,36 @@ router.post(
         });
       }
 
+      console.log("Buyer/User GST State:", userGSTState);
+
 
       // --------------------------------------------------
       // 5. Get Vendor GSTIN from AI
       // --------------------------------------------------
 
-      const vendorGSTINResult = validateGSTIN(
-        aiResult.vendor_gstin
-      );
+      const vendorGSTINResult = validateGSTIN(aiResult.vendor_gstin);
 
       let gstStatus = null;
       let vendorGSTState = null;
 
       if (vendorGSTINResult.isValid) {
-        gstStatus = await getGSTStatus(
+        const gstinDerivedState = getStateFromGSTIN(
           vendorGSTINResult.gstin
         );
 
-        vendorGSTState = gstStatus.vendor_state;
+        try {
+          gstStatus = await getGSTStatus(
+            vendorGSTINResult.gstin
+          );
+        } catch (gstError) {
+          console.error(
+            "GST Status API Error:",
+            gstError.message
+          );
+        }
+
+        // GSTIN prefix is the reliable state source
+        vendorGSTState = gstinDerivedState;
       }
 
 
@@ -155,19 +187,73 @@ router.post(
       // 8. GST Calculation + AI Comparison
       // --------------------------------------------------
 
-      const gstComparison = (aiResult.items || []).map(
-        (item) => {
-
-          return compareGSTCalculation({
-            amountBeforeGST: item.amount_before_gst,
-            gstRate: item.gst_rate,
-            aiAmountAfterGST: item.amount_after_gst,
-            taxType: taxTypeResult.taxType,
-          });
-
+      const parseNumber = (value) => {
+        if (value === null || value === undefined || value === "") {
+          return null;
         }
-      );
 
+        const cleaned = String(value)
+          .replace(/₹/g, "")
+          .replace(/,/g, "")
+          .replace(/%/g, "")
+          .trim();
+
+        const number = Number(cleaned);
+
+        return Number.isFinite(number) ? number : null;
+      };
+
+      const gstComparison = (aiResult.items || []).map((item) => {
+
+        const amountBeforeGST = parseNumber(
+          item.amount_before_gst
+        );
+
+        const gstRate = parseNumber(
+          item.gst_rate
+        );
+
+        const aiAmountAfterGST = parseNumber(
+          item.amount_after_gst
+        );
+
+        console.log("AI GST VALUES:", {
+          description: item.description,
+          amountBeforeGST,
+          gstRate,
+          aiAmountAfterGST,
+        });
+
+        if (
+          amountBeforeGST === null ||
+          gstRate === null ||
+          aiAmountAfterGST === null
+        ) {
+          return {
+            ai: {
+              amount_before_gst: amountBeforeGST,
+              gst_rate: gstRate,
+              amount_after_gst: aiAmountAfterGST,
+            },
+
+            calculated: null,
+
+            comparison: {
+              is_match: false,
+              difference: null,
+              status: "INVALID_DATA",
+            },
+          };
+        }
+
+        return compareGSTCalculation({
+          amountBeforeGST,
+          gstRate,
+          aiAmountAfterGST,
+          taxType: taxTypeResult.taxType,
+        });
+
+      });
 
       // --------------------------------------------------
       // 9. Final Response
@@ -184,7 +270,7 @@ router.post(
         ai: aiResult,
 
         gst_status: gstStatus,
-        
+
         vendor_gstin_validation: vendorGSTINResult,
 
         user_gst_state: userGSTState,

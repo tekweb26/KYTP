@@ -1,3 +1,4 @@
+
 import axios from "axios";
 
 
@@ -95,9 +96,6 @@ export const authAPI = {
 
   /* ===================================================
      REGISTER / SIGNUP
-     
-     IMPORTANT:
-     SignupPage कडून पूर्ण object येत आहे.
   =================================================== */
 
   register: (data) => {
@@ -153,7 +151,7 @@ export const invoiceAPI = {
 
 
   /* ---------------------------------------------------
-     LIST
+     LIST INVOICES
   --------------------------------------------------- */
 
   list: () => {
@@ -166,7 +164,7 @@ export const invoiceAPI = {
 
 
   /* ---------------------------------------------------
-     CREATE
+     CREATE INVOICE
   --------------------------------------------------- */
 
   create: (data) => {
@@ -178,9 +176,20 @@ export const invoiceAPI = {
 
   },
 
+  /* ---------------------------------------------------
+
+   CREATE INVOICE - ALIAS
+
+    --------------------------------------------------- */
+
+  createInvoice: (data) => { return api.post("/invoices", data); 
+
+  },
 
   /* ---------------------------------------------------
-     DELETE
+
+     DELETE INVOICE
+
   --------------------------------------------------- */
 
   delete: (id) => {
@@ -206,7 +215,7 @@ export const invoiceAPI = {
 
 
   /* ---------------------------------------------------
-     UPDATE
+     UPDATE INVOICE
   --------------------------------------------------- */
 
   update: (
@@ -217,6 +226,46 @@ export const invoiceAPI = {
     return api.put(
       `/invoices/${id}`,
       data
+    );
+
+  },
+
+
+  /* ---------------------------------------------------
+     SCAN INVOICE
+     
+     Sends invoice image as multipart/form-data
+     to backend OCR + AI + GST pipeline.
+  --------------------------------------------------- */
+
+  scanInvoice: (formData) => {
+
+    return api.post(
+      "/invoices/scan",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+  },
+
+
+  /* ---------------------------------------------------
+     CHECK GST STATUS
+     
+     Sends GSTIN to backend Sandbox GST API.
+  --------------------------------------------------- */
+
+  checkGSTStatus: (gstin) => {
+
+    return api.post(
+      "/invoices/gst-status",
+      {
+        gstin,
+      }
     );
 
   },
@@ -287,3 +336,4 @@ export const gstAPI = {
 ===================================================== */
 
 export default api;
+
