@@ -41,6 +41,8 @@ router.post(
     try {
       const { gstin } = req.body;
 
+      console.log("GST STATUS REQUEST:", gstin);
+
       if (!gstin) {
         return res.status(400).json({
           success: false,
@@ -48,8 +50,9 @@ router.post(
         });
       }
 
-      // Validate GSTIN first
       const validation = validateGSTIN(gstin);
+
+      console.log("GST VALIDATION:", validation);
 
       if (!validation.isValid) {
         return res.status(400).json({
@@ -58,9 +61,18 @@ router.post(
         });
       }
 
-      // Call GST Status API with cleaned GSTIN
+      console.log(
+        "CALLING SANDBOX WITH:",
+        validation.gstin
+      );
+
       const gstStatus = await getGSTStatus(
         validation.gstin
+      );
+
+      console.log(
+        "SANDBOX GST RESPONSE:",
+        gstStatus
       );
 
       return res.json({
@@ -70,15 +82,14 @@ router.post(
       });
 
     } catch (error) {
-      console.error(
-        "GST Status Error:",
-        error.message
-      );
+      console.error("========== GST STATUS ERROR ==========");
+      console.error("Message:", error.message);
+      console.error("Stack:", error.stack);
+      console.error("======================================");
 
       return res.status(500).json({
         success: false,
-        message: "Failed to fetch GST status",
-        error: error.message,
+        message: error.message || "Failed to fetch GST status",
       });
     }
   }

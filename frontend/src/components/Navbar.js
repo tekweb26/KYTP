@@ -7,7 +7,6 @@ import {
   BarChart3,
   FileText,
   CreditCard,
-  Camera,
   TrendingUp,
   Settings,
   Bell,
@@ -25,12 +24,11 @@ export default function Navbar({ user, onLogout }) {
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
-    { path: "/dashboard", icon: BarChart3, label: "Dashboard" },
     { path: "/invoices", icon: FileText, label: "Invoices" },
     { path: "/payments", icon: CreditCard, label: "Payments" },
-    { path: "/scanner", icon: Camera, label: "Scanner" },
     { path: "/gst", icon: TrendingUp, label: "GST" },
-  ];
+    { path: "/dashboard", icon: BarChart3, label: "Dashboard" },
+];
 
   return (
     <>
@@ -57,9 +55,8 @@ export default function Navbar({ user, onLogout }) {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`ktyp-nav-link ${
-                    isActive(item.path) ? "active" : ""
-                  }`}
+                  className={`ktyp-nav-link ${isActive(item.path) ? "active" : ""
+                    }`}
                 >
                   <Icon size={18} />
                   <span>{item.label}</span>
@@ -156,9 +153,8 @@ export default function Navbar({ user, onLogout }) {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
-                  className={`ktyp-mobile-link ${
-                    isActive(item.path) ? "active" : ""
-                  }`}
+                  className={`ktyp-mobile-link ${isActive(item.path) ? "active" : ""
+                    }`}
                 >
                   <Icon size={18} />
                   <span>{item.label}</span>

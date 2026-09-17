@@ -178,16 +178,13 @@ export default function GSTPage() {
 
 
         {/* =================================================
-            SUMMARY CARDS
-        ================================================= */}
+    SUMMARY CARDS
+================================================= */}
 
         <div className="gst-summary-grid">
 
-
           {/* TAXABLE */}
-
           <div className="gst-summary-card">
-
             <div className="summary-label">
               Total Taxable Amount
             </div>
@@ -195,14 +192,23 @@ export default function GSTPage() {
             <div className="summary-value">
               ₹{summary?.taxable_amount || 0}
             </div>
+          </div>
 
+
+          {/* CGST */}
+          <div className="gst-summary-card cgst-card">
+            <div className="summary-label">
+              CGST
+            </div>
+
+            <div className="summary-value">
+              ₹{summary?.cgst || 0}
+            </div>
           </div>
 
 
           {/* SGST */}
-
           <div className="gst-summary-card sgst-card">
-
             <div className="summary-label">
               SGST (9%)
             </div>
@@ -210,29 +216,23 @@ export default function GSTPage() {
             <div className="summary-value">
               ₹{summary?.sgst || 0}
             </div>
-
           </div>
 
 
-          {/* CGST */}
-
+          {/* IGST */}
           <div className="gst-summary-card cgst-card">
-
             <div className="summary-label">
-              CGST (9%)
+              IGST
             </div>
 
             <div className="summary-value">
-              ₹{summary?.cgst || 0}
+              ₹{summary?.igst || 0}
             </div>
-
           </div>
 
 
           {/* TOTAL TAX */}
-
           <div className="gst-summary-card liability-card">
-
             <div className="summary-label">
               Total Tax Liability
             </div>
@@ -240,12 +240,9 @@ export default function GSTPage() {
             <div className="summary-value">
               ₹{summary?.total_tax || 0}
             </div>
-
           </div>
 
         </div>
-
-
 
         {/* =================================================
             CHARTS
@@ -516,7 +513,7 @@ export default function GSTPage() {
                             <span
                               className={
                                 taxType ===
-                                "IGST"
+                                  "IGST"
                                   ? "tax-badge igst"
                                   : "tax-badge intrastate"
                               }

@@ -7,7 +7,6 @@ import {
   Search,
   ScanLine,
   Upload,
-  Image as ImageIcon,
 } from "lucide-react";
 
 import toast from "react-hot-toast";
@@ -703,11 +702,6 @@ const NewInvoice = ({
   const [invoiceImage, setInvoiceImage] =
     useState(null);
 
-  const [
-    invoiceImagePreview,
-    setInvoiceImagePreview,
-  ] = useState("");
-
   const [scanning, setScanning] =
     useState(false);
 
@@ -726,9 +720,7 @@ const NewInvoice = ({
       if (!file) return;
 
       if (
-        !file.type.startsWith(
-          "image/"
-        )
+        !file.type.startsWith("image/")
       ) {
         toast.error(
           "Please select an invoice image."
@@ -736,54 +728,33 @@ const NewInvoice = ({
         return;
       }
 
-      if (
-        invoiceImagePreview
-      ) {
-        URL.revokeObjectURL(
-          invoiceImagePreview
-        );
-      }
-
       setInvoiceImage(file);
-
-      setInvoiceImagePreview(
-        URL.createObjectURL(file)
-      );
-
       setScanResult(null);
 
-      toast.success(
-        "Invoice image selected."
-      );
+      // Upload Invoice now directly starts the scan.
+      // No separate Scan Invoice button is required.
+      setScanning(true);
+      handleScanInvoice(file);
     };
 
   /* =========================================================
      REMOVE IMAGE
   ========================================================= */
 
-  const removeInvoiceImage =
+ /* const removeInvoiceImage =
     () => {
-      if (
-        invoiceImagePreview
-      ) {
-        URL.revokeObjectURL(
-          invoiceImagePreview
-        );
-      }
-
       setInvoiceImage(null);
-      setInvoiceImagePreview("");
       setScanResult(null);
-    };
+    };*/
 
   /* =========================================================
      SCAN INVOICE
   ========================================================= */
 
   const handleScanInvoice =
-    async () => {
-      if (!invoiceImage) {
-        console.log("❌ NO INVOICE IMAGE");
+    async (selectedImage = invoiceImage) => {
+      if (!selectedImage) {
+       
         toast.error(
           "Please upload an invoice image first."
         );
@@ -821,7 +792,7 @@ const NewInvoice = ({
 
         data.append(
           "invoice",
-          invoiceImage
+          selectedImage
         );
 
         data.append(
@@ -1136,42 +1107,74 @@ const NewInvoice = ({
      GST STATUS
   ========================================================= */
 
-  const handleCheckGSTStatus = async () => {
-    const gstin = cleanGSTIN(formData.vendor_gstin);
+ 
+const handleCheckGSTStatus = async () => {
+  const gstin = cleanGSTIN(formData.vendor_gstin);
 
-    console.log("GSTIN BEFORE API CALL:", gstin);
+  console.log("GSTIN BEFORE API CALL:", gstin);
 
-    if (!GST_REGEX.test(gstin)) {
-      toast.error("Invalid GSTIN. Please enter a valid GSTIN.");
-      return;
+  if (!GST_REGEX.test(gstin)) {
+    toast.error("Invalid GSTIN. Please enter a valid GSTIN.");
+    return;
+  }
+
+  try {
+    setGSTChecking(true);
+    setGSTStatus(null);
+
+    console.log("Calling GST API with:", gstin);
+
+    const response = await invoiceAPI.checkGSTStatus(gstin);
+
+    console.log(
+      "GST API FULL RESPONSE:",
+      JSON.stringify(response?.data, null, 2)
+    );
+
+    // Backend response:
+    // {
+    //   gstin: "...",
+    //   legal_name_of_business: "...",
+    //   gstn_status: "Active",
+    //   ...
+    // }
+
+    const result =
+      response?.data?.data ||
+      response?.data ||
+      response;
+
+    console.log(
+      "GST STATUS RESULT:",
+      JSON.stringify(result, null, 2)
+    );
+
+    if (!result) {
+      throw new Error("GST verification data not received.");
     }
 
-    try {
-      setGSTChecking(true);
+    setGSTStatus(result);
+    setShowGSTPopup(true);
 
-      console.log("Calling GST API with:", gstin);
+  } catch (error) {
+    console.error("GST Status Error:", error);
 
-      const response =
-        await invoiceAPI.checkGSTStatus(gstin);
+    console.error(
+      "GST API ERROR RESPONSE:",
+      error?.response?.data
+    );
 
-      console.log("GST API FULL RESPONSE:", response.data);
+    toast.error(
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch GST status."
+    );
+  } finally {
+    setGSTChecking(false);
+  }
+};
 
-      setGSTStatus(response.data.data);
-      setShowGSTPopup(true);
 
-    } catch (error) {
-      console.error("GST Status Error:", error);
-      console.log("GST API ERROR RESPONSE:", error.response?.data);
-
-      toast.error(
-        error.response?.data?.message ||
-        "Failed to fetch GST status."
-      );
-
-    } finally {
-      setGSTChecking(false);
-    }
-  };
   /* =========================================================
      GST CALCULATION
   ========================================================= */
@@ -1561,16 +1564,7 @@ const NewInvoice = ({
     setShowGSTPopup(false);
     setScanResult(null);
 
-    if (
-      invoiceImagePreview
-    ) {
-      URL.revokeObjectURL(
-        invoiceImagePreview
-      );
-    }
-
     setInvoiceImage(null);
-    setInvoiceImagePreview("");
   };
 
 
@@ -1939,12 +1933,12 @@ const NewInvoice = ({
   ========================================================= */
 
   return (
-    <div className="invoice-modal-overlay">
-      <div className="invoice-modal">
+    <div className="ni-invoice-modal-overlay">
+      <div className="ni-invoice-modal">
 
         {/* HEADER */}
 
-        <div className="invoice-header">
+        <div className="ni-invoice-header">
           <div>
             <h1>
               New Invoice
@@ -1958,7 +1952,7 @@ const NewInvoice = ({
 
           <button
             type="button"
-            className="close-btn"
+            className="ni-close-btn"
             onClick={
               onClose ||
               resetForm
@@ -1974,10 +1968,7 @@ const NewInvoice = ({
             ===================================================== */}
 
         <div
-          className="form-section"
-          style={{
-            marginBottom: "20px",
-          }}
+          className="ni-invoice-scan-section"
         >
           <div
             style={{
@@ -2032,7 +2023,7 @@ const NewInvoice = ({
               }}
             >
               <label
-                className="scan-btn"
+                className="ni-scan-btn"
                 style={{
                   display:
                     "inline-flex",
@@ -2064,101 +2055,22 @@ const NewInvoice = ({
                 />
               </label>
 
-              {invoiceImage && (
-                <button
-                  type="button"
-                  className="scan-btn"
-                  onClick={() => {
-                    alert("SCAN BUTTON WORKING");
-                    console.log("🔥 SCAN BUTTON CLICKED");
-                    handleScanInvoice();
-                  }}
-                  disabled={false}
-                >
-                  <ScanLine size={18} />
-                  {scanning ? "Scanning Invoice..." : "Scan Invoice"}
-                </button>
-              )}
             </div>
           </div>
 
-          {invoiceImagePreview && (
+          {scanning && (
             <div
               style={{
-                marginTop:
-                  "18px",
-                border:
-                  "1px solid #e5e7eb",
-                borderRadius:
-                  "12px",
-                padding:
-                  "12px",
-                background:
-                  "#f9fafb",
+                marginTop: "18px",
+                padding: "14px 16px",
+                border: "1px solid #e5e7eb",
+                borderRadius: "10px",
+                background: "#f9fafb",
+                fontWeight: 600,
+                textAlign: "center",
               }}
             >
-              <div
-                style={{
-                  display:
-                    "flex",
-                  alignItems:
-                    "center",
-                  justifyContent:
-                    "space-between",
-                  gap: "10px",
-                  marginBottom:
-                    "10px",
-                }}
-              >
-                <span
-                  style={{
-                    display:
-                      "flex",
-                    alignItems:
-                      "center",
-                    gap: "7px",
-                    fontWeight:
-                      600,
-                  }}
-                >
-                  <ImageIcon
-                    size={17}
-                  />
-
-                  {invoiceImage?.name ||
-                    "Invoice image"}
-                </span>
-
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={
-                    removeInvoiceImage
-                  }
-                >
-                  Remove
-                </button>
-              </div>
-
-              <img
-                src={
-                  invoiceImagePreview
-                }
-                alt="Invoice preview"
-                style={{
-                  display:
-                    "block",
-                  width: "100%",
-                  maxHeight:
-                    "420px",
-                  objectFit:
-                    "contain",
-                  borderRadius:
-                    "8px",
-                  background:
-                    "#ffffff",
-                }}
-              />
+             Scanning invoice data...
             </div>
           )}
 
@@ -2242,19 +2154,19 @@ const NewInvoice = ({
           onSubmit={
             handleSubmit
           }
-          className="invoice-form"
+          className="ni-invoice-form"
         >
 
           {/* INVOICE DETAILS */}
 
-          <div className="form-section">
+          <div className="ni-form-section">
             <h2>
               Invoice Details
             </h2>
 
-            <div className="form-grid">
+            <div className="ni-form-grid">
 
-              <div className="form-group">
+              <div className="ni-form-group">
                 <label>
                   Invoice Number{" "}
                   <span>*</span>
@@ -2275,7 +2187,7 @@ const NewInvoice = ({
                 />
               </div>
 
-              <div className="form-group">
+              <div className="ni-form-group">
                 <label>
                   Invoice Date{" "}
                   <span>*</span>
@@ -2294,7 +2206,7 @@ const NewInvoice = ({
                 />
               </div>
 
-              <div className="form-group">
+              <div className="ni-form-group">
                 <label>
                   Vendor Name{" "}
                   <span>*</span>
@@ -2320,20 +2232,20 @@ const NewInvoice = ({
 
           {/* VENDOR GST */}
 
-          <div className="form-section">
+          <div className="ni-form-section">
             <h2>
               Vendor GST Details
             </h2>
 
-            <div className="form-group">
+            <div className="ni-form-group">
               <label>
                 Does vendor have GST?{" "}
                 <span>*</span>
               </label>
 
-              <div className="radio-group">
+              <div className="ni-radio-group">
 
-                <label className="radio-option">
+                <label className="ni-radio-option">
                   <input
                     ref={vendorGSTOptionRef}
                     type="radio"
@@ -2355,7 +2267,7 @@ const NewInvoice = ({
                   </span>
                 </label>
 
-                <label className="radio-option">
+                <label className="ni-radio-option">
                   <input
                     type="radio"
                     name="vendor_has_gst"
@@ -2381,9 +2293,9 @@ const NewInvoice = ({
 
             {formData.vendor_has_gst ===
               "yes" && (
-                <div className="form-grid">
+                <div className="ni-form-grid">
 
-                  <div className="form-group">
+                  <div className="ni-form-group">
                     <label>
                       Vendor GSTIN{" "}
                       <span>*</span>
@@ -2403,7 +2315,7 @@ const NewInvoice = ({
 
                     <button
                       type="button"
-                      className="scan-btn"
+                      className="ni-scan-btn"
                       onClick={
                         handleCheckGSTStatus
                       }
@@ -2430,7 +2342,7 @@ const NewInvoice = ({
                     </button>
                   </div>
 
-                  <div className="form-group">
+                  <div className="ni-form-group">
                     <label>
                       Vendor State
                     </label>
@@ -2450,7 +2362,7 @@ const NewInvoice = ({
 
             {formData.vendor_has_gst ===
               "no" && (
-                <div className="form-group">
+                <div className="ni-form-group">
                   <label>
                     Vendor State{" "}
                     <span>*</span>
@@ -2487,14 +2399,14 @@ const NewInvoice = ({
 
           {/* GST CALCULATION */}
 
-          <div className="form-section">
+          <div className="ni-form-section">
             <h2>
               GST Calculation
             </h2>
 
-            <div className="form-grid">
+            <div className="ni-form-grid">
 
-              <div className="form-group">
+              <div className="ni-form-group">
                 <label>
                   Taxable Amount{" "}
                   <span>*</span>
@@ -2516,7 +2428,7 @@ const NewInvoice = ({
                 />
               </div>
 
-              <div className="form-group">
+              <div className="ni-form-group">
                 <label>
                   GST Rate (%)
                 </label>
@@ -2553,7 +2465,7 @@ const NewInvoice = ({
 
             <button
               type="button"
-              className="scan-btn"
+              className="ni-scan-btn"
               onClick={
                 calculateCurrentGST
               }
@@ -2566,13 +2478,13 @@ const NewInvoice = ({
             {formData.items?.length >
               0 && (
                 <div
-                  className="gst-breakdown-section"
+                  className="ni-gst-breakdown-section"
                   style={{
                     marginTop:
                       "20px",
                   }}
                 >
-                  <div className="gst-breakdown-header">
+                  <div className="ni-gst-breakdown-header">
                     <div>
                       <h3>
                         Invoice Items
@@ -2585,16 +2497,16 @@ const NewInvoice = ({
                     </div>
                   </div>
 
-                  <div className="gst-breakdown-list">
+                  <div className="ni-gst-breakdown-list">
 
                     {formData.items.map(
                       (item, index) => (
                         <div
-                          className="gst-breakdown-row"
+                          className="ni-gst-breakdown-row"
                           key={`item-${index}`}
                         >
 
-                          <div className="form-group">
+                          <div className="ni-form-group">
                             <label>
                               HSN/SAC
                             </label>
@@ -2611,7 +2523,7 @@ const NewInvoice = ({
                             />
                           </div>
 
-                          <div className="form-group">
+                          <div className="ni-form-group">
                             <label>
                               Quantity
                             </label>
@@ -2629,7 +2541,7 @@ const NewInvoice = ({
                             />
                           </div>
 
-                          <div className="form-group">
+                          <div className="ni-form-group">
                             <label>
                               Rate
                             </label>
@@ -2647,7 +2559,7 @@ const NewInvoice = ({
                             />
                           </div>
 
-                          <div className="form-group">
+                          <div className="ni-form-group">
                             <label>
                               Amount
                             </label>
@@ -2665,7 +2577,7 @@ const NewInvoice = ({
                             />
                           </div>
 
-                          <div className="form-group">
+                          <div className="ni-form-group">
                             <label>
                               GST Rate
                             </label>
@@ -2693,9 +2605,9 @@ const NewInvoice = ({
 
             {/* BREAKDOWN */}
 
-            <div className="gst-breakdown-section">
+            <div className="ni-gst-breakdown-section">
 
-              <div className="gst-breakdown-header">
+              <div className="ni-gst-breakdown-header">
 
                 <div>
                   <h3>
@@ -2710,7 +2622,7 @@ const NewInvoice = ({
 
                 <button
                   type="button"
-                  className="add-gst-btn"
+                  className="ni-add-gst-btn"
                   onClick={
                     addGSTRow
                   }
@@ -2724,12 +2636,12 @@ const NewInvoice = ({
               {!formData
                 .gst_breakdown
                 ?.length ? (
-                <div className="empty-breakdown">
+                <div className="ni-empty-breakdown">
                   No GST breakdown
                   added.
                 </div>
               ) : (
-                <div className="gst-breakdown-list">
+                <div className="ni-gst-breakdown-list">
 
                   {formData.gst_breakdown.map(
                     (
@@ -2737,11 +2649,11 @@ const NewInvoice = ({
                       index
                     ) => (
                       <div
-                        className="gst-breakdown-row"
+                        className="ni-gst-breakdown-row"
                         key={index}
                       >
 
-                        <div className="form-group">
+                        <div className="ni-form-group">
                           <label>
                             Tax Type
                           </label>
@@ -2777,7 +2689,7 @@ const NewInvoice = ({
                           </select>
                         </div>
 
-                        <div className="form-group">
+                        <div className="ni-form-group">
                           <label>
                             Rate (%)
                           </label>
@@ -2801,7 +2713,7 @@ const NewInvoice = ({
                           />
                         </div>
 
-                        <div className="form-group">
+                        <div className="ni-form-group">
                           <label>
                             Taxable Amount
                           </label>
@@ -2824,7 +2736,7 @@ const NewInvoice = ({
                           />
                         </div>
 
-                        <div className="form-group">
+                        <div className="ni-form-group">
                           <label>
                             GST Amount
                           </label>
@@ -2849,7 +2761,7 @@ const NewInvoice = ({
 
                         <button
                           type="button"
-                          className="delete-gst-btn"
+                          className="ni-delete-gst-btn"
                           onClick={() =>
                             removeGSTRow(
                               index
@@ -2872,9 +2784,9 @@ const NewInvoice = ({
 
             {/* SUMMARY */}
 
-            <div className="calculation-summary">
+            <div className="ni-calculation-summary">
 
-              <div className="summary-row">
+              <div className="ni-summary-row">
                 <span>
                   Taxable Amount
                 </span>
@@ -2893,7 +2805,7 @@ const NewInvoice = ({
                   index
                 ) => (
                   <div
-                    className="summary-row"
+                    className="ni-summary-row"
                     key={`summary-${index}`}
                   >
                     <span>
@@ -2915,7 +2827,7 @@ const NewInvoice = ({
                 )
               )}
 
-              <div className="summary-row">
+              <div className="ni-summary-row">
                 <span>
                   Total GST
                 </span>
@@ -2928,7 +2840,7 @@ const NewInvoice = ({
                 </strong>
               </div>
 
-              <div className="summary-row total-row">
+              <div className="ni-summary-row ni-total-row">
                 <span>
                   Final Amount
                 </span>
@@ -2949,11 +2861,11 @@ const NewInvoice = ({
 
           {/* ACTIONS */}
 
-          <div className="form-actions">
+          <div className="ni-form-actions">
 
             <button
               type="button"
-              className="cancel-btn"
+              className="ni-cancel-btn"
               onClick={
                 onClose ||
                 resetForm
@@ -2965,7 +2877,7 @@ const NewInvoice = ({
 
             <button
               type="submit"
-              className="submit-btn"
+              className="ni-submit-btn"
               disabled={loading}
             >
               {loading
@@ -2984,11 +2896,11 @@ const NewInvoice = ({
         {showGSTPopup &&
           gstStatus && (
             <div
-              className="camera-modal"
+              className="ni-camera-modal"
               onClick={() => setShowGSTPopup(false)}
             >
               <div
-                className="camera-modal-content"
+                className="ni-camera-modal-content"
                 style={{
                   maxWidth: "650px",
                   width: "95%",
@@ -2996,7 +2908,7 @@ const NewInvoice = ({
                 onClick={(e) => e.stopPropagation()}
               >
 
-                <div className="camera-modal-header">
+                <div className="ni-camera-modal-header">
                   <h2>
                     GST Registration Details
                   </h2>
@@ -3009,67 +2921,67 @@ const NewInvoice = ({
                   </button>
                 </div>
 
-                <div className="gst-details-body">
+                <div className="ni-gst-details-body">
 
-                  <div className="gst-info-list">
+                  <div className="ni-gst-info-list">
 
-                    <div className="gst-info-row">
+                    <div className="ni-gst-info-row">
                       <span>GSTIN</span>
                       <strong>
                         {gstStatus.gstn || "-"}
                       </strong>
                     </div>
 
-                    <div className="gst-info-row">
+                    <div className="ni-gst-info-row">
                       <span>GSTIN Status</span>
                       <strong>
                         {gstStatus.gstn_status || "-"}
                       </strong>
                     </div>
 
-                    <div className="gst-info-row">
+                    <div className="ni-gst-info-row">
                       <span>Legal Name</span>
                       <strong>
                         {gstStatus.legal_name_of_business || "-"}
                       </strong>
                     </div>
 
-                    <div className="gst-info-row">
+                    <div className="ni-gst-info-row">
                       <span>Trade Name</span>
                       <strong>
                         {gstStatus.trade_name || "-"}
                       </strong>
                     </div>
 
-                    <div className="gst-info-row">
+                    <div className="ni-gst-info-row">
                       <span>Centre Jurisdiction</span>
                       <strong>
                         {gstStatus.central_jurisdiction || "-"}
                       </strong>
                     </div>
 
-                    <div className="gst-info-row">
+                    <div className="ni-gst-info-row">
                       <span>State Jurisdiction</span>
                       <strong>
                         {gstStatus.state_jurisdiction || "-"}
                       </strong>
                     </div>
 
-                    <div className="gst-info-row">
+                    <div className="ni-gst-info-row">
                       <span>Registration Date</span>
                       <strong>
                         {gstStatus.date_of_registration || "-"}
                       </strong>
                     </div>
 
-                    <div className="gst-info-row">
+                    <div className="ni-gst-info-row">
                       <span>Taxpayer Type</span>
                       <strong>
                         {gstStatus.taxpayer_type || "-"}
                       </strong>
                     </div>
 
-                    <div className="gst-info-row">
+                    <div className="ni-gst-info-row">
                       <span>Business Activity</span>
                       <strong>
                         {(gstStatus.nature_of_business_activity || [])
@@ -3079,10 +2991,10 @@ const NewInvoice = ({
 
                   </div>
 
-                  <div className="gst-popup-footer">
+                  <div className="ni-gst-popup-footer">
                     <button
                       type="button"
-                      className="cancel-btn"
+                      className="ni-cancel-btn"
                       onClick={() => setShowGSTPopup(false)}
                     >
                       Close

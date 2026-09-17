@@ -107,6 +107,7 @@ export const getGSTStatus = async (gstin) => {
   // ==========================================
 
   return {
+    verified: data.sts === "Active",
     gstin:
       data.gstin ||
       requestedGSTIN,

@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  X,
-  Printer,
-} from "lucide-react";
+import { X } from "lucide-react";
 
 import "./ReadInvoice.css";
 
@@ -124,33 +121,29 @@ export default function ReadInvoice({
     return convert(num);
   };
 
-  const companyName =
+  const purchaserName =
     invoice.user_id?.companyName ||
     invoice.user?.companyName ||
     invoice.companyName ||
-    "Your Business Name";
+    "Purchaser";
 
-  const companyAddress =
+  const purchaserAddress =
     invoice.user_id?.companyAddress ||
     invoice.user?.companyAddress ||
     invoice.companyAddress ||
     "Company Address";
 
-  const companyState =
+  const purchaserState =
     invoice.user_id?.companyState ||
     invoice.user?.companyState ||
     invoice.companyState ||
     "";
 
-  const companyGST =
+  const purchaserGST =
     invoice.user_id?.gstNumber ||
     invoice.user?.gstNumber ||
     invoice.gstNumber ||
     "";
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   return (
     <div
@@ -173,15 +166,6 @@ export default function ReadInvoice({
           </strong>
 
           <div className="invoice-preview-actions">
-
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="invoice-print-btn"
-            >
-              <Printer size={17} />
-              Print Invoice
-            </button>
 
             <button
               type="button"
@@ -221,150 +205,91 @@ export default function ReadInvoice({
 
 
             {/* SELLER */}
-
             <div className="tax-invoice-top-grid">
-
               <div className="seller-details">
+                <div className="invoice-section-label">
+                  SELLER
+                </div>
 
                 <h2>
-                  {companyName}
+                  {invoice.vendor_name || "-"}
                 </h2>
 
-                <p>
-                  {companyAddress}
-                </p>
-
-                {companyState && (
-                  <p>
-                    {companyState}
-                  </p>
+                {invoice.vendor_state && (
+                  <p>{invoice.vendor_state}</p>
                 )}
 
-                {companyGST && (
+                {invoice.vendor_gstin && (
                   <p>
-                    <strong>
-                      GSTIN:
-                    </strong>{" "}
-                    {companyGST}
+                    <strong>GSTIN:</strong>{" "}
+                    {invoice.vendor_gstin}
                   </p>
                 )}
-
               </div>
 
-
               <div className="invoice-meta">
-
                 <div>
-                  <span>
-                    Invoice No.
-                  </span>
-
+                  <span>Invoice No.</span>
                   <strong>
                     {invoice.invoice_number || "-"}
                   </strong>
                 </div>
 
                 <div>
-                  <span>
-                    Invoice Date
-                  </span>
-
-                  <strong>
-                    {getInvoiceDate()}
-                  </strong>
+                  <span>Invoice Date</span>
+                  <strong>{getInvoiceDate()}</strong>
                 </div>
 
                 <div>
-                  <span>
-                    Status
-                  </span>
-
-                  <strong>
-                    {invoice.status || "Pending"}
-                  </strong>
+                  <span>Status</span>
+                  <strong>{invoice.status || "Pending"}</strong>
                 </div>
-
               </div>
-
             </div>
 
 
-            {/* BILL TO */}
-
+            {/* PURCHASER */}
             <div className="bill-to-box">
-
-              <div className="invoice-section-label">
-                BILL TO
-              </div>
-
-              <h3>
-                {invoice.vendor_name || "-"}
-              </h3>
-
-              {invoice.vendor_has_gst ? (
-                <p>
-                  GSTIN:{" "}
-                  {invoice.vendor_gstin || "-"}
-                </p>
-              ) : (
-                <p>
-                  State:{" "}
-                  {invoice.vendor_state || "-"}
-                </p>
-              )}
-
+              <div className="invoice-section-label">PURCHASER</div>
+              <h3>{purchaserName}</h3>
+              {purchaserAddress && <p>{purchaserAddress}</p>}
+              {purchaserState && <p>State: {purchaserState}</p>}
+              {purchaserGST && <p><strong>GSTIN:</strong> {purchaserGST}</p>}
             </div>
 
 
             {/* ITEMS */}
-
             <table className="tax-invoice-table">
-
               <thead>
                 <tr>
                   <th>#</th>
                   <th>Description</th>
+                  <th>HSN/SAC</th>
                   <th>Qty</th>
+                  <th>Rate</th>
                   <th>Amount</th>
-                  <th>Taxable Value</th>
+                  <th>GST</th>
                 </tr>
               </thead>
-
               <tbody>
-
-                <tr>
-
-                  <td>
-                    1
-                  </td>
-
-                  <td className="item-description">
-                    {invoice.description ||
-                      "Invoice Services"}
-                  </td>
-
-                  <td>
-                    1
-                  </td>
-
-                  <td>
-                    ₹
-                    {formatAmount(
-                      invoice.total_amount
-                    )}
-                  </td>
-
-                  <td>
-                    ₹
-                    {formatAmount(
-                      invoice.total_amount
-                    )}
-                  </td>
-
-                </tr>
-
+                {Array.isArray(invoice.items) && invoice.items.length > 0 ? (
+                  invoice.items.map((item, index) => (
+                    <tr key={`invoice-item-${index}`}>
+                      <td>{index + 1}</td>
+                      <td className="item-description">{`Item ${index + 1}`}</td>
+                      <td>{item.hsn_sac || "-"}</td>
+                      <td>{item.quantity ?? "-"}</td>
+                      <td>₹{formatAmount(item.rate)}</td>
+                      <td>₹{formatAmount(item.amount)}</td>
+                      <td>{item.gst_rate ?? 0}%</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7">No invoice items available</td>
+                  </tr>
+                )}
               </tbody>
-
             </table>
 
 
@@ -530,7 +455,7 @@ export default function ReadInvoice({
                 <div className="signature-line" />
 
                 <strong>
-                  For {companyName}
+                  For {invoice.vendor_name || "-"}
                 </strong>
 
               </div>
